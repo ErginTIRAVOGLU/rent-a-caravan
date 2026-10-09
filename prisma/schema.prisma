@@ -5,3 +5,204 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// Tablo/kolon/enum adları yalnızca İngilizce (spec §3). Tarih alanları
+// DB'de `DateTime @db.Date` (taşıma formatı YYYY-MM-DD); readAt/expiresAt
+// spec'te `DateTime` olarak etiketli — timestamp kalır.
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum VehicleType {
+  TOWED_CARAVAN
+  PANELVAN
+  MOTORHOME
+}
+
+enum Transmission {
+  MANUAL
+  SEMI_AUTOMATIC
+  AUTOMATIC
+}
+
+enum Fuel {
+  DIESEL
+  PETROL
+  ELECTRIC
+  HYBRID
+}
+
+enum LicenseRequired {
+  B
+  BE
+  C1
+  C
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  REJECTED
+  PAUSED
+}
+
+enum BookingRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum ReportTargetType {
+  LISTING
+  USER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  CLOSED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  googleId     String?  @unique
+  avatarUrl    String?
+  phone        String?
+  role         Role     @default(USER)
+  isBanned     Boolean  @default(false)
+  createdAt    DateTime @default(now()) @db.Date
+
+  listings              Listing[]
+  bookingRequests       BookingRequest[]      @relation("RenterBookings")
+  ownedConversations    Conversation[]        @relation("OwnerConversations")
+  rentedConversations   Conversation[]        @relation("RenterConversations")
+  sentMessages          Message[]
+  reviews               Review[]
+  reports               Report[]
+}
+
+model Listing {
+  id               String        @id @default(cuid())
+  owner            User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId          String
+  title            String
+  description      String
+  city             String
+  district         String?
+  lat              Float?
+  lng              Float?
+  nightlyPrice     Decimal       @db.Decimal(10, 2)
+  capacity         Int
+  vehicleType      VehicleType
+  brand            String?
+  model            String?
+  transmission     Transmission
+  fuel             Fuel
+  licenseRequired  LicenseRequired
+  minDriverAge     Int?
+  minRentalDays    Int           @default(1)
+  year             Int?
+  weightKg         Int?
+  lengthM          Float?
+  amenities        String[]
+  houseRules       String?       @db.Text
+  photoUrls        String[]
+  status           ListingStatus @default(DRAFT)
+  rejectionReason  String?
+  createdAt        DateTime      @default(now()) @db.Date
+
+  bookingRequests BookingRequest[]
+  conversations   Conversation[]
+  reviews         Review[]
+
+  @@index([city, status])
+}
+
+model BookingRequest {
+  id         String                @id @default(cuid())
+  listing    Listing               @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId  String
+  renter     User                  @relation("RenterBookings", fields: [renterId], references: [id], onDelete: Cascade)
+  renterId   String
+  startDate  DateTime              @db.Date
+  endDate    DateTime              @db.Date
+  guests     Int
+  totalPrice Decimal               @db.Decimal(10, 2)
+  message    String?
+  status     BookingRequestStatus  @default(PENDING)
+  createdAt  DateTime              @default(now()) @db.Date
+
+  reviews Review[]
+
+  @@index([listingId, status, startDate, endDate])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String
+  renter    User     @relation("RenterConversations", fields: [renterId], references: [id], onDelete: Cascade)
+  renterId  String
+  owner     User     @relation("OwnerConversations", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  createdAt DateTime @default(now()) @db.Date
+
+  messages Message[]
+
+  @@unique([listingId, renterId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderId       String
+  content        String       @db.Text
+  readAt         DateTime?
+  createdAt      DateTime     @default(now()) @db.Date
+
+  @@index([conversationId, createdAt])
+}
+
+model Review {
+  id         String         @id @default(cuid())
+  listing    Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId  String
+  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId   String
+  booking    BookingRequest @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId  String         @unique
+  rating     Int
+  comment    String?
+  createdAt  DateTime       @default(now()) @db.Date
+}
+
+model Report {
+  id         String           @id @default(cuid())
+  reporter   User             @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reporterId String
+  targetType ReportTargetType
+  targetId   String
+  reason     String           @db.Text
+  status     ReportStatus     @default(OPEN)
+  createdAt  DateTime         @default(now()) @db.Date
+}
+
+// Spec §5: DB sayaçlı hız sınırı — `expiresAt` timestamp (dakikalık pencere).
+model RateLimitEntry {
+  key       String
+  bucket    String
+  count     Int
+  expiresAt DateTime
+
+  @@unique([key, bucket])
+}
