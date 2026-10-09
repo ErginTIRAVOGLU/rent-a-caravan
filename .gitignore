@@ -1,0 +1,21 @@
+# İzole çalışma alanları
+.worktrees/
+
+# Bağımlılıklar
+node_modules/
+
+# Ortam değişkenleri
+.env
+.env.local
+
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+
+# Test/coverage
+coverage/
+
+# IDE
+.vscode/
+.idea/
