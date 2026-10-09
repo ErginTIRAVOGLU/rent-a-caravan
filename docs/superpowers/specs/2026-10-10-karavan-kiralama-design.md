@@ -12,6 +12,8 @@ Türkiye pazarına yönelik, gerçek karavan sahipleri ile kiracıları buluştu
 
 **Başarı kriteri:** Bir sahip ilanını çıkarabildiği, bir kiracının tarihli arama yapıp talep gönderebildiği, sahibin onaylayabildiği, tarafların birbiriyle mesajlaşıp birbirini değerlendirebildiği ve admin'in kötü ilanları kaldırabildiği canlı site.
 
+**Referans site:** [letsgocamper.com](https://www.letsgocamper.com/) — Antalya merkezli filo kiralama şirketi (pazar yeri değil, tek lokasyon). İlan alan iskeleti (marka/model, vites, ölçüler, donanım), ehliyet/yaş kuralı, depozito ve ev kuralları gerçekleri için incelendi (2026-10-10).
+
 **Doğrulanmış kararlar (kullanıcı ile netleştirilen):**
 
 | Karar | Seçim |
@@ -32,6 +34,8 @@ Türkiye pazarına yönelik, gerçek karavan sahipleri ile kiracıları buluştu
 - Çoklu dil (i18n), native mobil uygulama, push bildirim
 - Kampanya/indirim kodu, öne çıkan ilanlar, PostGIS arama
 - Plaka/TC gibi sahip kimlik doğrulama bilgileri
+- **Sezonluk fiyat tablosu** (ay bazlı fiyat — referans: letsgocamper.com; MVP'de tek `nightlyPrice`)
+- Ek ekipman kiralama (masa, mangal…), araç bazlı FAQ, WhatsApp butonu, TR/EN değiştirici
 
 ---
 
@@ -40,7 +44,7 @@ Türkiye pazarına yönelik, gerçek karavan sahipleri ile kiracıları buluştu
 ### Genel (girişsiz gezilebilir)
 - `/` — ana sayfa: tarih + şehir + kişi sayısı arama kutusu, son eklenen aktif ilanlar
 - `/arama` — sonuçlar + filtreler (şehir, tarih aralığı, kişi, fiyat, araç tipi)
-- `/ilan/[id]` — detay: fotoğraflar, fiyat özeti (gece × gün), sahip profili, müsaitlik kontrolü, "Talep gönder", yorumlar
+- `/ilan/[id]` — detay: fotoğraflar, fiyat özeti (gece × gün), marka/model, vites/yakıt, kapasite, **ehliyet gereksinimi + min yaş**, donanım etiketleri, ev kuralları, min kiralama süresi, sahip profili, müsaitlik kontrolü, "Talep gönder", yorumlar
 - `/giris`, `/kayit`
 
 ### Giriş yapmış kullanıcı (tek panel — kiracı/sahip ayrımı yok)
@@ -76,8 +80,17 @@ Listing
   title, description,
   city, district?, lat?, lng?,
   nightlyPrice (TL, Decimal), capacity: int,
-  vehicleType: PANELVAN | CAMPER | MOTORHOME,
-  amenities: string[], photoUrls: string[],
+  vehicleType: TOWED_CARAVAN | PANELVAN | MOTORHOME,
+  brand?, model?,
+  transmission: MANUAL | SEMI_AUTOMATIC | AUTOMATIC,
+  fuel: DIESEL | PETROL | ELECTRIC | HYBRID,
+  licenseRequired: B | BE | C1 | C,     -- sahip beyanı, ilanda gösterilir
+  minDriverAge?: int,                   -- örn. 21
+  minRentalDays: int (default 1),
+  year?, weightKg?, lengthM?,
+  amenities: string[] (sabit katalog — bkz. 3.1),
+  houseRules?: text,                    -- "Evcil hayvan yok", "Sigara yasak" vb.
+  photoUrls: string[],
   status: DRAFT | PENDING | ACTIVE | REJECTED | PAUSED,
   rejectionReason?, createdAt
 
@@ -108,8 +121,17 @@ Report
   reason: text, status: OPEN | REVIEWING | CLOSED, createdAt
 ```
 
+### 3.1 Amenities kataloğu (sabit kod listesi — DB'de kolon değil)
+
+```
+AIR_CONDITIONING | WC | SHOWER | SOLAR_PANEL | AWNING | HEATING |
+TV | HOT_WATER | STOVE | FRIDGE | BEDDING | COOKWARE | GPS |
+BIKE_RACK | REAR_CAMERA | INVERTER | WIFI
+```
+Arayüzde Türkçe etiketler: Klima, WC, Duş, Güneş Paneli, Tente, Isıtma, TV, Sıcak Su, Ocak, Buzdolabı, Yatak Takımı, Mutfak Takımı, GPS, Bisiklet Taşıyıcı, Kamera, İnvertör, WiFi.
+
 **İndeksler:**
-- `Listing(sehir→city, status)`
+- `Listing(city, status)`
 - `BookingRequest(listingId, status, startDate, endDate)`
 - `Message(conversationId, createdAt)`
 
@@ -118,7 +140,7 @@ Report
 ## 4. Akışlar
 
 ### 4.1 Rezervasyon talebi (çekirdek akış)
-1. Kiracı ilan detayında tarih + kişi seçer → sunucu `totalPrice`'ı `nights × nightlyPrice` olarak hesaplar → `PENDING` talep + sahibe e-posta.
+1. Kiracı ilan detayında tarih + kişi seçer → sunucu doğrular: `endDate - startDate >= listing.minRentalDays`, `guests <= capacity`, tarih kuralları → `totalPrice`'ı `nights × nightlyPrice` olarak hesaplar → `PENDING` talep + sahibe e-posta.
 2. Sahip panelde onaylar/reddeder (+ gerekçe):
    - **Onayda:** `$transaction` içinde üst üste binme kontrolü — `startDate < other.endDate AND endDate > other.startDate`, yalnız `APPROVED`/`COMPLETED` kayıtlarına karşı. Çakışıyorsa kontrollü hata ("Bu tarihler artık dolu"), uyuşuyorsa `APPROVED` + kiracıya e-posta. Yarış koşulu için raw SQL `SELECT ... FOR UPDATE` — onay atomik.
    - **Redde:** `REJECTED` + gerekçe + e-posta.
@@ -160,7 +182,7 @@ E-posta gönderimi `try/catch` içinde; başarısızlık log'a yazılır, ana ak
 
 ### Girdi doğrulama
 - Tüm formlar **Zod** ile (tek şema kaynağı, istemci + sunucu). Hatalar alan bazında.
-- Tarih kuralları: `startDate >= bugün`, `endDate > startDate`, en fazla 30 gece.
+- Tarih kuralları: `startDate >= bugün`, `endDate > startDate`, en fazla 30 gece, `endDate - startDate >= listing.minRentalDays`, `guests <= listing.capacity`
 - Fotoğraf: sadece jpg/png/webp, max 10 dosya (`MAX_PHOTOS = 10`), dosya başına ~5 MB (UploadThing config).
 
 ### Hata yüzeyi
@@ -189,7 +211,7 @@ E-posta gönderimi `try/catch` içinde; başarısızlık log'a yazılır, ana ak
    - **Çift rezervasyon koruması** — üst üste binen onay reddedilir, transaction atomiktir (kritik test)
    - Yorum ön koşulu (yalnız `COMPLETED` + kendi talebi)
    - Yetki testleri — başkasının kaynağına erişim → 403
-   - Zod şemaları (geçersiz tarih, negatif fiyat, fazla foto)
+   - Zod şemaları (geçersiz tarih, negatif fiyat, fazla foto, min kiralama süresi ihlali, kapasite aşımı)
    - Arama filtresi sorguları (tarih çakışması eleme)
 2. **API/server action entegrasyon:** talep → onay → e-posta tetiklenir (Resend mock'lanır); moderasyon akışı.
 3. **Playwright smoke (3 senaryo):**
@@ -224,3 +246,6 @@ E-posta gönderimi `try/catch` içinde; başarısızlık log'a yazılır, ana ak
 3. Sahip müsaitlik takvimi (tarih kapama)
 4. Gerçek zamanlı mesajlaşma (SSE/Pusher)
 5. İ18n (EN), native mobil/PWA push
+6. **Sezonluk fiyat tablosu** (ay bazlı — referans: letsgocamper.com)
+7. Ek ekipman kiralama (masa, mangal…), WhatsApp butonu
+8. Ehliyet/yaş belge doğrulama (şimdilik sadece sahip beyanı)
