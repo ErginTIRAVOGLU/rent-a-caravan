@@ -1,6 +1,9 @@
 # İzole çalışma alanları
 .worktrees/
 
+# SDD çalışma alanı (scratch)
+.superpowers/
+
 # Bağımlılıklar
 node_modules/
 
