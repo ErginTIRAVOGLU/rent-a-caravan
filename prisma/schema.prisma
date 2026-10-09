@@ -6,9 +6,11 @@ datasource db {
   provider = "postgresql"
 }
 
-// Tablo/kolon/enum adları yalnızca İngilizce (spec §3). Tarih alanları
-// DB'de `DateTime @db.Date` (taşıma formatı YYYY-MM-DD); readAt/expiresAt
-// spec'te `DateTime` olarak etiketli — timestamp kalır.
+// Tablo/kolon/enum adları yalnızca İngilizce (spec §3). Stay tarihleri
+// (BookingRequest.startDate/endDate) DB'de `DateTime @db.Date` (taşıma
+// formatı YYYY-MM-DD). createdAt/readAt/expiresAt audit metadata'sıdır —
+// timestamp kalır (Ruling-6): aynı-gün kronoloji ve Message(conversationId,
+// createdAt) indeksi DATE'te kırılırdı.
 
 enum Role {
   USER
@@ -78,7 +80,7 @@ model User {
   phone        String?
   role         Role     @default(USER)
   isBanned     Boolean  @default(false)
-  createdAt    DateTime @default(now()) @db.Date
+  createdAt    DateTime @default(now())
 
   listings              Listing[]
   bookingRequests       BookingRequest[]      @relation("RenterBookings")
@@ -117,7 +119,7 @@ model Listing {
   photoUrls        String[]
   status           ListingStatus @default(DRAFT)
   rejectionReason  String?
-  createdAt        DateTime      @default(now()) @db.Date
+  createdAt        DateTime      @default(now())
 
   bookingRequests BookingRequest[]
   conversations   Conversation[]
@@ -138,7 +140,7 @@ model BookingRequest {
   totalPrice Decimal               @db.Decimal(10, 2)
   message    String?
   status     BookingRequestStatus  @default(PENDING)
-  createdAt  DateTime              @default(now()) @db.Date
+  createdAt  DateTime              @default(now())
 
   reviews Review[]
 
@@ -153,7 +155,7 @@ model Conversation {
   renterId  String
   owner     User     @relation("OwnerConversations", fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId   String
-  createdAt DateTime @default(now()) @db.Date
+  createdAt DateTime @default(now())
 
   messages Message[]
 
@@ -168,7 +170,7 @@ model Message {
   senderId       String
   content        String       @db.Text
   readAt         DateTime?
-  createdAt      DateTime     @default(now()) @db.Date
+  createdAt      DateTime     @default(now())
 
   @@index([conversationId, createdAt])
 }
@@ -183,7 +185,7 @@ model Review {
   bookingId  String         @unique
   rating     Int
   comment    String?
-  createdAt  DateTime       @default(now()) @db.Date
+  createdAt  DateTime       @default(now())
 }
 
 model Report {
@@ -194,7 +196,7 @@ model Report {
   targetId   String
   reason     String           @db.Text
   status     ReportStatus     @default(OPEN)
-  createdAt  DateTime         @default(now()) @db.Date
+  createdAt  DateTime         @default(now())
 }
 
 // Spec §5: DB sayaçlı hız sınırı — `expiresAt` timestamp (dakikalık pencere).
