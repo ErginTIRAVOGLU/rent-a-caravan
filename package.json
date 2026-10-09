@@ -2,6 +2,9 @@
   "name": "karavan-kiralama",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,7 +18,6 @@
     "bcryptjs": "^3.0.3",
     "next": "^15.5.27",
     "next-auth": "^5.0.0-beta.32",
-    "prisma": "^7.10.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "resend": "^6.32.1",
@@ -32,6 +34,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.27",
+    "prisma": "^7.10.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.1",

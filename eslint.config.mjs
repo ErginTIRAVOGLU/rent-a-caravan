@@ -19,6 +19,9 @@ const eslintConfig = [
       "coverage/**",
       ".worktrees/**",
       ".superpowers/**",
+      // next build/dev bu dosyayı her seferinde yeniden üretir; triple-slash
+      // referansları eslint kuralını tetikler → kalıcı olarak yok say.
+      "next-env.d.ts",
     ],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
