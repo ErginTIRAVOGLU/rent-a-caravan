@@ -74,19 +74,10 @@ describe("verifyEmail / createVerifyToken", () => {
     expect(await verifyEmail("payload.only")).toBeNull();
   });
 
-  it("AUTH_SECRET yoksa createVerifyToken throw eder", async () => {
+  it("AUTH_SECRET yoksa verifyEmail throw eder", async () => {
     vi.unstubAllEnvs();
     vi.stubEnv("AUTH_SECRET", "");
-    expect(() => createVerifyToken("test@karavan.test")).toThrow("AUTH_SECRET tanımlı değil");
-    vi.stubEnv("AUTH_SECRET", TEST_SECRET);
-  });
-
-  it("verifyEmail AUTH_SECRET yoksa null döner ve loglar", async () => {
-    vi.unstubAllEnvs();
-    vi.stubEnv("AUTH_SECRET", "");
-    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     
-    // Token'ı manuel oluştur (AUTH_SECRET olmadan createVerifyToken çağrılamaz)
     const payload = { email: "test@karavan.test", exp: Math.floor(Date.now() / 1000) + 86400 };
     const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
     const signature = createHmac("sha256", "dummy-secret")
@@ -94,10 +85,7 @@ describe("verifyEmail / createVerifyToken", () => {
       .digest("base64url");
     const token = `${payloadB64}.${signature}`;
     
-    const result = await verifyEmail(token);
-    expect(result).toBeNull();
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
+    await expect(verifyEmail(token)).rejects.toThrow("AUTH_SECRET tanımlı değil");
     vi.stubEnv("AUTH_SECRET", TEST_SECRET);
   });
 });

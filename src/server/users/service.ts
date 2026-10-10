@@ -139,12 +139,12 @@ export async function registerUser(
  * Payload: `{ email, exp }` (exp = Unix saniyesi, 24 saat ömür).
  * İmza: `crypto.createHmac('sha256', AUTH_SECRET)`.
  * Döndürür: `{ email }` doğrulama başarılıysa, aksi halde `null`.
+ * AUTH_SECRET yoksa throw eder (config error = crash early).
  */
 export async function verifyEmail(token: string): Promise<{ email: string } | null> {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
-    console.error("[verifyEmail] AUTH_SECRET tanımlı değil");
-    return null;
+    throw new Error("AUTH_SECRET tanımlı değil");
   }
 
   try {
