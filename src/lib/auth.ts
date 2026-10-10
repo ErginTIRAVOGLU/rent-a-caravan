@@ -6,7 +6,6 @@ import {
   linkGoogleUser,
   verifyCredentials,
   type SessionUser,
-  EmailNotVerifiedError,
 } from "../server/users/service";
 import { applyUserClaims, authConfig } from "./auth.config";
 import { loginSchema } from "../lib/validators/auth";

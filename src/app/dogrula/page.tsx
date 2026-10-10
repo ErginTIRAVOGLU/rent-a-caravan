@@ -10,7 +10,15 @@ import {
   type VerifyEmailResult,
 } from "../../server/users/actions";
 
-const initialState: VerifyEmailResult = { ok: false, error: undefined, field: undefined };
+const initialState: VerifyEmailResult = { ok: false, error: "", field: undefined };
+
+function hasError(state: VerifyEmailResult): state is { ok: false; error: string; field?: string } {
+  return state.ok === false && state.error !== undefined && state.error !== "";
+}
+
+function isSuccess(state: VerifyEmailResult): state is { ok: true; data: { verified: boolean } } {
+  return state.ok === true;
+}
 
 export default function DogrulaPage() {
   const searchParams = useSearchParams();
@@ -26,8 +34,8 @@ export default function DogrulaPage() {
     initialState,
   );
 
-  const verified = state.ok && state.data?.verified === true;
-  const resendVerified = resendState.ok && resendState.data?.verified === true;
+  const verified = isSuccess(state) && state.data.verified === true;
+  const resendVerified = isSuccess(resendState) && resendState.data.verified === true;
 
   // Token varsa sayfa yüklendiğinde otomatik doğrula.
   useEffect(() => {
@@ -100,7 +108,7 @@ export default function DogrulaPage() {
                 Giriş yap
               </Link>
             </div>
-          ) : state.error ? (
+          ) : hasError(state) ? (
             <div className="mt-6 space-y-4">
               <p
                 role="alert"
@@ -121,7 +129,7 @@ export default function DogrulaPage() {
                   {resendPending ? "Gönderiliyor…" : "Doğrulama e-postasını yeniden gönder"}
                 </button>
               </form>
-              {resendState.ok && !resendVerified && !resendState.error && (
+              {isSuccess(resendState) && !resendVerified && (
                 <p
                   role="status"
                   className="rounded-lg bg-success-bg px-4 py-2 text-body-sm text-success text-center"
@@ -129,7 +137,7 @@ export default function DogrulaPage() {
                   Doğrulama e-postası yeniden gönderildi. Lütfen e-posta kutunuzu kontrol edin.
                 </p>
               )}
-              {resendState.error && (
+              {hasError(resendState) && (
                 <p
                   role="alert"
                   className="rounded-lg bg-error-bg px-4 py-2 text-body-sm text-error text-center"
