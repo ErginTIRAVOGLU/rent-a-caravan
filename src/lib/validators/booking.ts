@@ -10,7 +10,7 @@ export const staySchema = z.object({
   startDate: isoDateField("Başlangıç tarihi YYYY-AA-GG biçiminde olmalıdır."),
   endDate: isoDateField("Bitiş tarihi YYYY-AA-GG biçiminde olmalıdır."),
   guests: z
-    .int("Konaklama kişi sayısı zorunludur.")
+    .int("Konaklama kişi sayısı tam sayı olmalıdır.")
     .min(1, "En az 1 kişi olmalıdır.")
     .max(16, "En fazla 16 kişi olabilir."),
   message: z

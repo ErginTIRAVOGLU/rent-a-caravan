@@ -9,6 +9,8 @@ const MS_PER_DAY = 86_400_000;
 export function calculateNights(startDate: string, endDate: string): number {
   const start = Date.parse(`${startDate}T00:00:00.000Z`);
   const end = Date.parse(`${endDate}T00:00:00.000Z`);
+  // Geçersiz/geriye giden girdi → NaN/negatif; çağıran (validateStay) şemayı
+  // önce doğrular. Doğrudan çağıranlar (T9) bunu göz önünde bulundurmalı.
   return Math.round((end - start) / MS_PER_DAY);
 }
 

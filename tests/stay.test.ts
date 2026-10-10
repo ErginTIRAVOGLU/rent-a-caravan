@@ -65,6 +65,20 @@ describe("validateStay", () => {
     }
   });
 
+  it("30 gece tam sınır → izin verilir (31 zaten hata, 30 dahil)", () => {
+    // 2026-10-11 → 2026-11-10 tam 30 gece: sınırın kendisi kabul edilmeli.
+    const result = validateStay(
+      baseRules,
+      stayInput({ startDate: "2026-10-11", endDate: "2026-11-10" }),
+      nightlyPrice,
+      today,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.nights).toBe(30);
+    }
+  });
+
   it("31 gece → 'en fazla 30 gece' hatası", () => {
     // 2026-10-11 → 2026-11-11 tam 31 gece.
     const result = validateStay(
@@ -133,6 +147,21 @@ describe("validateStay", () => {
     const result = validateStay(
       baseRules,
       stayInput({ startDate: "2026-13-40" }),
+      nightlyPrice,
+      today,
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.field).toBe("startDate");
+    }
+  });
+
+  it("gerçek takvim dışı tarih (2026-02-30) reddedilir (field=startDate)", () => {
+    // z.iso.date yalnız regex değil gerçek takvim geçerliliği de doğrular;
+    // şema yükseltmesine karşı bu davranışı pinliyoruz (NaN price'a yol açmaz).
+    const result = validateStay(
+      baseRules,
+      stayInput({ startDate: "2026-02-30" }),
       nightlyPrice,
       today,
     );
