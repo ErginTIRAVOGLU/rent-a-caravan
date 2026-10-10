@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Sayfa Bulunamadı — Karavan Kiralama",
 };
 
-/** Genel 404 — `notFound()` (ilan detayı dahil) bu sınıra düşer. */
+/** Genel 404 — kök `notFound()`; `/ilan/[id]` kendi rota-kapsamlı 404'üne düşer. */
 export default function NotFound() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 p-8 text-center">

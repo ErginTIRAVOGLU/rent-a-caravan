@@ -249,6 +249,12 @@ export async function updateProfileCore(
     data.passwordHash = await hash(newPassword, 10);
   }
 
-  await prisma.user.update({ where: { id: user.id }, data });
+  // Tek atomic update (kısmi yazım yok); yine de geçici DB hatası action'ı
+  // throw etmesin — bookings safeTx kontratı gibi Türkçe ActionResult'a düşer.
+  try {
+    await prisma.user.update({ where: { id: user.id }, data });
+  } catch {
+    return fail("Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.");
+  }
   return ok(true);
 }

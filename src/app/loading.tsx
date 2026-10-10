@@ -1,4 +1,4 @@
-// Kök yükleme iskeleti — kendine loading.tsi OLMAYAN tüm rotalarda görünür
+// Kök yükleme iskeleti — kendine `loading.tsx` OLMAYAN tüm rotalarda görünür
 // (App Router segment bazlı fallback'i). Statik, ek bağımlılık yok;
 // animasyon Tailwind `animate-pulse`.
 

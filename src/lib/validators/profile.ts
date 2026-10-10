@@ -2,8 +2,9 @@ import { z } from "zod";
 
 import { passwordField } from "./auth";
 
-// Profil güncelleme şeması — tek doğrulama kaynağı (form + service aynı şemayı
-// kullanır). Tüm alanlar opsiyoneldir; "en az bir alan" ve şifre değişimi
+// Profil güncelleme şeması — SUNUCU doğrulamasının tek kaynağı (service bu
+// şemayı parse eder). Form yalnız aynı kuralları aynalar (HTML attrs), şemayı
+// import etmez. Tüm alanlar opsiyoneldir; "en az bir alan" ve şifre değişimi
 // eş-kuraları nesne düzeyindeki refine'larda uygulanır.
 // NOT: `id`/`role`/`email` BİLEREK şemada yok — Zod v4 object bilinmeyen
 // anahtarları strip eder (ledger Ruling-3: hedef satır yalnız `user.id`'dir).
@@ -26,8 +27,10 @@ const phoneField = z
   );
 
 const currentPasswordField = z
+  // NOT: `.trim()` BİLEREK YOK — kayıt (auth.ts `passwordField`) ham girdiyi
+  // hash'lediği için, trimlenmiş girdi `compare`'da hiçbir zaman eşleşmezdi
+  // (kullanıcı şifre değiştiremez hale gelirdi). Kayıt ile simetri şart.
   .string("Mevcut şifre zorunludur.")
-  .trim()
   .min(1, "Mevcut şifre zorunludur.")
   .optional();
 

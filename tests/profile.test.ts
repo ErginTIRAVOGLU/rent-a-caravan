@@ -123,6 +123,28 @@ it("eski şifre yanlışsa fail döner, DB'de hash değişmez", async () => {
   expect(await compare("demo1234", saved.passwordHash ?? "")).toBe(true);
 });
 
+it("Google-hesapta (passwordHash null) şifre belirlenemez — koruma", async () => {
+  await resetDb();
+  const created = await prisma.user.create({
+    data: makeUser({ passwordHash: null }),
+  });
+
+  const result = await updateProfileCore(toSession(created), {
+    newPassword: "yeni-guclu-sifre-9",
+    currentPassword: "herhangi-bir-sey",
+  });
+
+  expect(result.ok).toBe(false);
+  if (!result.ok) {
+    expect(result.field).toBe("currentPassword");
+  }
+  // Hesap hâlâ şifresiz; ad güncelleme gibi diğer alanlar etkilenmez.
+  const saved = await prisma.user.findUniqueOrThrow({
+    where: { id: created.id },
+  });
+  expect(saved.passwordHash).toBeNull();
+});
+
 it("boş ad fail döner (alan bazlı Türkçe hata)", async () => {
   await resetDb();
   const created = await prisma.user.create({ data: makeUser() });

@@ -47,7 +47,7 @@ npm run seed
 | `RESEND_FROM` | Gönderen adresi (ör. `Karavan <onboarding@resend.dev>`). Opsiyonel; varsayılan kod içinde tanımlıdır. |
 | `UPLOADTHING_TOKEN` | UploadThing yükleme anahtarı (ilan fotoğrafları). |
 | `CRON_SECRET` | `/api/cron/complete-bookings` cron'unun sırrı; istek `Authorization: Bearer <CRON_SECRET>` başlığı ile doğrulanır (fail-closed). |
-| `NEXT_PUBLIC_APP_URL` | Uygulamanın kök adresi (opsiyonel, ortam başına). |
+
 
 ## Demo hesaplar
 
