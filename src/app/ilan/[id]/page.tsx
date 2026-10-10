@@ -13,7 +13,9 @@ import { prisma } from "../../../lib/prisma";
 import { formatTRY } from "../../../lib/format";
 import { validateStay } from "../../../lib/stay";
 import { parseSearchParams } from "../../../server/listings/search";
+import { getReviewsForListing } from "../../../server/reviews/service";
 import { PhotoGallery } from "../../../components/PhotoGallery";
+import { StarRating } from "../../../components/StarRating";
 import { BookingRequestForm } from "./BookingRequestForm";
 import { AskButton } from "./AskButton";
 
@@ -76,6 +78,11 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
 
   const user = await getSessionUser();
   const nightlyPrice = Number(listing.nightlyPrice);
+
+  // Yorumlar + ortalama puan (display guard'lar service'te uygulanır:
+  // reviewsEnabled=false veya owner reviewsVisible=false → boş döner).
+  const reviewsResult = await getReviewsForListing(id);
+  const reviewsData = reviewsResult.ok ? reviewsResult.data : null;
 
   // Konaklama tarihleri URL'den. Fiyat özeti formun AYNI kurallarını kullanır
   // (validateStay): URL'yle 30 geceden uzun, geçmiş veya minimum-altı tarih
@@ -267,9 +274,44 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
 
           <section className={cardClassName}>
             <SectionTitle icon="star">Yorumlar</SectionTitle>
-            <p className="mt-3 text-body-md text-on-surface-variant">
-              Henüz yorum yok.
-            </p>
+            {reviewsData && reviewsData.reviews.length > 0 ? (
+              <div className="mt-3 space-y-4">
+                {reviewsData.averageRating !== null ? (
+                  <div className="flex items-center gap-2">
+                    <StarRating
+                      value={Math.round(reviewsData.averageRating)}
+                      size="sm"
+                    />
+                    <span className="text-body-md text-on-surface-variant">
+                      {reviewsData.averageRating.toFixed(1)} / 5 (
+                      {reviewsData.reviews.length} yorum)
+                    </span>
+                  </div>
+                ) : null}
+                {reviewsData.reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="rounded-lg bg-surface-low p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-on-surface">
+                        {review.author.name}
+                      </span>
+                      <StarRating value={review.rating} size="sm" />
+                    </div>
+                    {review.comment ? (
+                      <p className="mt-2 break-words text-body-md text-on-surface-variant">
+                        {review.comment}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-body-md text-on-surface-variant">
+                Henüz yorum yok.
+              </p>
+            )}
           </section>
         </div>
 
