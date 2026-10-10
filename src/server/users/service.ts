@@ -3,8 +3,8 @@ import { compare, hash } from "bcryptjs";
 
 import { prisma } from "../../lib/prisma";
 import { fail, ok, type ActionResult } from "../../lib/result";
+import { firstIssue } from "../../lib/result";
 import {
-  firstIssue,
   registerSchema,
   type RegisterInput,
 } from "../../lib/validators/auth";

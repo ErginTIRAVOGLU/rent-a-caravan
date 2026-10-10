@@ -1,8 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { calculateNights, calculateTotalPrice } from "./pricing";
-import { fail, ok, type ActionResult } from "./result";
-import { firstIssue } from "./validators/auth";
+import { fail, firstIssue, ok, type ActionResult } from "./result";
 import { staySchema, type StayInput } from "./validators/booking";
 
 // Konaklama kural doğrulaması — saf mantık (DB/İstemci yok).

@@ -3,10 +3,8 @@
 import { CredentialsSignin } from "next-auth";
 
 import { signIn } from "../../lib/auth";
-import {
-  firstIssue,
-  loginSchema,
-} from "../../lib/validators/auth";
+import { firstIssue } from "../../lib/result";
+import { loginSchema } from "../../lib/validators/auth";
 import { registerUser } from "./service";
 
 export type LoginState = { error: string | null; field?: string };

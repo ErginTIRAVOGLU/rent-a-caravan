@@ -36,17 +36,5 @@ export const registerSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-export type FieldIssue = { message: string; field?: string };
-
-/** İlk doğrulama hatasını (Türkçe mesaj + alan adı) çıkarır. */
-export function firstIssue(error: z.ZodError): FieldIssue {
-  const issue = error.issues[0];
-  if (!issue) {
-    return { message: "Geçersiz veri." };
-  }
-  const path = issue.path[0];
-  return {
-    message: issue.message,
-    field: typeof path === "string" ? path : undefined,
-  };
-}
+// NOT: `firstIssue` artık nötr `src/lib/result.ts` içinde (auth olmayan
+// validator'lar da tükettiği için — bkz. ledger "firstIssue nötr taşınması").

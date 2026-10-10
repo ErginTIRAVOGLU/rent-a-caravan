@@ -2,8 +2,7 @@ import type { Listing } from "@prisma/client";
 import type { ZodError } from "zod";
 
 import { prisma } from "../../lib/prisma";
-import { fail, ok, type ActionResult } from "../../lib/result";
-import { firstIssue } from "../../lib/validators/auth";
+import { fail, firstIssue, ok, type ActionResult } from "../../lib/result";
 import {
   listingSchema,
   listingUpdateSchema,
