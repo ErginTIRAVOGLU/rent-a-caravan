@@ -40,9 +40,9 @@ function seedListings(ownerIds: Record<string, string>): Prisma.ListingCreateMan
       houseRules:
         "Sigara içilmez. Evcil hayvan kabul edilir. Gece 22.00'den sonra sesli müzik yoktur.",
       photoUrls: [
-        "https://placehold.co/800x600/4a90d9/ffffff?text=Antalya+Karavan+1",
-        "https://placehold.co/800x600/4a90d9/ffffff?text=Antalya+Karavan+2",
-        "https://placehold.co/800x600/4a90d9/ffffff?text=Antalya+Karavan+3",
+        "/images/home-card-1.jpg",
+        "/images/home-card-2.jpg",
+        "/images/detail-interior.jpg",
       ],
       status: "ACTIVE",
     },
@@ -71,8 +71,8 @@ function seedListings(ownerIds: Record<string, string>): Prisma.ListingCreateMan
       amenities: ["WC", "SHOWER", "FRIDGE", "HEATING", "GPS", "BIKE_RACK", "BEDDING"],
       houseRules: "Sigara yasaktır. Günlük kilometre sınırı 250 km'dir.",
       photoUrls: [
-        "https://placehold.co/800x600/7ed321/ffffff?text=İzmir+Panelvan+1",
-        "https://placehold.co/800x600/7ed321/ffffff?text=İzmir+Panelvan+2",
+        "/images/home-card-2.jpg",
+        "/images/detail-kitchen.jpg",
       ],
       status: "ACTIVE",
     },
@@ -111,8 +111,8 @@ function seedListings(ownerIds: Record<string, string>): Prisma.ListingCreateMan
       ],
       houseRules: "Sigara içilmez. Kış aylarında zincir zorunludur.",
       photoUrls: [
-        "https://placehold.co/800x600/f5a623/ffffff?text=Bolu+Motorhome+1",
-        "https://placehold.co/800x600/f5a623/ffffff?text=Bolu+Motorhome+2",
+        "/images/home-card-3.jpg",
+        "/images/detail-bed.jpg",
       ],
       status: "PENDING",
     },
@@ -127,12 +127,13 @@ function seedListings(ownerIds: Record<string, string>): Prisma.ListingCreateMan
 export async function seed(): Promise<void> {
   const passwordHash = hashSync(SEED_PASSWORD, 10);
   const userIds: Record<string, string> = {};
+  const now = new Date();
 
   for (const user of seedUsers) {
     const saved = await prisma.user.upsert({
       where: { email: user.email },
-      update: { name: user.name, role: user.role, passwordHash, isBanned: false },
-      create: { email: user.email, name: user.name, role: user.role, passwordHash },
+      update: { name: user.name, role: user.role, passwordHash, isBanned: false, emailVerified: now },
+      create: { email: user.email, name: user.name, role: user.role, passwordHash, emailVerified: now },
     });
     userIds[user.email] = saved.id;
   }
@@ -145,6 +146,120 @@ export async function seed(): Promise<void> {
     },
   });
   await prisma.listing.createMany({ data: seedListings(userIds) });
+
+  // Fetch created listings for relations
+  const createdListings = await prisma.listing.findMany({
+    where: {
+      ownerId: {
+        in: [userIds["sahip@karavan.test"], userIds["ikinci-sahip@karavan.test"]],
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Sample conversations & messages
+  const renterId = userIds["kiraci@karavan.test"];
+  const ownerId = userIds["sahip@karavan.test"];
+
+  if (createdListings.length >= 2) {
+    // Conversation 1: kiraci <-> sahip (listing 0)
+    const conv1 = await prisma.conversation.upsert({
+      where: { listingId_renterId: { listingId: createdListings[0].id, renterId } },
+      update: { lastMessageAt: now, lastMessagePreview: "İlanınız hala müsait mi?" },
+      create: {
+        listingId: createdListings[0].id,
+        renterId,
+        ownerId,
+        lastMessageAt: now,
+        lastMessagePreview: "İlanınız hala müsait mi?",
+      },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: conv1.id, senderId: renterId, content: "Merhaba, ilanınız hala müsait mi?", createdAt: new Date(now.getTime() - 3600000) },
+        { conversationId: conv1.id, senderId: ownerId, content: "Evet, müsait. Hangi tarihler düşünüyorsunuz?", createdAt: new Date(now.getTime() - 1800000) },
+      ],
+    });
+
+    // Conversation 2: kiraci <-> ikinci-sahip (listing 2)
+    const ownerId2 = userIds["ikinci-sahip@karavan.test"];
+    const conv2 = await prisma.conversation.upsert({
+      where: { listingId_renterId: { listingId: createdListings[2].id, renterId } },
+      update: { lastMessageAt: now, lastMessagePreview: "Fiyatınız sabit mi?" },
+      create: {
+        listingId: createdListings[2].id,
+        renterId,
+        ownerId: ownerId2,
+        lastMessageAt: now,
+        lastMessagePreview: "Fiyatınız sabit mi?",
+      },
+    });
+    await prisma.message.createMany({
+      data: [
+        { conversationId: conv2.id, senderId: renterId, content: "Fiyatınız sabit mi?", createdAt: new Date(now.getTime() - 7200000) },
+        { conversationId: conv2.id, senderId: ownerId2, content: "Uzun kiralamalarda indirim yapabilirim.", createdAt: new Date(now.getTime() - 5400000) },
+      ],
+    });
+  }
+
+  // Sample reviews (need completed bookings first)
+  // Create a completed booking for review
+  if (createdListings.length >= 1) {
+    const booking = await prisma.bookingRequest.upsert({
+      where: { id: "seed-review-booking" },
+      update: {},
+      create: {
+        id: "seed-review-booking",
+        listingId: createdListings[0].id,
+        renterId,
+        startDate: new Date(now.getTime() - 86400000 * 10),
+        endDate: new Date(now.getTime() - 86400000 * 7),
+        guests: 2,
+        totalPrice: 4500,
+        status: "COMPLETED",
+      },
+    });
+
+    await prisma.review.upsert({
+      where: { bookingId: booking.id },
+      update: { rating: 5, comment: "Harika bir deneyimdi, karavan çok temiz ve sahibi çok yardımcıdı." },
+      create: {
+        listingId: createdListings[0].id,
+        authorId: renterId,
+        bookingId: booking.id,
+        rating: 5,
+        comment: "Harika bir deneyimdi, karavan çok temiz ve sahibi çok yardımcıdı.",
+        ipAddress: "127.0.0.1",
+      },
+    });
+  }
+
+  // Sample reports
+  await prisma.report.upsert({
+    where: { id: "seed-report-1" },
+    update: {},
+    create: {
+      id: "seed-report-1",
+      reporterId: renterId,
+      targetType: "LISTING",
+      targetId: createdListings[0].id,
+      reason: "İlan fotoğrafları gerçek durumu yansıtmıyor.",
+      status: "OPEN",
+    },
+  });
+
+  await prisma.report.upsert({
+    where: { id: "seed-report-2" },
+    update: {},
+    create: {
+      id: "seed-report-2",
+      reporterId: ownerId,
+      targetType: "USER",
+      targetId: renterId,
+      reason: "Kullanıcı iletişimde kaba davrandı.",
+      status: "REVIEWING",
+    },
+  });
 }
 
 // CLI girişi: `npm run seed` / `prisma db seed` bu dosyayı doğrudan çalıştırır;

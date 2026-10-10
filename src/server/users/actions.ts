@@ -3,11 +3,15 @@
 import { CredentialsSignin } from "next-auth";
 
 import { requireUser, signIn } from "../../lib/auth";
+import { fail, ok, type ActionResult } from "../../lib/result";
 import { firstIssue } from "../../lib/result";
 import { loginSchema } from "../../lib/validators/auth";
-import { registerUser, updateProfileCore } from "./service";
+import { registerUser, updateProfileCore, EmailNotVerifiedError, verifyEmail } from "./service";
+import { prisma } from "../../lib/prisma";
+import { createVerifyToken } from "../../lib/auth/tokens";
+import { sendRegisterVerify } from "../../lib/email/events";
 
-export type LoginState = { error: string | null; field?: string };
+export type LoginState = { error: string | null; field?: string; resendEmail?: string };
 export type RegisterState = {
   error: string | null;
   field?: string;
@@ -18,6 +22,7 @@ export type ProfileState = {
   field?: string;
   done: boolean;
 };
+export type VerifyEmailResult = ActionResult<{ verified: boolean }>;
 
 function formDataValue(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -40,6 +45,7 @@ function safeCallbackUrl(value: unknown): string {
  * Giriş formu eylemi: Zod (Türkçe hatalar) → Auth.js credentials sign-in.
  * Başarıda `signIn()` redirect fırlatır ve hiç dönmez; geçersiz kimlikte
  * `CredentialsSignin` yakalanıp Türkçe mesajla döner.
+ * E-posta doğrulanmamışsa özel hata + resend e-postası döner.
  */
 export async function loginAction(
   _prevState: LoginState,
@@ -63,6 +69,14 @@ export async function loginAction(
     });
   } catch (error) {
     if (error instanceof CredentialsSignin) {
+      // EmailNotVerifiedError cause olarak geliyor.
+      if (error.cause instanceof EmailNotVerifiedError) {
+        return {
+          error: "E-postanız doğrulanmamış.",
+          field: undefined,
+          resendEmail: error.cause.email,
+        };
+      }
       // Yanlış şifre, bilinmeyen e-posta ve banlı hesap aynı genel mesajda
       // birleşir (hesap varlığı sızdırılmaz).
       return { error: "E-posta veya şifre hatalı." };
@@ -113,4 +127,69 @@ export async function updateProfileAction(
     return { error: null, done: true };
   }
   return { error: result.error, field: result.field, done: false };
+}
+
+/**
+ * E-posta doğrulama eylemi: token'ı doğrular, kullanıcının emailVerified alanını
+ * günceller. Başarı/başarısızlık durumunu UI'ya döndürür.
+ */
+export async function verifyEmailAction(
+  _prevState: VerifyEmailResult,
+  formData: FormData,
+): Promise<VerifyEmailResult> {
+  const token = formData.get("token");
+  if (typeof token !== "string" || token.length === 0) {
+    return fail("Geçersiz doğrulama bağlantısı.");
+  }
+
+  const payload = await verifyEmail(token);
+  if (!payload) {
+    return fail("Doğrulama bağlantısı geçersiz veya süresi dolmuş.");
+  }
+
+  // Kullanıcıyı bul ve emailVerified'ı güncelle.
+  const user = await prisma.user.findUnique({ where: { email: payload.email } });
+  if (!user) {
+    return fail("Kullanıcı bulunamadı.");
+  }
+
+  if (user.emailVerified !== null) {
+    // Zaten doğrulanmış → yine de başarı say (idempotent).
+    return ok({ verified: true });
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerified: new Date() },
+  });
+
+  return ok({ verified: true });
+}
+
+/**
+ * Doğrulama e-postasını yeniden gönderir.
+ */
+export async function resendVerifyEmailAction(
+  _prevState: VerifyEmailResult,
+  formData: FormData,
+): Promise<VerifyEmailResult> {
+  const email = formData.get("email");
+  if (typeof email !== "string" || email.length === 0) {
+    return fail("E-posta adresi gerekli.");
+  }
+
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+  if (!user) {
+    // Güvenlik: kullanıcı yoksa da başarılıymiş gibi davran (enumaration engeli).
+    return ok({ verified: false });
+  }
+
+  if (user.emailVerified !== null) {
+    return fail("E-posta zaten doğrulanmış.");
+  }
+
+  const token = createVerifyToken(user.email);
+  sendRegisterVerify(user.email, token);
+
+  return ok({ verified: false });
 }

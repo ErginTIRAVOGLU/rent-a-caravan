@@ -21,9 +21,6 @@ type Props = {
 
 type Pending = "approve" | "reject" | "cancel" | null;
 
-const inputClassName =
-  "mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
-
 export function BookingActions({ bookingId, mode }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState<Pending>(null);
@@ -102,7 +99,7 @@ export function BookingActions({ bookingId, mode }: Props) {
             type="button"
             onClick={() => void handleApprove()}
             disabled={pending !== null}
-            className="min-h-10 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+            className="btn btn-success py-2"
           >
             {pending === "approve" ? "Onaylanıyor…" : "Onayla"}
           </button>
@@ -113,7 +110,7 @@ export function BookingActions({ bookingId, mode }: Props) {
               setError(null);
             }}
             disabled={pending !== null}
-            className="min-h-10 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+            className="btn btn-outline text-error border-error/30 hover:bg-error-bg py-2"
           >
             Reddet
           </button>
@@ -121,10 +118,10 @@ export function BookingActions({ bookingId, mode }: Props) {
       ) : null}
 
       {mode === "decide" && rejecting ? (
-        <div className="space-y-2 rounded-lg bg-gray-50 p-3">
+        <div className="space-y-2 rounded-lg bg-surface-low p-3">
           <label
             htmlFor={`reason-${bookingId}`}
-            className="block text-sm font-medium text-gray-700"
+            className="field-label"
           >
             Red gerekçesi (opsiyonel)
           </label>
@@ -135,14 +132,14 @@ export function BookingActions({ bookingId, mode }: Props) {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Kiracıya iletilecek gerekçe…"
-            className={inputClassName}
+            className="input"
           />
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => void handleReject()}
               disabled={pending !== null}
-              className="min-h-10 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+              className="btn btn-error py-2"
             >
               {pending === "reject" ? "Reddediliyor…" : "Reddet"}
             </button>
@@ -154,7 +151,7 @@ export function BookingActions({ bookingId, mode }: Props) {
                 setError(null);
               }}
               disabled={pending !== null}
-              className="min-h-10 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              className="btn btn-outline py-2"
             >
               Vazgeç
             </button>
@@ -167,14 +164,14 @@ export function BookingActions({ bookingId, mode }: Props) {
           type="button"
           onClick={() => void handleCancel()}
           disabled={pending !== null}
-          className="min-h-10 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+          className="btn btn-outline text-error border-error/30 hover:bg-error-bg py-2"
         >
           {pending === "cancel" ? "İptal ediliyor…" : "İptal Et"}
         </button>
       ) : null}
 
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-body-md text-error">
           {error}
         </p>
       ) : null}

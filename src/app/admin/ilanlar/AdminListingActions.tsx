@@ -27,6 +27,8 @@ export function AdminListingActions({ listingId, status }: Props) {
   const [pending, setPending] = useState<"approve" | "reject" | "pause" | null>(
     null,
   );
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   // Server action reddi (ağ/serileştirme/sunucu throw) için ortak TR mesajı.
@@ -50,14 +52,15 @@ export function AdminListingActions({ listingId, status }: Props) {
   }
 
   async function handleReject() {
-    const reason = window.prompt("Ret gerekçesi (zorunlu):");
-    if (reason === null) {
-      return; // kullanıcı vazgeçti
+    if (!rejecting) {
+      setRejecting(true);
+      setError(null);
+      return;
     }
     setPending("reject");
     setError(null);
     try {
-      const result = await rejectListing(listingId, reason);
+      const result = await rejectListing(listingId, reason.trim());
       if (!result.ok) {
         setError(result.error);
         return;
@@ -67,6 +70,8 @@ export function AdminListingActions({ listingId, status }: Props) {
       setError(HATA);
     } finally {
       setPending(null);
+      setRejecting(false);
+      setReason("");
     }
   }
 
@@ -94,41 +99,86 @@ export function AdminListingActions({ listingId, status }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex flex-wrap gap-2">
-        {status === "PENDING" ? (
-          <>
-            <button
-              type="button"
-              onClick={() => void handleApprove()}
-              disabled={pending !== null}
-              className="min-h-10 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-            >
-              {pending === "approve" ? "Onaylanıyor…" : "Onayla"}
-            </button>
+    <div className="mt-3 space-y-2">
+      {status === "PENDING" && !rejecting ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void handleApprove()}
+            disabled={pending !== null}
+            className="btn btn-success py-2"
+          >
+            {pending === "approve" ? "Onaylanıyor…" : "Onayla"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setRejecting(true);
+              setError(null);
+            }}
+            disabled={pending !== null}
+            className="btn btn-outline text-error border-error/30 hover:bg-error-bg py-2"
+          >
+            Reddet
+          </button>
+        </div>
+      ) : null}
+
+      {status === "PENDING" && rejecting ? (
+        <div className="space-y-2 rounded-lg bg-surface-low p-3">
+          <label
+            htmlFor={`reason-${listingId}`}
+            className="field-label"
+          >
+            Red gerekçesi (zorunlu)
+          </label>
+          <textarea
+            id={`reason-${listingId}`}
+            rows={2}
+            maxLength={1000}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="İlan sahibine iletilecek gerekçe…"
+            className="input"
+          />
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => void handleReject()}
               disabled={pending !== null}
-              className="min-h-10 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+              className="btn btn-error py-2"
             >
               {pending === "reject" ? "Reddediliyor…" : "Reddet"}
             </button>
-          </>
-        ) : null}
-        {status === "ACTIVE" ? (
-          <button
-            type="button"
-            onClick={() => void handlePause()}
-            disabled={pending !== null}
-            className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
-          >
-            {pending === "pause" ? "Duraklatılıyor…" : "Duraklat"}
-          </button>
-        ) : null}
-      </div>
+            <button
+              type="button"
+              onClick={() => {
+                setRejecting(false);
+                setReason("");
+                setError(null);
+              }}
+              disabled={pending !== null}
+              className="btn btn-outline py-2"
+            >
+              Vazgeç
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {status === "ACTIVE" ? (
+        <button
+          type="button"
+          onClick={() => void handlePause()}
+          disabled={pending !== null}
+          className="btn btn-outline text-info border-info/30 hover:bg-info-bg py-2"
+        >
+          {pending === "pause" ? "Duraklatılıyor…" : "Duraklat"}
+        </button>
+      ) : null}
+
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="text-body-md text-error">
           {error}
         </p>
       ) : null}

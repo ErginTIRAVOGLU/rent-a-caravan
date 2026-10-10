@@ -6,11 +6,8 @@ import { AccountNav } from "../../../components/AccountNav";
 import { ProfileForm } from "./ProfileForm";
 
 export const metadata: Metadata = {
-  title: "Profilim — Karavan Kiralama",
+  title: "Profil",
 };
-
-// Profil sayfası — sunucu bileşeni: mevcut ad/telefon form başlangıç değeri
-// olarak okunur; güncelleme `updateProfileAction` (requireUser kapılı) yapar.
 
 export default async function ProfilPage() {
   const sessionUser = await requireUser();
@@ -20,23 +17,22 @@ export default async function ProfilPage() {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="mx-auto w-full max-w-3xl px-4 py-8">
-        <header>
-          <h1 className="text-2xl font-bold text-gray-900">Profilim</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Adınızı ve telefonunuzu güncelleyin, şifrenizi değiştirin.
-          </p>
-        </header>
+    <div className="mx-auto w-full max-w-3xl px-4 py-8">
+      <header className="mb-6">
+        <span className="eyebrow">Hesabım</span>
+        <h1 className="mt-1 text-headline-lg font-bold text-primary">Profil</h1>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          Adınızı ve telefonunuzu güncelleyin, şifrenizi değiştirin.
+        </p>
+      </header>
 
-        <AccountNav current="profil" />
+      <AccountNav current="profil" />
 
-        <ProfileForm
-          email={user?.email ?? sessionUser.email}
-          initialName={user?.name ?? sessionUser.name}
-          initialPhone={user?.phone ?? ""}
-        />
-      </div>
-    </main>
+      <ProfileForm
+        email={user?.email ?? sessionUser.email}
+        initialName={user?.name ?? sessionUser.name}
+        initialPhone={user?.phone ?? ""}
+      />
+    </div>
   );
 }

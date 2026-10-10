@@ -36,22 +36,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${listing.title} — Karavan Kiralama` };
 }
 
-const cardClassName = "rounded-2xl bg-white p-4 shadow-sm sm:p-6";
-const sectionTitleClassName = "text-lg font-semibold text-gray-900";
+const cardClassName = "card p-5 sm:p-6";
+const sectionTitleClassName =
+  "flex items-center gap-2 text-title-md font-bold text-primary";
 
 /** Özet satırı (dl). */
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2">
-      <dt className="text-sm text-gray-500">{label}</dt>
-      <dd className="text-right text-sm font-medium text-gray-900">{value}</dd>
+      <dt className="text-body-md text-on-surface-variant">{label}</dt>
+      <dd className="text-right text-body-md font-semibold text-on-surface">
+        {value}
+      </dd>
     </div>
+  );
+}
+
+function SectionTitle({ icon, children }: { icon: string; children: string }) {
+  return (
+    <h2 className={sectionTitleClassName}>
+      <span className="material-symbols-outlined text-xl text-accent">
+        {icon}
+      </span>
+      {children}
+    </h2>
   );
 }
 
 export default async function IlanDetayPage({ params, searchParams }: Props) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const listing = await prisma.listing.findUnique({ where: { id } });
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    include: { owner: { select: { name: true } } },
+  });
   if (!listing || listing.status !== "ACTIVE") {
     notFound();
   }
@@ -88,198 +105,265 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
     .map((key) => AMENITIES.find((a) => a.key === key)?.label ?? key)
     .filter((label, index, all) => all.indexOf(label) === index);
 
+  // Tasarım-kartı istatistik satırı (design2) — veri aynı, sunum ayrı.
+  const stats = [
+    listing.year !== null
+      ? { icon: "event_available", value: String(listing.year), label: "Üretim yılı" }
+      : null,
+    { icon: "settings", value: TRANSMISSION_LABELS[listing.transmission], label: "Vites" },
+    { icon: "local_gas_station", value: FUEL_LABELS[listing.fuel], label: "Yakıt" },
+    { icon: "persons", value: `${listing.capacity} kişi`, label: "Kapasite" },
+    { icon: "card_membership", value: listing.licenseRequired, label: "Ehliyet" },
+    { icon: "calendar_month", value: `${listing.minRentalDays} gün`, label: "Min. kiralama" },
+  ].filter((stat): stat is NonNullable<typeof stat> => stat !== null);
+
+  const ownerInitial = (listing.owner.name || "İ").slice(0, 1).toUpperCase();
+
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-          <Link
-            href="/"
-            className="inline-flex min-h-10 items-center text-lg font-bold text-emerald-700 hover:text-emerald-800"
-          >
-            Karavan Kiralama
-          </Link>
-          <Link
-            href="/arama"
-            className="inline-flex min-h-10 items-center text-sm font-semibold text-gray-700 hover:text-emerald-700"
-          >
-            ← Aramaya dön
-          </Link>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-12">
+      {/* Breadcrumb */}
+      <nav
+        aria-label="Breadcrumb"
+        className="flex min-w-0 items-center gap-1.5 text-body-sm text-on-surface-variant"
+      >
+        <Link href="/" className="hover:text-primary">
+          Ana Sayfa
+        </Link>
+        <span className="material-symbols-outlined text-base text-outline">
+          chevron_right
+        </span>
+        <Link href="/arama" className="hover:text-primary">
+          Karavanlar
+        </Link>
+        <span className="material-symbols-outlined text-base text-outline">
+          chevron_right
+        </span>
+        <span className="truncate text-on-surface">{listing.title}</span>
+      </nav>
+
+      {/* Başlık bloğu */}
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-headline-lg font-bold text-primary">
+            {listing.title}
+          </h1>
+          <p className="mt-1.5 flex items-center gap-1.5 text-body-md text-on-surface-variant">
+            <span className="material-symbols-outlined text-base text-accent">
+              location_on
+            </span>
+            {location}
+          </p>
         </div>
-      </header>
+        <span className="badge badge-primary mt-1 text-body-sm">
+          {VEHICLE_TYPE_LABELS[listing.vehicleType]}
+        </span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className="chip">
+          <span className="material-symbols-outlined text-base text-secondary">
+            card_membership
+          </span>
+          Ehliyet: {listing.licenseRequired}
+        </span>
+        {listing.minDriverAge !== null ? (
+          <span className="chip">
+            <span className="material-symbols-outlined text-base text-secondary">
+              supervisor_account
+            </span>
+            Min. sürücü yaşı: {listing.minDriverAge}
+          </span>
+        ) : null}
+        <span className="chip">
+          <span className="material-symbols-outlined text-base text-secondary">
+            group
+          </span>
+          {listing.capacity} kişi
+        </span>
+      </div>
 
-      <div className="mx-auto w-full max-w-5xl px-4 py-6">
+      {/* Galeri */}
+      <div className="mt-5">
         <PhotoGallery photoUrls={listing.photoUrls} title={listing.title} />
+      </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          {/* Sol: içerik */}
-          <div className="space-y-6 lg:col-span-2">
-            <section className={cardClassName}>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {listing.title}
-                  </h1>
-                  <p className="mt-1 text-gray-600">{location}</p>
-                </div>
-                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-                  {VEHICLE_TYPE_LABELS[listing.vehicleType]}
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800">
-                  Ehliyet: {listing.licenseRequired}
-                </span>
-                {listing.minDriverAge !== null ? (
-                  <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800">
-                    Min. sürücü yaşı: {listing.minDriverAge}
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        {/* Sol: içerik */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* İstatistik satırı */}
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {stats.map((stat) => (
+              <div key={stat.label} className="card flex items-center gap-3 p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-deep">
+                  <span className="material-symbols-outlined text-xl">
+                    {stat.icon}
                   </span>
-                ) : null}
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800">
-                  {listing.capacity} kişi
                 </span>
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-on-surface">
+                    {stat.value}
+                  </p>
+                  <p className="text-body-sm text-on-surface-variant">
+                    {stat.label}
+                  </p>
+                </div>
               </div>
-            </section>
+            ))}
+          </section>
 
-            <section className={cardClassName}>
-              <h2 className={sectionTitleClassName}>Özellikler</h2>
-              <dl className="mt-2 divide-y divide-gray-100">
-                <Row
-                  label="Araç tipi"
-                  value={VEHICLE_TYPE_LABELS[listing.vehicleType]}
-                />
-                {brandModel ? <Row label="Marka / Model" value={brandModel} /> : null}
-                <Row
-                  label="Vites"
-                  value={TRANSMISSION_LABELS[listing.transmission]}
-                />
-                <Row label="Yakıt" value={FUEL_LABELS[listing.fuel]} />
-                <Row label="Kapasite" value={`${listing.capacity} kişi`} />
-                <Row
-                  label="Minimum kiralama"
-                  value={`${listing.minRentalDays} gün`}
-                />
-                {listing.year !== null ? (
-                  <Row label="Üretim yılı" value={String(listing.year)} />
-                ) : null}
-                {listing.weightKg !== null ? (
-                  <Row label="Ağırlık" value={`${listing.weightKg} kg`} />
-                ) : null}
-                {listing.lengthM !== null ? (
-                  <Row label="Uzunluk" value={`${listing.lengthM} m`} />
-                ) : null}
-              </dl>
-            </section>
+          {/* Detaylar */}
+          <section className={cardClassName}>
+            <SectionTitle icon="info">Detaylar</SectionTitle>
+            <dl className="mt-2 divide-y divide-surface-mid">
+              <Row
+                label="Araç tipi"
+                value={VEHICLE_TYPE_LABELS[listing.vehicleType]}
+              />
+              {brandModel ? <Row label="Marka / Model" value={brandModel} /> : null}
+              {listing.weightKg !== null ? (
+                <Row label="Ağırlık" value={`${listing.weightKg} kg`} />
+              ) : null}
+              {listing.lengthM !== null ? (
+                <Row label="Uzunluk" value={`${listing.lengthM} m`} />
+              ) : null}
+            </dl>
+          </section>
 
+          <section className={cardClassName}>
+            <SectionTitle icon="notes">Açıklama</SectionTitle>
+            <p className="mt-3 whitespace-pre-line break-words text-body-md leading-relaxed text-on-surface-variant">
+              {listing.description}
+            </p>
+          </section>
+
+          <section className={cardClassName}>
+            <SectionTitle icon="checklist">Olanaklar</SectionTitle>
+            {amenityLabels.length === 0 ? (
+              <p className="mt-3 text-body-md text-on-surface-variant">
+                Bu ilan için olanak belirtilmemiş.
+              </p>
+            ) : (
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {amenityLabels.map((label) => (
+                  <li key={label} className="chip border-accent/30 bg-accent-soft text-accent-deep">
+                    <span className="material-symbols-outlined text-base">
+                      check
+                    </span>
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {listing.houseRules ? (
             <section className={cardClassName}>
-              <h2 className={sectionTitleClassName}>Açıklama</h2>
-              <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-gray-700">
-                {listing.description}
+              <SectionTitle icon="gavel">Ev kuralları</SectionTitle>
+              <p className="mt-3 whitespace-pre-line break-words text-body-md leading-relaxed text-on-surface-variant">
+                {listing.houseRules}
               </p>
             </section>
+          ) : null}
 
+          <section className={cardClassName}>
+            <SectionTitle icon="star">Yorumlar</SectionTitle>
+            <p className="mt-3 text-body-md text-on-surface-variant">
+              Henüz yorum yok.
+            </p>
+          </section>
+        </div>
+
+        {/* Sağ: fiyat özeti + talep + sahip */}
+        <aside className="lg:col-span-1">
+          <div className="space-y-4 lg:sticky lg:top-24">
             <section className={cardClassName}>
-              <h2 className={sectionTitleClassName}>Olanaklar</h2>
-              {amenityLabels.length === 0 ? (
-                <p className="mt-2 text-sm text-gray-500">
-                  Bu ilan için olanak belirtilmemiş.
-                </p>
+              {stayNights !== null && stayTotal !== null ? (
+                <div>
+                  <p className="flex items-center gap-1.5 text-body-md text-on-surface-variant">
+                    <span className="material-symbols-outlined text-base text-secondary">
+                      date_range
+                    </span>
+                    {parsed.baslangic} → {parsed.bitis}
+                  </p>
+                  <p className="mt-3 text-body-md text-on-surface-variant">
+                    {formatTRY(nightlyPrice)} × {stayNights} gece
+                  </p>
+                  <p className="mt-1">
+                    <span className="text-price text-primary">
+                      {formatTRY(stayTotal)}
+                    </span>
+                    <span className="text-body-sm text-on-surface-variant">
+                      {" "}
+                      toplam
+                    </span>
+                  </p>
+                </div>
               ) : (
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {amenityLabels.map((label) => (
-                    <li
-                      key={label}
-                      className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"
-                    >
-                      {label}
-                    </li>
-                  ))}
-                </ul>
+                <div>
+                  <p>
+                    <span className="text-price text-primary">
+                      {formatTRY(nightlyPrice)}
+                    </span>
+                    <span className="text-body-sm text-on-surface-variant">
+                      {" "}
+                      / gece
+                    </span>
+                  </p>
+                  <p className="mt-1 text-body-sm text-on-surface-variant">
+                    {listing.minRentalDays} gün minimum kiralama
+                  </p>
+                </div>
+              )}
+
+              {/* Talep formu (T9): oturum yoksa giriş çağrısı, sahipse not. */}
+              {user ? (
+                user.id === listing.ownerId ? (
+                  <div className="mt-4 rounded-lg bg-surface-low p-4 text-body-md text-on-surface-variant">
+                    <p>Bu sizin ilanınız; kendi ilanınıza talep oluşturamazsınız.</p>
+                  </div>
+                ) : (
+                  <BookingRequestForm
+                    listingId={listing.id}
+                    minRentalDays={listing.minRentalDays}
+                    capacity={listing.capacity}
+                    nightlyPrice={nightlyPrice}
+                  />
+                )
+              ) : (
+                <div className="mt-4 rounded-lg bg-surface-low p-4 text-body-md text-on-surface-variant">
+                  <p>Talep göndermek için giriş yapın.</p>
+                  <Link href="/giris" className="btn btn-primary btn-sm mt-3">
+                    Giriş Yap
+                  </Link>
+                </div>
               )}
             </section>
 
-            {listing.houseRules ? (
-              <section className={cardClassName}>
-                <h2 className={sectionTitleClassName}>Ev kuralları</h2>
-                <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-gray-700">
-                  {listing.houseRules}
-                </p>
-              </section>
-            ) : null}
-
+            {/* İlan sahibi */}
             <section className={cardClassName}>
-              <h2 className={sectionTitleClassName}>Yorumlar</h2>
-              <p className="mt-2 text-sm text-gray-500">Henüz yorum yok.</p>
+              <div className="flex items-center gap-3">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-title-md font-bold text-white">
+                  {ownerInitial}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-on-surface">
+                    {listing.owner.name}
+                  </p>
+                  <span className="badge badge-success mt-0.5">
+                    <span className="material-symbols-outlined text-sm">
+                      verified
+                    </span>
+                    İlan sahibi
+                  </span>
+                </div>
+              </div>
+              <p className="mt-3 text-body-sm text-on-surface-variant">
+                Ödeme ve teslim detayları ilan sahibiyle doğrudan
+                konuşulur; platform ödeme işlemez.
+              </p>
             </section>
           </div>
-
-          {/* Sağ: fiyat özeti + talep */}
-          <aside className="lg:col-span-1">
-            <div className="space-y-4 lg:sticky lg:top-6">
-              <section className={cardClassName}>
-                {stayNights !== null && stayTotal !== null ? (
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {parsed.baslangic} → {parsed.bitis}
-                    </p>
-                    <p className="mt-2 text-sm text-gray-700">
-                      {formatTRY(nightlyPrice)} × {stayNights} gece
-                    </p>
-                    <p className="mt-1">
-                      <span className="text-xl font-bold text-gray-900">
-                        {formatTRY(stayTotal)}
-                      </span>
-                      <span className="text-sm text-gray-500"> toplam</span>
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p>
-                      <span className="text-2xl font-bold text-gray-900">
-                        {formatTRY(nightlyPrice)}
-                      </span>
-                      <span className="text-sm text-gray-500"> / gece</span>
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      {listing.minRentalDays} gün minimum kiralama
-                    </p>
-                  </div>
-                )}
-
-                {/* Talep formu (T9): oturum yoksa giriş çağrısı, sahipse not. */}
-                {user ? (
-                  user.id === listing.ownerId ? (
-                    <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-                      <p>Bu sizin ilanınız; kendi ilanınıza talep oluşturamazsınız.</p>
-                    </div>
-                  ) : (
-                    <div className="mt-4">
-                      <BookingRequestForm
-                        listingId={listing.id}
-                        minRentalDays={listing.minRentalDays}
-                        capacity={listing.capacity}
-                        nightlyPrice={nightlyPrice}
-                      />
-                    </div>
-                  )
-                ) : (
-                  <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-                    <p>
-                      Talep göndermek için{" "}
-                      <Link
-                        href="/giris"
-                        className="font-semibold text-emerald-700 hover:underline"
-                      >
-                        giriş yapın
-                      </Link>
-                      .
-                    </p>
-                  </div>
-                )}
-              </section>
-            </div>
-          </aside>
-        </div>
+        </aside>
       </div>
-    </main>
+    </div>
   );
 }

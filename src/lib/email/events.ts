@@ -4,6 +4,7 @@ import {
   bookingRequestedTemplate,
   bookingStatusChangedTemplate,
   listingStatusChangedTemplate,
+  registerVerifyTemplate,
 } from "./templates";
 import type {
   BookingRequestedData,
@@ -48,5 +49,23 @@ export async function sendListingStatusChanged(
     await client.send(listingStatusChangedTemplate(to, data));
   } catch (error) {
     console.error("[email] sendListingStatusChanged gönderimi başarısız:", error);
+  }
+}
+
+/**
+ * Kayıt sonrası e-posta doğrulama linki gönderir.
+ * Hata ana akışı düşürmez (try/catch ile sarılır).
+ */
+export async function sendRegisterVerify(
+  to: string,
+  token: string,
+  client: EmailClient = resendClient,
+): Promise<void> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const verifyUrl = `${baseUrl}/dogrula?token=${token}`;
+    await client.send(registerVerifyTemplate(to, { verifyUrl, expiryHours: 24 }));
+  } catch (error) {
+    console.error("[email] sendRegisterVerify gönderimi başarısız:", error);
   }
 }

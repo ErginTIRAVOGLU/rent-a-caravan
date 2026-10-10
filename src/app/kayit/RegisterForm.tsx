@@ -8,8 +8,7 @@ import {
   type RegisterState,
 } from "../../server/users/actions";
 
-const inputClassName =
-  "mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
+const inputClassName = "input min-h-11 py-3";
 
 const initialState: RegisterState = { error: null, done: false };
 
@@ -24,13 +23,13 @@ export function RegisterForm() {
       <div className="space-y-4">
         <p
           role="status"
-          className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+          className="rounded-lg bg-success-bg px-4 py-3 text-body-md text-success"
         >
           Kayıt başarılı! Şimdi giriş yapabilirsiniz.
         </p>
         <Link
           href="/giris"
-          className="flex min-h-11 w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
+          className="btn btn-primary w-full py-3"
         >
           Giriş sayfasına git
         </Link>
@@ -43,7 +42,7 @@ export function RegisterForm() {
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
+          className="field-label"
         >
           Ad Soyad
         </label>
@@ -56,14 +55,14 @@ export function RegisterForm() {
           className={inputClassName}
         />
         {state.field === "name" && state.error ? (
-          <p className="mt-1 text-sm text-red-600">{state.error}</p>
+          <p className="field-error">{state.error}</p>
         ) : null}
       </div>
 
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
+          className="field-label"
         >
           E-posta
         </label>
@@ -76,14 +75,14 @@ export function RegisterForm() {
           className={inputClassName}
         />
         {state.field === "email" && state.error ? (
-          <p className="mt-1 text-sm text-red-600">{state.error}</p>
+          <p className="field-error">{state.error}</p>
         ) : null}
       </div>
 
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
+          className="field-label"
         >
           Şifre
         </label>
@@ -97,18 +96,18 @@ export function RegisterForm() {
           className={inputClassName}
           aria-describedby="password-help"
         />
-        <p id="password-help" className="mt-1 text-xs text-gray-500">
+        <p id="password-help" className="field-error text-on-surface-variant">
           En az 8 karakter.
         </p>
         {state.field === "password" && state.error ? (
-          <p className="mt-1 text-sm text-red-600">{state.error}</p>
+          <p className="field-error">{state.error}</p>
         ) : null}
       </div>
 
       {state.error && !state.field ? (
         <p
           role="alert"
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="rounded-lg bg-error-bg px-3 py-2 text-body-md text-error"
         >
           {state.error}
         </p>
@@ -117,7 +116,7 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+        className="btn btn-primary w-full py-3"
       >
         {pending ? "Kayıt yapılıyor…" : "Üye ol"}
       </button>

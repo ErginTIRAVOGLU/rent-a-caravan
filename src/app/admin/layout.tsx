@@ -8,8 +8,12 @@ export const metadata: Metadata = {
   title: "Yönetim — Karavan Kiralama",
 };
 
-const NAV_LINK =
-  "rounded-lg px-3 py-2 text-sm font-semibold text-gray-200 hover:bg-gray-800 hover:text-white";
+const NAV_LINKS = [
+  { href: "/admin", label: "Genel Bakış", icon: "dashboard" },
+  { href: "/admin/ilanlar", label: "İlanlar", icon: "caravan" },
+  { href: "/admin/kullanicilar", label: "Kullanıcılar", icon: "group" },
+  { href: "/admin/ayarlar", label: "Ayarlar", icon: "settings" },
+] as const;
 
 /**
  * Yönetim paneli sarmalayıcısı: her istekte `requireAdmin()` — oturum yoksa
@@ -22,24 +26,27 @@ export default async function AdminLayout({
 }) {
   await requireAdmin();
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-gray-900">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-lg font-bold text-white">Yönetim Paneli</span>
-          <nav className="flex flex-wrap gap-1 sm:gap-2">
-            <Link href="/admin" className={NAV_LINK}>
-              Genel Bakış
-            </Link>
-            <Link href="/admin/ilanlar" className={NAV_LINK}>
-              İlanlar
-            </Link>
-            <Link href="/admin/kullanicilar" className={NAV_LINK}>
-              Kullanıcılar
-            </Link>
+    <div className="flex min-h-screen flex-col">
+      <header className="border-b border-surface-mid bg-surface-low">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-12">
+          <Link href="/admin" className="text-headline-md font-bold text-primary">
+            Yönetim Paneli
+          </Link>
+          <nav className="flex gap-1">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-label-lg text-on-surface-variant transition-colors hover:bg-surface-mid hover:text-primary"
+              >
+                <span className="material-symbols-outlined text-lg">{link.icon}</span>
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
       </header>
-      {children}
-    </main>
+      <main className="flex-1">{children}</main>
+    </div>
   );
 }

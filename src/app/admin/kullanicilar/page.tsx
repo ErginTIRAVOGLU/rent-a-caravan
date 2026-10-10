@@ -5,7 +5,7 @@ import { prisma } from "../../../lib/prisma";
 import { UserBanActions } from "./UserBanActions";
 
 export const metadata: Metadata = {
-  title: "Kullanıcılar — Yönetim",
+  title: "Kullanıcılar",
 };
 
 /** @db/timestamp → DD.MM.YYYY (UTC; saat dilimi kaymaz). */
@@ -36,52 +36,52 @@ export default async function AdminUsersPage() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900">Kullanıcılar</h1>
-      <p className="mt-1 text-sm text-gray-600">
-        Kayıtlı hesapları inceleyin; gerektiğinde banlayın veya banı açın.
-      </p>
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-12">
+      <header className="mb-6">
+        <span className="eyebrow">Yönetim</span>
+        <h1 className="mt-1 text-headline-lg font-bold text-primary">Kullanıcılar</h1>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          Kayıtlı hesapları inceleyin; gerektiğinde banlayın veya banı açın.
+        </p>
+      </header>
 
       {users.length === 0 ? (
-        <div className="mt-8 rounded-2xl bg-white p-8 text-center shadow-sm">
-          <p className="text-gray-600">Kayıtlı kullanıcı yok.</p>
+        <div className="card mt-8 p-8 text-center">
+          <span className="material-symbols-outlined text-3xl text-outline">people</span>
+          <p className="mt-2 font-semibold text-on-surface">Kayıtlı kullanıcı yok</p>
         </div>
       ) : (
         <ul className="mt-6 space-y-3">
           {users.map((user) => (
             <li
               key={user.id}
-              className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5"
+              className="card p-4 sm:p-5 sm:flex sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate font-semibold text-gray-900">
-                    {user.name}
-                  </h2>
+                  <h2 className="truncate font-bold text-on-surface">{user.name}</h2>
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    className={`badge ${
                       user.role === "ADMIN"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-700"
+                        ? "badge-primary"
+                        : "badge-neutral"
                     }`}
                   >
                     {user.role === "ADMIN" ? "Yönetici" : "Üye"}
                   </span>
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      user.isBanned
-                        ? "bg-red-100 text-red-700"
-                        : "bg-emerald-100 text-emerald-800"
+                    className={`badge ${
+                      user.isBanned ? "badge-error" : "badge-success"
                     }`}
                   >
                     {user.isBanned ? "Banlı" : "Aktif"}
                   </span>
                 </div>
-                <p className="mt-1 truncate text-sm text-gray-600">
+                <p className="mt-1 truncate text-body-md text-on-surface-variant">
                   {user.email} · Üyelik: {formatDate(user.createdAt)}
                 </p>
               </div>
-              <div className="shrink-0">
+              <div className="shrink-0 mt-3 sm:mt-0">
                 <UserBanActions
                   userId={user.id}
                   isBanned={user.isBanned}

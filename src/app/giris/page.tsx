@@ -4,7 +4,7 @@ import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = {
-  title: "Giriş Yap — Karavan Kiralama",
+  title: "Giriş Yap",
 };
 
 // Auth.js hata kodları → Türkçe mesajlar (OAuth hataları ?error= ile gelir).
@@ -55,25 +55,30 @@ export default async function GirisPage({ searchParams }: Props) {
   const callbackUrl = toAppPath(params.callbackUrl);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="text-2xl font-bold text-gray-900">Giriş Yap</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Rezervasyon ve ilan yönetimi için hesabınıza giriş yapın.
-        </p>
+    <main className="flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="card p-6 sm:p-8">
+          <span className="badge badge-accent">Hesabınıza giriş</span>
+          <h1 className="mt-3 text-headline-md font-bold text-primary">
+            Giriş Yap
+          </h1>
+          <p className="mt-1 text-body-md text-on-surface-variant">
+            Rezervasyon ve ilan yönetimi için hesabınıza giriş yapın.
+          </p>
 
-        <div className="mt-6">
-          <LoginForm
-            callbackUrl={callbackUrl}
-            serverError={oauthErrorMessage(params.error)}
-          />
+          <div className="mt-6">
+            <LoginForm
+              callbackUrl={callbackUrl}
+              serverError={oauthErrorMessage(params.error)}
+            />
+          </div>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-body-md text-on-surface-variant">
           Hesabınız yok mu?{" "}
           <Link
             href="/kayit"
-            className="font-semibold text-emerald-600 hover:underline"
+            className="font-semibold text-secondary hover:underline"
           >
             Üye olun
           </Link>

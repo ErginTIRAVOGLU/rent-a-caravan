@@ -6,7 +6,7 @@ import { prisma } from "../../../lib/prisma";
 import { AdminListingActions } from "./AdminListingActions";
 
 export const metadata: Metadata = {
-  title: "İlan Moderasyonu — Yönetim",
+  title: "İlanlar",
 };
 
 // Durum rozetleri — arayüz metni Türkçe, DB değeri İngilizce
@@ -20,11 +20,11 @@ const STATUS_LABELS: Record<ListingStatus, string> = {
 };
 
 const STATUS_BADGES: Record<ListingStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-700",
-  PENDING: "bg-amber-100 text-amber-800",
-  ACTIVE: "bg-emerald-100 text-emerald-800",
-  REJECTED: "bg-red-100 text-red-700",
-  PAUSED: "bg-slate-200 text-slate-700",
+  DRAFT: "badge badge-neutral",
+  PENDING: "badge badge-warning",
+  ACTIVE: "badge badge-success",
+  REJECTED: "badge badge-error",
+  PAUSED: "badge badge-info",
 };
 
 /**
@@ -55,39 +55,37 @@ export default async function AdminListingsPage() {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900">İlanlar</h1>
-      <p className="mt-1 text-sm text-gray-600">
-        Bekleyen ilanları inceleyin, onaylayın veya gerekçeyle reddedin.
-      </p>
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-12">
+      <header className="mb-6">
+        <span className="eyebrow">Yönetim</span>
+        <h1 className="mt-1 text-headline-lg font-bold text-primary">İlanlar</h1>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          Bekleyen ilanları inceleyin, onaylayın veya gerekçeyle reddedin.
+        </p>
+      </header>
 
       {/* İnceleme kuyruğu */}
       <section className="mt-8">
-        <h2 className="text-lg font-bold text-gray-900">
-          İncelemedeki ilanlar ({pending.length})
-        </h2>
+        <h2 className="section-title">İncelemedeki ilanlar ({pending.length})</h2>
         {pending.length === 0 ? (
-          <div className="mt-3 rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="text-gray-600">İnceleme sırasındaki ilan yok.</p>
+          <div className="card mt-3 p-6 text-center">
+            <span className="material-symbols-outlined text-3xl text-outline">inbox</span>
+            <p className="mt-2 font-semibold text-on-surface">İnceleme sırasındaki ilan yok</p>
           </div>
         ) : (
           <ul className="mt-3 space-y-4">
             {pending.map((listing) => (
-              <li key={listing.id} className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+              <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-semibold text-gray-900">
-                      {listing.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <p className="mt-1 text-body-md text-on-surface-variant">
                       {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
                       /gece · {listing.capacity} kişi · {listing.owner.name} (
                       {listing.owner.email})
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGES[listing.status]}`}
-                  >
+                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
                     {STATUS_LABELS[listing.status]}
                   </span>
                 </div>
@@ -105,30 +103,25 @@ export default async function AdminListingsPage() {
 
       {/* Yayındaki ilanlar — duraklatma adayları */}
       <section className="mt-10">
-        <h2 className="text-lg font-bold text-gray-900">
-          Yayındaki ilanlar ({active.length})
-        </h2>
+        <h2 className="section-title">Yayındaki ilanlar ({active.length})</h2>
         {active.length === 0 ? (
-          <div className="mt-3 rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="text-gray-600">Yayında ilan yok.</p>
+          <div className="card mt-3 p-6 text-center">
+            <span className="material-symbols-outlined text-3xl text-outline">check_circle</span>
+            <p className="mt-2 font-semibold text-on-surface">Yayında ilan yok</p>
           </div>
         ) : (
           <ul className="mt-3 space-y-4">
             {active.map((listing) => (
-              <li key={listing.id} className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+              <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-semibold text-gray-900">
-                      {listing.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <p className="mt-1 text-body-md text-on-surface-variant">
                       {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
                       /gece · {listing.owner.name}
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGES[listing.status]}`}
-                  >
+                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
                     {STATUS_LABELS[listing.status]}
                   </span>
                 </div>
@@ -146,35 +139,30 @@ export default async function AdminListingsPage() {
 
       {/* Red geçmişi — salt okunur */}
       <section className="mt-10">
-        <h2 className="text-lg font-bold text-gray-900">
-          Reddedilen ilanlar ({rejected.length})
-        </h2>
+        <h2 className="section-title">Reddedilen ilanlar ({rejected.length})</h2>
         {rejected.length === 0 ? (
-          <div className="mt-3 rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="text-gray-600">Red geçmişi boş.</p>
+          <div className="card mt-3 p-6 text-center">
+            <span className="material-symbols-outlined text-3xl text-outline">block</span>
+            <p className="mt-2 font-semibold text-on-surface">Red geçmişi boş</p>
           </div>
         ) : (
           <ul className="mt-3 space-y-4">
             {rejected.map((listing) => (
-              <li key={listing.id} className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+              <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-semibold text-gray-900">
-                      {listing.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <p className="mt-1 text-body-md text-on-surface-variant">
                       {listing.city} · {listing.owner.name} (
                       {listing.owner.email})
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGES[listing.status]}`}
-                  >
+                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
                     {STATUS_LABELS[listing.status]}
                   </span>
                 </div>
                 {listing.rejectionReason ? (
-                  <p className="mt-3 break-words rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                  <p className="mt-3 break-words rounded-lg bg-error-bg p-3 text-body-md text-error">
                     Red gerekçesi: {listing.rejectionReason}
                   </p>
                 ) : null}

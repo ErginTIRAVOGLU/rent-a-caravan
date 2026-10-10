@@ -1,0 +1,9 @@
+packages:
+  - .
+
+allowBuilds:
+  next: true
+  sharp: true
+  '@tailwindcss/oxide': true
+  lightningcss: true
+  unrs-resolver: true

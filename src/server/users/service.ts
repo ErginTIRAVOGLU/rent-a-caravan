@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { compare, hash } from "bcryptjs";
+import { createHmac, timingSafeEqual } from "crypto";
 
 import { prisma } from "../../lib/prisma";
 import { fail, ok, type ActionResult } from "../../lib/result";
@@ -9,6 +10,18 @@ import {
   type RegisterInput,
 } from "../../lib/validators/auth";
 import { updateProfileSchema } from "../../lib/validators/profile";
+import { createVerifyToken } from "../../lib/auth/tokens";
+
+/**
+ * E-posta doğrulanmamış hatası — loginAction tarafından yakalanır
+ * ve "E-postanız doğrulanmamış." mesajı + resend butonu ile gösterilir.
+ */
+export class EmailNotVerifiedError extends Error {
+  constructor(public readonly email: string) {
+    super("E-posta doğrulanmamış");
+    this.name = "EmailNotVerifiedError";
+  }
+}
 
 /**
  * Oturumdaki kimlik. Sözleşme (plan §Task 3):
@@ -23,7 +36,7 @@ export type SessionUser = {
   isBanned: boolean;
 };
 
-function normalizeEmail(email: string): string {
+export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
@@ -52,8 +65,9 @@ function isDuplicateEmailError(error: unknown): boolean {
 
 /**
  * E-posta + şifre ile kimlik doğrulama (test edilen çekirdek).
- * Bilinmeyen e-posta, şifresiz (Google) hesap, banlı hesap veya yanlış
+ * Bilinmeyen e-posta, şifresiz (Google) hesap, banlı hesap, yanlış
  * şifre → `null`.
+ * Doğrulanmamış e-posta → `EmailNotVerifiedError` fırlatır.
  */
 export async function verifyCredentials(
   email: string,
@@ -66,6 +80,10 @@ export async function verifyCredentials(
   if (!user || !user.passwordHash || user.isBanned) {
     return null;
   }
+  // E-posta doğrulama engeli: emailVerified=null → özel hata fırlat.
+  if (user.emailVerified === null) {
+    throw new EmailNotVerifiedError(user.email);
+  }
   const valid = await compare(password, user.passwordHash);
   if (!valid) {
     return null;
@@ -77,6 +95,7 @@ export async function verifyCredentials(
  * Yeni üye kaydı: Zod doğrulama → tekil e-posta kontrolü → bcrypt hash.
  * Düz metin şifre asla DB'ye yazılmaz; `role` her zaman USER'dır
  * (ADMIN yalnız seed'den/DB'den gelir).
+ * Kayıt başarılı olursa doğrulama e-postası gönderilir.
  */
 export async function registerUser(
   input: RegisterInput,
@@ -101,6 +120,10 @@ export async function registerUser(
         role: "USER",
       },
     });
+    // Doğrulama e-postasını arka planda gönder (hata ana akışı düşürmez).
+    const { sendRegisterVerify } = await import("../../lib/email/events");
+    const token = createVerifyToken(user.email);
+    sendRegisterVerify(user.email, token);
     return ok(toSessionUser(user));
   } catch (error) {
     // Yarış durumunda da aynı Türkçe/alan hatası (unique index P2002).
@@ -108,6 +131,51 @@ export async function registerUser(
       return fail("Bu e-posta adresi zaten kayıtlı.", "email");
     }
     throw error;
+  }
+}
+
+/**
+ * HMAC-SHA256 ile e-posta doğrulama linki imzalar/doğrular.
+ * Payload: `{ email, exp }` (exp = Unix saniyesi, 24 saat ömür).
+ * İmza: `crypto.createHmac('sha256', AUTH_SECRET)`.
+ * Döndürür: `{ email }` doğrulama başarılıysa, aksi halde `null`.
+ * AUTH_SECRET yoksa throw eder (config error = crash early).
+ */
+export async function verifyEmail(token: string): Promise<{ email: string } | null> {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    throw new Error("AUTH_SECRET tanımlı değil");
+  }
+
+  try {
+    const [payloadB64, signature] = token.split(".");
+    if (!payloadB64 || !signature) {
+      return null;
+    }
+
+    // İmzayı doğrula (timing-safe).
+    const expectedSignature = createHmac("sha256", secret)
+      .update(payloadB64)
+      .digest("base64url");
+    if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+      return null;
+    }
+
+    const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString());
+    const { email, exp } = payload as { email?: string; exp?: number };
+
+    if (!email || typeof exp !== "number") {
+      return null;
+    }
+
+    // Süre dolmuş mu?
+    if (Date.now() / 1000 > exp) {
+      return null;
+    }
+
+    return { email: normalizeEmail(email) };
+  } catch {
+    return null;
   }
 }
 
@@ -123,6 +191,7 @@ export type GoogleProfile = {
  * e-postası kayıtlıysa googleId'si bağlanır. Böylece `SessionUser.id`
  * her zaman gerçek DB kimliği olur (sonraki görevlerin FK'ları için).
  * Banlı hesap → fail (oturum kurulmaz).
+ * E-posta henüz doğrulanmamışsa (emailVerified=null), giriş anında doğrulanır.
  */
 export async function linkGoogleUser(
   profile: GoogleProfile,
@@ -154,6 +223,9 @@ export async function linkGoogleUser(
               data: {
                 googleId: profile.googleId,
                 avatarUrl: existing.avatarUrl ?? profile.avatarUrl,
+                // Google ile giriş yapan kullanıcının e-postası Google tarafından
+                // doğrulanmış sayılır → emailVerified ayarla.
+                emailVerified: existing.emailVerified ?? new Date(),
               },
             });
       return ok(toSessionUser(user));
@@ -166,6 +238,9 @@ export async function linkGoogleUser(
         googleId: profile.googleId,
         avatarUrl: profile.avatarUrl,
         role: "USER",
+        // Google ile kayıt olan kullanıcının e-postası Google tarafından
+        // doğrulanmış sayılır → emailVerified ayarla.
+        emailVerified: new Date(),
       },
     });
     return ok(toSessionUser(user));
@@ -184,7 +259,7 @@ export async function linkGoogleUser(
         }
         const updated = await prisma.user.update({
           where: { id: conflict.id },
-          data: { email, name: profile.name.trim() || conflict.name, avatarUrl: profile.avatarUrl ?? conflict.avatarUrl },
+          data: { email, name: profile.name.trim() || conflict.name, avatarUrl: profile.avatarUrl ?? conflict.avatarUrl, emailVerified: conflict.emailVerified ?? new Date() },
         });
         return ok(toSessionUser(updated));
       }

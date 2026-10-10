@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ListingCard } from "../../components/ListingCard";
 import { SearchFilters } from "../../components/SearchFilters";
+import { VEHICLE_TYPE_LABELS } from "../../lib/labels";
 import {
   SEARCH_PAGE_SIZE,
   parseSearchParams,
@@ -49,10 +50,61 @@ function pageHref(query: RawQuery, page: number): string {
   return qs ? `/arama?${qs}` : "/arama";
 }
 
-const gridClassName =
-  "mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
+/** Belirli filtreyi URL'den düşerek "x" ile kaldırma linki üretir. */
+function withoutFilter(query: RawQuery, drop: (typeof FILTER_KEYS)[number]): string {
+  const params = new URLSearchParams();
+  for (const key of FILTER_KEYS) {
+    if (key === drop) continue;
+    const value = firstValue(query[key]);
+    if (value !== "") {
+      params.set(key, value);
+    }
+  }
+  const qs = params.toString();
+  return qs ? `/arama?${qs}` : "/arama";
+}
+
+/** Uygulanan filtrelerin görünen etiketleri (chip'ler). */
+function activeFilterChips(query: RawQuery): Array<{
+  key: (typeof FILTER_KEYS)[number];
+  label: string;
+}> {
+  const chips: Array<{ key: (typeof FILTER_KEYS)[number]; label: string }> = [];
+  for (const key of FILTER_KEYS) {
+    const value = firstValue(query[key]);
+    if (value === "") continue;
+    switch (key) {
+      case "sehir":
+        chips.push({ key, label: `Şehir: ${value}` });
+        break;
+      case "baslangic":
+        chips.push({ key, label: `Giriş: ${value}` });
+        break;
+      case "bitis":
+        chips.push({ key, label: `Çıkış: ${value}` });
+        break;
+      case "kisi":
+        chips.push({ key, label: `${value} kişi` });
+        break;
+      case "minFiyat":
+        chips.push({ key, label: `Min ₺${value}` });
+        break;
+      case "maxFiyat":
+        chips.push({ key, label: `Max ₺${value}` });
+        break;
+      case "aracTipi":
+        chips.push({
+          key,
+          label: VEHICLE_TYPE_LABELS[value as keyof typeof VEHICLE_TYPE_LABELS] ?? value,
+        });
+        break;
+    }
+  }
+  return chips;
+}
+
 const pageLinkClassName =
-  "inline-flex min-h-10 items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-emerald-400 disabled:opacity-50";
+  "inline-flex min-h-10 items-center rounded-lg border border-outline-variant bg-white px-4 py-2 text-label-lg text-primary hover:bg-surface-low disabled:opacity-50";
 
 export default async function AramaPage({
   searchParams,
@@ -80,6 +132,13 @@ export default async function AramaPage({
     aracTipi: firstValue(query.aracTipi),
   };
 
+  const chips = activeFilterChips(query);
+  const sehir = firstValue(query.sehir);
+  const headline =
+    total === 0
+      ? "Eşleşen karavan bulunamadı"
+      : `${sehir ? `${sehir} için ` : ""}${total} karavan bulundu`;
+
   // Fiyat özeti yalnız doğrulanmış (parsed) tarihlerle kurulur — ham query'den
   // gelen geçersiz tarih kart linklerine taşınmaz.
   const stay =
@@ -88,103 +147,150 @@ export default async function AramaPage({
       : undefined;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
-          <Link
-            href="/"
-            className="inline-flex min-h-10 items-center text-lg font-bold text-emerald-700 hover:text-emerald-800"
-          >
-            Karavan Kiralama
-          </Link>
-          <Link
-            href="/giris"
-            className="inline-flex min-h-10 items-center text-sm font-semibold text-gray-700 hover:text-emerald-700"
-          >
-            Giriş Yap
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto w-full max-w-6xl px-4 py-6">
-        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
-          <SearchFilters initial={initial} />
-        </div>
-
-        <p className="mt-5 text-sm text-gray-600" aria-live="polite">
-          {total === 0
-            ? "Eşleşen ilan bulunamadı."
-            : `${total} ilan bulundu${
-                page > 1 ? ` · sayfa ${page}/${totalPages}` : ""
-              }`}
-        </p>
-
-        {!hasResults && total === 0 ? (
-          <div className="mt-4 rounded-2xl bg-white p-8 text-center shadow-sm">
-            <p className="font-semibold text-gray-900">
-              Sonuç bulunamadı
-            </p>
-            <p className="mt-1 text-sm text-gray-600">
-              Filtreleri gevşetmeyi (tarih veya fiyat aralığını genişletmeyi)
-              deneyin.
-            </p>
-          </div>
-        ) : !hasResults ? (
-          /* sayfa sayısı aşıldı (ör. ?sayfa=99) */
-          <div className="mt-4 rounded-2xl bg-white p-8 text-center shadow-sm">
-            <p className="text-gray-600">Bu sayfada ilan yok.</p>
-            <Link
-              href={pageHref(query, 1)}
-              className="mt-3 inline-block font-semibold text-emerald-700 hover:underline"
-            >
-              İlk sayfaya dön →
-            </Link>
-          </div>
-        ) : (
-          <ul className={gridClassName}>
-            {items.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} stay={stay} />
-            ))}
-          </ul>
-        )}
-
-        {totalPages > 1 ? (
-          <nav
-            className="mt-6 flex items-center justify-center gap-3"
-            aria-label="Sayfalama"
-          >
-            {prevPage >= 1 ? (
-              <Link
-                href={pageHref(query, prevPage)}
-                rel="prev"
-                className={pageLinkClassName}
-              >
-                ← Önceki
-              </Link>
-            ) : (
-              <span className={`${pageLinkClassName} cursor-default`}>
-                ← Önceki
-              </span>
-            )}
-            <span className="text-sm text-gray-600">
-              Sayfa {Math.min(page, totalPages)} / {totalPages}
-            </span>
-            {page < totalPages ? (
-              <Link
-                href={pageHref(query, page + 1)}
-                rel="next"
-                className={pageLinkClassName}
-              >
-                Sonraki →
-              </Link>
-            ) : (
-              <span className={`${pageLinkClassName} cursor-default`}>
-                Sonraki →
-              </span>
-            )}
-          </nav>
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-12">
+      {/* Başlık */}
+      <p className="eyebrow">Karavanları keşfet</p>
+      <h1
+        className="mt-1 text-headline-lg font-bold text-primary"
+        aria-live="polite"
+      >
+        {headline}
+        {total > 0 && page > 1 ? (
+          <span className="text-on-surface-variant">
+            {" "}
+            · sayfa {page}/{totalPages}
+          </span>
         ) : null}
+      </h1>
+      <p className="mt-2 text-body-md text-on-surface-variant">
+        Seçtiğiniz tarih, kişi ve fiyat filtreleriyle eşleşen ilanlar.
+      </p>
+
+      {/* Aktif filtre chip'leri */}
+      {chips.length > 0 ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-label-md text-on-surface-variant">
+            Filtreler:
+          </span>
+          {chips.map((chip) => (
+            <Link
+              key={chip.key}
+              href={withoutFilter(query, chip.key)}
+              className="chip border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+              title="Bu filtreyi kaldır"
+            >
+              {chip.label}
+              <span className="material-symbols-outlined text-base">
+                close
+              </span>
+            </Link>
+          ))}
+          <Link
+            href="/arama"
+            className="text-label-md text-on-surface-variant underline hover:text-primary"
+          >
+            Filtreleri temizle
+          </Link>
+        </div>
+      ) : null}
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+        {/* Sol: detaylı filtreler */}
+        <aside>
+          <div className="card p-5 lg:sticky lg:top-24">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-title-md font-bold text-primary">
+                <span className="material-symbols-outlined text-xl text-accent">
+                  tune
+                </span>
+                Detaylı Filtreler
+              </h2>
+              {chips.length > 0 ? (
+                <span className="badge badge-accent">{chips.length} aktif</span>
+              ) : null}
+            </div>
+            <SearchFilters
+              initial={initial}
+              layout="stack"
+              submitLabel="Sonuçları Güncelle"
+            />
+          </div>
+        </aside>
+
+        {/* Sağ: sonuçlar */}
+        <div>
+          {!hasResults && total === 0 ? (
+            <div className="card p-10 text-center">
+              <span className="material-symbols-outlined text-4xl text-outline">
+                search_off
+              </span>
+              <p className="mt-3 font-bold text-on-surface">
+                Sonuç bulunamadı
+              </p>
+              <p className="mt-1 text-body-md text-on-surface-variant">
+                Filtreleri gevşetmeyi (tarih veya fiyat aralığını genişletmeyi)
+                deneyin.
+              </p>
+            </div>
+          ) : !hasResults ? (
+            /* sayfa sayısı aşıldı (ör. ?sayfa=99) */
+            <div className="card p-10 text-center">
+              <p className="text-body-md text-on-surface-variant">
+                Bu sayfada ilan yok.
+              </p>
+              <Link
+                href={pageHref(query, 1)}
+                className="btn btn-outline btn-sm mt-4"
+              >
+                İlk sayfaya dön
+              </Link>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {items.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} stay={stay} />
+              ))}
+            </ul>
+          )}
+
+          {totalPages > 1 ? (
+            <nav
+              className="mt-8 flex items-center justify-center gap-3"
+              aria-label="Sayfalama"
+            >
+              {prevPage >= 1 ? (
+                <Link
+                  href={pageHref(query, prevPage)}
+                  rel="prev"
+                  className={pageLinkClassName}
+                >
+                  ← Önceki
+                </Link>
+              ) : (
+                <span className={`${pageLinkClassName} cursor-default`}>
+                  ← Önceki
+                </span>
+              )}
+              <span className="text-body-md text-on-surface-variant">
+                Sayfa {Math.min(page, totalPages)} / {totalPages}
+              </span>
+              {page < totalPages ? (
+                <Link
+                  href={pageHref(query, page + 1)}
+                  rel="next"
+                  className={pageLinkClassName}
+                >
+                  Sonraki →
+                </Link>
+              ) : (
+                <span className={`${pageLinkClassName} cursor-default`}>
+                  Sonraki →
+                </span>
+              )}
+            </nav>
+          ) : null}
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

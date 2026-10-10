@@ -19,8 +19,7 @@ type Props = {
   nightlyPrice: number;
 };
 
-const inputClassName =
-  "mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
+const inputClassName = "input min-h-11 py-3";
 
 type FieldError = { message: string; field?: string };
 
@@ -135,18 +134,18 @@ export function BookingRequestForm({
   }
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <h2 className="text-lg font-semibold text-gray-900">Rezervasyon Talebi</h2>
+    <section className="mt-4">
+      <h2 className="text-title-md font-bold text-primary">Rezervasyon Talebi</h2>
 
       {success ? (
-        <div className="mt-3 space-y-2 rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+        <div className="mt-3 space-y-2 rounded-lg bg-success-bg px-3 py-3 text-sm text-success">
           <p>
             Talebiniz gönderildi. İlan sahibi onayladığında size haber
             vereceğiz.
           </p>
           <Link
             href="/hesap/taleplerim"
-            className="inline-block font-semibold text-emerald-700 hover:underline"
+            className="inline-block font-semibold underline hover:opacity-80"
           >
             Taleplerinizi görüntüleyin →
           </Link>
@@ -157,7 +156,7 @@ export function BookingRequestForm({
             <div>
               <label
                 htmlFor="startDate"
-                className="block text-sm font-medium text-gray-700"
+                className="field-label"
               >
                 Giriş
               </label>
@@ -170,13 +169,13 @@ export function BookingRequestForm({
                 className={inputClassName}
               />
               {startDateError ? (
-                <p className="mt-1 text-sm text-red-600">{startDateError.message}</p>
+                <p className="field-error">{startDateError.message}</p>
               ) : null}
             </div>
             <div>
               <label
                 htmlFor="endDate"
-                className="block text-sm font-medium text-gray-700"
+                className="field-label"
               >
                 Çıkış
               </label>
@@ -189,7 +188,7 @@ export function BookingRequestForm({
                 className={inputClassName}
               />
               {endDateError ? (
-                <p className="mt-1 text-sm text-red-600">{endDateError.message}</p>
+                <p className="field-error">{endDateError.message}</p>
               ) : null}
             </div>
           </div>
@@ -197,7 +196,7 @@ export function BookingRequestForm({
           <div>
             <label
               htmlFor="guests"
-              className="block text-sm font-medium text-gray-700"
+              className="field-label"
             >
               Kişi sayısı
             </label>
@@ -211,18 +210,18 @@ export function BookingRequestForm({
               onChange={(e) => setGuests(e.target.value)}
               className={inputClassName}
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-body-sm text-on-surface-variant">
               En fazla {capacity} kişi kabul edilir.
             </p>
             {guestsError ? (
-              <p className="mt-1 text-sm text-red-600">{guestsError.message}</p>
+              <p className="field-error">{guestsError.message}</p>
             ) : null}
           </div>
 
           <div>
             <label
               htmlFor="message"
-              className="block text-sm font-medium text-gray-700"
+              className="field-label"
             >
               Mesaj (opsiyonel)
             </label>
@@ -237,22 +236,22 @@ export function BookingRequestForm({
             />
           </div>
 
-          <div className="rounded-lg bg-gray-50 px-3 py-2">
+          <div className="rounded-lg bg-surface-low px-3 py-2.5">
             {hasPreview ? (
               <>
-                <p className="text-sm text-gray-600">
+                <p className="text-body-md text-on-surface-variant">
                   {formatTRY(nightlyPrice)} × {preview.nights} gece
                 </p>
-                <p className="text-sm text-gray-900">
-                  <span className="text-lg font-bold">Tahmini toplam:{" "}
+                <p className="text-body-md text-on-surface">
+                  <span className="text-price text-primary">Tahmini toplam:{" "}
                     {formatTRY(preview.total)}</span>
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-body-sm text-on-surface-variant">
                   Kesin tutar talebiniz sunucuda kaydedilirken hesaplanır.
                 </p>
               </>
             ) : (
-              <p className="text-xs text-gray-500">
+              <p className="text-body-sm text-on-surface-variant">
                 {liveError && !liveError.field
                   ? liveError.message
                   : "Tarih ve kişi seçtiğinizde tahmini tutarı görürsünüz."}
@@ -263,7 +262,7 @@ export function BookingRequestForm({
           {error && !error.field ? (
             <p
               role="alert"
-              className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600"
+              className="rounded-lg bg-error-bg px-3 py-2 text-body-md text-error"
             >
               {error.message}
             </p>
@@ -272,7 +271,7 @@ export function BookingRequestForm({
           <button
             type="submit"
             disabled={pending}
-            className="min-h-11 w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+            className="btn btn-accent w-full py-3"
           >
             {pending ? "Gönderiliyor…" : "Talebi Gönder"}
           </button>

@@ -32,36 +32,60 @@ export function ListingCard({ listing, stay }: ListingCardProps) {
     .join(" · ");
 
   return (
-    <li className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md">
+    <li className="group card card-hover overflow-hidden">
       <Link href={href} className="block">
-        {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element -- UploadThing URL'leri next.config images domain listesinde değil; PhotoUploader da <img> kullanır.
-          <img
-            src={photo}
-            alt={listing.title}
-            className="aspect-[4/3] w-full bg-gray-100 object-cover"
-          />
-        ) : (
-          <div className="flex aspect-[4/3] w-full items-center justify-center bg-gray-100 text-sm text-gray-400">
-            Fotoğraf yok
-          </div>
-        )}
+        <div className="relative aspect-[16/10] overflow-hidden bg-surface-mid">
+          {photo ? (
+            // eslint-disable-next-line @next/next/no-img-element -- UploadThing URL'leri next.config images domain listesinde değil; PhotoUploader da <img> kullanır.
+            <img
+              src={photo}
+              alt={listing.title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element -- yerel fallback
+            <img
+              src="/images/photo-fallback.svg"
+              alt="Fotoğraf yok"
+              className="h-full w-full object-cover opacity-70"
+            />
+          )}
+          <span className="badge badge-primary absolute left-3 top-3 shadow-sm">
+            {VEHICLE_TYPE_LABELS[listing.vehicleType]}
+          </span>
+        </div>
+
         <div className="p-4">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate font-semibold text-gray-900">
+            <h3 className="min-w-0 truncate font-bold text-on-surface transition-colors group-hover:text-primary">
               {listing.title}
             </h3>
-            <span className="shrink-0 text-xs text-gray-500">
+            <span className="shrink-0 text-body-sm text-on-surface-variant">
               {listing.capacity} kişi
             </span>
           </div>
-          <p className="mt-1 truncate text-sm text-gray-600">
-            {location} · {subtitle}
+
+          <p className="mt-1 flex min-w-0 items-center gap-1 text-body-md text-on-surface-variant">
+            <span className="material-symbols-outlined shrink-0 text-base text-accent">
+              location_on
+            </span>
+            <span className="truncate">
+              {location} · {subtitle}
+            </span>
           </p>
-          <p className="mt-2 text-sm">
-            <span className="font-bold text-gray-900">{formatTRY(price)}</span>
-            <span className="text-gray-500"> / gece</span>
-          </p>
+
+          <div className="mt-3 flex items-center justify-between border-t border-outline-variant/60 pt-3">
+            <p>
+              <span className="text-price text-primary">{formatTRY(price)}</span>
+              <span className="text-body-sm text-on-surface-variant"> / gece</span>
+            </p>
+            <span className="inline-flex items-center gap-1 text-label-lg text-accent-deep transition-all group-hover:gap-2">
+              İncele
+              <span className="material-symbols-outlined text-base">
+                arrow_forward
+              </span>
+            </span>
+          </div>
         </div>
       </Link>
     </li>

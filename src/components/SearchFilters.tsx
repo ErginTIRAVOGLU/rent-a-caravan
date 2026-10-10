@@ -1,9 +1,12 @@
+import type { ReactNode } from "react";
+
 import { VEHICLE_TYPE_OPTIONS } from "../lib/labels";
 
 // Genel arama filtre formu — saf HTML GET (method="get" action="/arama").
 // JS zorunlu değil: tarayıcı doğrudan /arama?... navigasyonu yapar; boş
 // alanlar URL'ye boş değer olarak yazılır (parseSearchParams boşu yok sayar).
-// / ve /arama sayfalarında aynı bileşen kullanılır (URL round-trip).
+// / (grid, turuncu "Karavan Ara") ve /arama (stack, lacivert "Sonuçları
+// Güncelle") aynı bileşeni farklı yerleşimle kullanır (URL round-trip).
 
 export type SearchFilterValues = {
   sehir: string;
@@ -15,112 +18,93 @@ export type SearchFilterValues = {
   aracTipi: string;
 };
 
-const inputClassName =
-  "mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
+type SearchFiltersProps = {
+  /** URL query'den gelen mevcut değerler (arama sayfasında formu korur). */
+  initial?: Partial<SearchFilterValues>;
+  /** grid: ana sayfa hero kartı (2 satır) · stack: arama filtre paneli (dikey). */
+  layout?: "grid" | "stack";
+  submitLabel?: string;
+  submitVariant?: "accent" | "primary";
+};
 
-const labelClassName = "block text-sm font-medium text-gray-700";
+function Field({
+  id,
+  label,
+  icon,
+  children,
+}: {
+  id: string;
+  label: string;
+  icon: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="field-label flex items-center gap-1.5">
+        <span className="material-symbols-outlined text-base text-secondary">
+          {icon}
+        </span>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
 
 export function SearchFilters({
   initial,
-}: {
-  /** URL query'den gelen mevcut değerler (arama sayfasında formu korur). */
-  initial?: Partial<SearchFilterValues>;
-}) {
+  layout = "grid",
+  submitLabel = "Ara",
+  submitVariant = "primary",
+}: SearchFiltersProps) {
+  const formClassName =
+    layout === "stack"
+      ? "space-y-4"
+      : "grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4";
+  const buttonClassName =
+    submitVariant === "accent" ? "btn btn-accent w-full" : "btn btn-primary w-full";
+
+  const fields: Array<{
+    id: string;
+    name: keyof SearchFilterValues;
+    label: string;
+    icon: string;
+    type: string;
+    placeholder?: string;
+    min?: number;
+    max?: number;
+  }> = [
+    { id: "search-sehir", name: "sehir", label: "Şehir", icon: "location_on", type: "text", placeholder: "Antalya" },
+    { id: "search-baslangic", name: "baslangic", label: "Giriş tarihi", icon: "calendar_month", type: "date" },
+    { id: "search-bitis", name: "bitis", label: "Çıkış tarihi", icon: "calendar_month", type: "date" },
+    { id: "search-kisi", name: "kisi", label: "Kişi", icon: "persons", type: "number", placeholder: "4", min: 1, max: 16 },
+    { id: "search-minfiyat", name: "minFiyat", label: "Min gece fiyatı (₺)", icon: "payments", type: "number", placeholder: "500", min: 0 },
+    { id: "search-maxfiyat", name: "maxFiyat", label: "Max gece fiyatı (₺)", icon: "payments", type: "number", placeholder: "3000", min: 0 },
+  ];
+
   return (
-    <form
-      method="get"
-      action="/arama"
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
-    >
-      <div>
-        <label htmlFor="search-sehir" className={labelClassName}>
-          Şehir
-        </label>
-        <input
-          id="search-sehir"
-          name="sehir"
-          type="text"
-          defaultValue={initial?.sehir ?? ""}
-          placeholder="Antalya"
-          className={inputClassName}
-        />
-      </div>
-      <div>
-        <label htmlFor="search-baslangic" className={labelClassName}>
-          Giriş tarihi
-        </label>
-        <input
-          id="search-baslangic"
-          name="baslangic"
-          type="date"
-          defaultValue={initial?.baslangic ?? ""}
-          className={inputClassName}
-        />
-      </div>
-      <div>
-        <label htmlFor="search-bitis" className={labelClassName}>
-          Çıkış tarihi
-        </label>
-        <input
-          id="search-bitis"
-          name="bitis"
-          type="date"
-          defaultValue={initial?.bitis ?? ""}
-          className={inputClassName}
-        />
-      </div>
-      <div>
-        <label htmlFor="search-kisi" className={labelClassName}>
-          Kişi
-        </label>
-        <input
-          id="search-kisi"
-          name="kisi"
-          type="number"
-          min={1}
-          max={16}
-          defaultValue={initial?.kisi ?? ""}
-          placeholder="4"
-          className={inputClassName}
-        />
-      </div>
-      <div>
-        <label htmlFor="search-minfiyat" className={labelClassName}>
-          Min gece fiyatı (₺)
-        </label>
-        <input
-          id="search-minfiyat"
-          name="minFiyat"
-          type="number"
-          min={0}
-          defaultValue={initial?.minFiyat ?? ""}
-          placeholder="500"
-          className={inputClassName}
-        />
-      </div>
-      <div>
-        <label htmlFor="search-maxfiyat" className={labelClassName}>
-          Max gece fiyatı (₺)
-        </label>
-        <input
-          id="search-maxfiyat"
-          name="maxFiyat"
-          type="number"
-          min={0}
-          defaultValue={initial?.maxFiyat ?? ""}
-          placeholder="3000"
-          className={inputClassName}
-        />
-      </div>
-      <div>
-        <label htmlFor="search-aractipi" className={labelClassName}>
-          Araç tipi
-        </label>
+    <form method="get" action="/arama" className={formClassName}>
+      {fields.map((field) => (
+        <Field key={field.id} id={field.id} label={field.label} icon={field.icon}>
+          <input
+            id={field.id}
+            name={field.name}
+            type={field.type}
+            min={field.min}
+            max={field.max}
+            defaultValue={initial?.[field.name] ?? ""}
+            placeholder={field.placeholder}
+            className="input"
+          />
+        </Field>
+      ))}
+
+      <Field id="search-aractipi" label="Araç tipi" icon="time_to_leave">
         <select
           id="search-aractipi"
           name="aracTipi"
           defaultValue={initial?.aracTipi ?? ""}
-          className={inputClassName}
+          className="input"
         >
           <option value="">Tümü</option>
           {VEHICLE_TYPE_OPTIONS.map((option) => (
@@ -129,13 +113,12 @@ export function SearchFilters({
             </option>
           ))}
         </select>
-      </div>
-      <div className="flex items-end">
-        <button
-          type="submit"
-          className="min-h-11 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
-        >
-          Ara
+      </Field>
+
+      <div className={layout === "stack" ? "" : "flex items-end"}>
+        <button type="submit" className={buttonClassName}>
+          <span className="material-symbols-outlined text-lg">search</span>
+          {submitLabel}
         </button>
       </div>
     </form>

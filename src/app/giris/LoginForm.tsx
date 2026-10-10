@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 
 import { loginAction, type LoginState } from "../../server/users/actions";
@@ -33,8 +34,7 @@ function GoogleIcon() {
   );
 }
 
-const inputClassName =
-  "mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
+const inputClassName = "input min-h-11 py-3";
 
 export function LoginForm({ callbackUrl, serverError }: Props) {
   const initialState: LoginState = { error: serverError ?? null };
@@ -43,21 +43,23 @@ export function LoginForm({ callbackUrl, serverError }: Props) {
     initialState,
   );
 
+  const isEmailNotVerified = state.error === "E-postanız doğrulanmamış.";
+
   return (
     <div className="space-y-5">
       <button
         type="button"
         onClick={() => void signIn("google", { redirectTo: callbackUrl || "/" })}
-        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+        className="btn btn-outline w-full py-3"
       >
         <GoogleIcon />
         Google ile devam et
       </button>
 
       <div className="flex items-center gap-3" aria-hidden="true">
-        <span className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs text-gray-500">veya</span>
-        <span className="h-px flex-1 bg-gray-200" />
+        <span className="h-px flex-1 bg-surface-highest" />
+        <span className="text-body-sm text-on-surface-variant">veya</span>
+        <span className="h-px flex-1 bg-surface-highest" />
       </div>
 
       <form action={formAction} className="space-y-4">
@@ -68,7 +70,7 @@ export function LoginForm({ callbackUrl, serverError }: Props) {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+            className="field-label"
           >
             E-posta
           </label>
@@ -81,14 +83,14 @@ export function LoginForm({ callbackUrl, serverError }: Props) {
             className={inputClassName}
           />
           {state.field === "email" && state.error ? (
-            <p className="mt-1 text-sm text-red-600">{state.error}</p>
+            <p className="field-error">{state.error}</p>
           ) : null}
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            className="field-label"
           >
             Şifre
           </label>
@@ -101,23 +103,38 @@ export function LoginForm({ callbackUrl, serverError }: Props) {
             className={inputClassName}
           />
           {state.field === "password" && state.error ? (
-            <p className="mt-1 text-sm text-red-600">{state.error}</p>
+            <p className="field-error">{state.error}</p>
           ) : null}
         </div>
 
         {state.error && !state.field ? (
-          <p
-            role="alert"
-            className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
-          >
-            {state.error}
-          </p>
+          <div className="space-y-2">
+            <p
+              role="alert"
+              className="rounded-lg bg-error-bg px-3 py-2 text-body-md text-error"
+            >
+              {state.error}
+            </p>
+            {isEmailNotVerified && state.resendEmail ? (
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-body-sm text-on-surface-variant">
+                  Doğrulama e-postasını yeniden gönder:
+                </p>
+                <Link
+                  href={`/dogrula?resend=${encodeURIComponent(state.resendEmail)}`}
+                  className="btn btn-outline btn-sm"
+                >
+                  Yeniden gönder
+                </Link>
+              </div>
+            ) : null}
+          </div>
         ) : null}
 
         <button
           type="submit"
           disabled={pending}
-          className="min-h-11 w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+          className="btn btn-primary w-full py-3"
         >
           {pending ? "Giriş yapılıyor…" : "Giriş yap"}
         </button>

@@ -12,11 +12,6 @@ import {
 // Pending sırasında gönderim düğmesi devre dışı (kilit yok — çift gönderim
 // server action seviyesinde zaten seyrek).
 
-const inputClassName =
-  "mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
-
-const labelClassName = "block text-sm font-medium text-gray-700";
-
 const initialState: ProfileState = { error: null, done: false };
 
 type Props = {
@@ -53,11 +48,11 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
 
   return (
     <form action={formAction} className="mt-6 space-y-6">
-      <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Profil bilgileri</h2>
+      <section className="card p-5">
+        <h2 className="section-title">Profil bilgileri</h2>
         <div className="mt-4 space-y-4">
           <div>
-            <label htmlFor="profile-name" className={labelClassName}>
+            <label htmlFor="profile-name" className="field-label">
               Ad
             </label>
             <input
@@ -69,15 +64,15 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={inputClassName}
+              className="input"
             />
             {state.field === "name" && state.error ? (
-              <p className="mt-1 text-sm text-red-600">{state.error}</p>
+              <p className="field-error">{state.error}</p>
             ) : null}
           </div>
 
           <div>
-            <label htmlFor="profile-phone" className={labelClassName}>
+            <label htmlFor="profile-phone" className="field-label">
               Telefon (opsiyonel)
             </label>
             <input
@@ -89,18 +84,18 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
               placeholder="0555 555 55 55"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className={inputClassName}
+              className="input"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-body-sm text-on-surface-variant">
               Boş bırakırsanız telefon numaranız hesabınızdan kaldırılır.
             </p>
             {state.field === "phone" && state.error ? (
-              <p className="mt-1 text-sm text-red-600">{state.error}</p>
+              <p className="field-error">{state.error}</p>
             ) : null}
           </div>
 
           <div>
-            <label htmlFor="profile-email" className={labelClassName}>
+            <label htmlFor="profile-email" className="field-label">
               E-posta
             </label>
             <input
@@ -108,26 +103,23 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
               type="email"
               value={email}
               readOnly
-              disabled
-              className={`${inputClassName} cursor-not-allowed bg-gray-50 text-gray-500`}
+              className="input bg-surface-low text-on-surface-variant cursor-not-allowed"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-body-sm text-on-surface-variant">
               E-posta adresi değiştirilemez.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Şifre değiştirme
-        </h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <section className="card p-5">
+        <h2 className="section-title">Şifre değiştirme</h2>
+        <p className="mt-1 text-body-md text-on-surface-variant">
           Şifrenizi değiştirmek istemiyorsanız bu alanları boş bırakın.
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="profile-current-password" className={labelClassName}>
+            <label htmlFor="profile-current-password" className="field-label">
               Mevcut şifre
             </label>
             <input
@@ -137,15 +129,15 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
               autoComplete="current-password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className={inputClassName}
+              className="input"
             />
             {state.field === "currentPassword" && state.error ? (
-              <p className="mt-1 text-sm text-red-600">{state.error}</p>
+              <p className="field-error">{state.error}</p>
             ) : null}
           </div>
 
           <div>
-            <label htmlFor="profile-new-password" className={labelClassName}>
+            <label htmlFor="profile-new-password" className="field-label">
               Yeni şifre
             </label>
             <input
@@ -156,11 +148,11 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
               minLength={8}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className={inputClassName}
+              className="input"
             />
-            <p className="mt-1 text-xs text-gray-500">En az 8 karakter.</p>
+            <p className="mt-1 text-body-sm text-on-surface-variant">En az 8 karakter.</p>
             {state.field === "newPassword" && state.error ? (
-              <p className="mt-1 text-sm text-red-600">{state.error}</p>
+              <p className="field-error">{state.error}</p>
             ) : null}
           </div>
         </div>
@@ -169,7 +161,7 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
       {state.error && !state.field ? (
         <p
           role="alert"
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="rounded-lg bg-error-bg px-3 py-2 text-body-md text-error"
         >
           {state.error}
         </p>
@@ -178,7 +170,7 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
       {state.done ? (
         <p
           role="status"
-          className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+          className="rounded-lg bg-success-bg px-3 py-2 text-body-md text-success"
         >
           Profiliniz güncellendi.
         </p>
@@ -187,7 +179,7 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 sm:w-auto"
+        className="btn btn-primary"
       >
         {pending ? "Kaydediliyor…" : "Değişiklikleri Kaydet"}
       </button>

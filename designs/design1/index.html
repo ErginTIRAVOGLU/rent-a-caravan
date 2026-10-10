@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#234B3B">
+<title>Karavan — Türkiye'nin Karavan Kiralama Pazaryeri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+--forest-900:#1B3329;--forest-800:#1E4133;--forest-700:#234B3B;--forest-600:#2C5C49;--forest-100:#E2EBE6;
+--sage-700:#5F7A6B;--sage-600:#6F8A79;--sage-100:#EAF0EB;
+--orange-600:#D0742F;--orange-500:#E58B52;--orange-100:#FAEADD;
+--bg:#FAF9F6;--surface2:#F2F1EA;--text:#202722;--text2:#66716A;--text3:#8C948D;
+--border:#E4E7E3;--border2:#CFD5CF;
+--success-bg:#E3F2E9;--success-bd:#BFDCCB;--warning-bg:#FBF1DC;--warning-bd:#EBD9A8;
+--danger:#B23A2E;--danger-bg:#FAE7E3;--danger-bd:#EFC7C0;--info-bg:#E4EEF4;--info-bd:#C4D9E6;
+--ring:#2F6B52;--ring-soft:rgba(47,107,82,.18);
+--r-md:12px;--r-lg:16px;--r-xl:22px;
+--sh-md:0 10px 30px -12px rgba(28,38,32,.18);--sh-lg:0 24px 60px -20px rgba(28,38,32,.28);
+--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366716A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}h1,h2,h3,h4,p,dl,dd{margin:0}button{font:inherit;cursor:pointer;color:inherit}a{color:inherit;text-decoration:none}ul,ol{margin:0;padding:0;list-style:none}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}.muted{color:var(--text2)}.small{font-size:.875rem}
+.boot{display:grid;place-items:center;min-height:50vh;color:var(--text2);font-weight:600}
+.err-banner{position:fixed;left:12px;right:12px;bottom:12px;z-index:300;background:var(--danger);color:#fff;border-radius:12px;padding:12px 16px;font-size:.875rem;box-shadow:var(--sh-lg)}
+.skip{position:absolute;left:-9999px;top:0;background:var(--forest-700);color:#fff;padding:10px 16px;border-radius:0 0 12px 0;z-index:200;font-weight:700}.skip:focus{left:0}
+.container{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,32px)}
+.section{padding-block:clamp(40px,6vw,68px)}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:26px}.sec-head p{margin-top:4px;color:var(--text2)}
+.sec-more{font-weight:700;font-size:.9375rem;color:var(--forest-700);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.sec-more:hover{color:var(--forest-900)}
+.h1{font-size:clamp(1.9rem,4.5vw,2.6rem);line-height:1.12;letter-spacing:-.02em;font-weight:800}
+.h2{font-size:clamp(1.4rem,2.6vw,1.75rem);line-height:1.2;letter-spacing:-.015em;font-weight:700}
+.h3{font-size:1.125rem;font-weight:700;letter-spacing:-.01em}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.75rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--sage-700)}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.img-fail{background:var(--sage-100)!important;position:relative}
+.img-fb{position:absolute;inset:0;display:grid;place-content:center;gap:6px;justify-items:center;color:var(--sage-700);font-size:.75rem;font-weight:600}.img-fb .ic{width:22px;height:22px}
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:var(--r-md);border:1px solid transparent;font-weight:600;font-size:.9375rem;white-space:nowrap;user-select:none;transition:background .15s,border-color .15s,color .15s,transform .06s}
+.btn:active:not(:disabled){transform:translateY(1px)}.btn:disabled{opacity:.55;cursor:not-allowed}.btn .ic{width:18px;height:18px}
+.btn-primary{background:var(--forest-700);color:#fff}.btn-primary:hover:not(:disabled){background:#2C5C49}
+.btn-secondary{background:var(--forest-100);color:#1E4133}.btn-secondary:hover:not(:disabled){background:#D5E3DB}
+.btn-outline{background:#fff;border-color:var(--border2)}.btn-outline:hover:not(:disabled){border-color:var(--text3);background:var(--surface2)}
+.btn-ghost{color:var(--text2)}.btn-ghost:hover:not(:disabled){background:var(--surface2);color:var(--text)}
+.btn-destructive{background:var(--danger);color:#fff}.btn-destructive:hover:not(:disabled){background:#9E3327}
+.btn-danger-outline{background:#fff;color:var(--danger);border-color:var(--danger-bd)}.btn-danger-outline:hover:not(:disabled){background:var(--danger-bg)}
+.btn-accent{background:var(--orange-500);color:var(--forest-900)}.btn-accent:hover:not(:disabled){background:#EF9B66}
+.btn-sm{height:36px;padding:0 14px;font-size:.875rem;border-radius:10px;gap:6px}.btn-sm .ic{width:16px;height:16px}
+.btn-lg{height:52px;font-size:1rem;border-radius:14px}.btn-block{width:100%}
+.spinner{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.is-loading{color:transparent!important;pointer-events:none}.is-loading .spinner{display:block;position:absolute;color:#fff}
+.ibtn{width:40px;height:40px;display:inline-grid;place-items:center;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--text2)}
+.ibtn:hover{background:var(--surface2);color:var(--text)}.ibtn.bordered{border-color:var(--border2);background:#fff}.ibtn.danger{color:var(--danger)}.ibtn .ic{width:18px;height:18px}
+.field{display:grid;gap:6px;min-width:0}
+.label{font-size:.8125rem;font-weight:700}.label .opt{font-weight:500;color:var(--text2)}
+.input,.select,.textarea{width:100%;background:#fff;border:1px solid var(--border2);border-radius:var(--r-md);color:var(--text);font:inherit;font-size:.9375rem;min-height:44px;padding:10px 14px;transition:border-color .15s,box-shadow .15s}
+.textarea{min-height:110px;resize:vertical;line-height:1.55}
+.input:hover,.select:hover,.textarea:hover{border-color:var(--text3)}
+.input:focus,.select:focus,.textarea:focus{outline:none;border-color:#2C5C49;box-shadow:0 0 0 3px var(--ring-soft)}
+.input::placeholder,.textarea::placeholder{color:var(--text3)}
+.input.err,.select.err,.textarea.err{border-color:var(--danger)}
+.input:disabled{background:var(--surface2);color:var(--text2);cursor:not-allowed}
+.f-err{display:flex;gap:6px;align-items:center;font-size:.8125rem;font-weight:600;color:var(--danger)}.f-err .ic{width:14px;height:14px}
+.f-help{font-size:.8125rem;color:var(--text2)}
+.input-wrap{position:relative;display:block}.input-wrap .ic{position:absolute;left:14px;top:50%;translate:0 -50%;color:var(--text3);width:18px;height:18px;pointer-events:none}.input-wrap .input{padding-left:42px}
+input[type=number]{-moz-appearance:textfield}input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+.select{appearance:none;padding-right:40px;background-image:var(--chev);background-repeat:no-repeat;background-position:right 14px center}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.radio{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input,.radio input{appearance:none;width:20px;height:20px;margin:2px 0 0;border:1.5px solid var(--border2);border-radius:6px;background:#fff;flex:none;display:grid;place-content:center;cursor:pointer;transition:.15s}
+.check input:checked{background:var(--forest-700);border-color:var(--forest-700)}
+.check input:checked::before{content:"";width:10px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(0,-1px)}
+.radio input{border-radius:50%}.radio input:checked{border-color:var(--forest-700)}.radio input:checked::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--forest-700)}
+.check .t,.radio .t{font-size:.9375rem;line-height:1.45}
+.badge{display:inline-flex;align-items:center;gap:6px;height:25px;padding:0 10px;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid transparent;white-space:nowrap}.badge .ic{width:13px;height:13px}
+.b-green{background:var(--success-bg);color:#1D5F3C;border-color:var(--success-bd)}.b-amber{background:var(--warning-bg);color:#7C5608;border-color:var(--warning-bd)}
+.b-red{background:var(--danger-bg);color:#8E2F25;border-color:var(--danger-bd)}.b-gray{background:var(--surface2);color:var(--text2);border-color:var(--border)}
+.b-sage{background:var(--sage-100);color:#3E5A4B;border-color:#D8E2DA}
+.av{--sz:40px;width:var(--sz);height:var(--sz);border-radius:50%;background:var(--c,#6F8A79);color:#fff;display:inline-grid;place-items:center;font-weight:700;font-size:calc(var(--sz)*.36);flex:none}
+.av-lg{--sz:56px}.av-sm{--sz:28px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg)}.card-pad{padding:24px}
+.note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-md);font-size:.875rem;line-height:1.5;border:1px solid}.note .ic{width:17px;height:17px;margin-top:2px}
+.n-info{background:var(--info-bg);border-color:var(--info-bd);color:#23506B}.n-warn{background:var(--warning-bg);border-color:var(--warning-bd);color:#6B4A07}
+.n-err{background:var(--danger-bg);border-color:var(--danger-bd);color:#7E2A22}.n-ok{background:var(--success-bg);border-color:var(--success-bd);color:#1D5F3C}
+.empty{text-align:center;padding:56px 20px}
+.empty-ic{width:64px;height:64px;border-radius:50%;background:var(--forest-100);color:var(--forest-700);display:grid;place-items:center;margin:0 auto 16px}.empty-ic .ic{width:28px;height:28px}
+.empty h3{margin-bottom:6px}.empty p{color:var(--text2);max-width:440px;margin:0 auto 20px}.empty .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.sk{background:linear-gradient(100deg,#ECEBE3 30%,#F5F4EE 45%,#ECEBE3 60%);background-size:250% 100%;animation:shimmer 1.3s infinite;border-radius:10px}
+@keyframes shimmer{to{background-position:-150% 0}}
+.sk-img{aspect-ratio:4/3;border-radius:12px}.sk-line{height:12px;margin-bottom:10px}.sk-line.w60{width:60%}.sk-line.w40{width:40%}
+.pager{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:32px}
+.pg{min-width:40px;height:40px;padding:0 8px;border-radius:10px;border:0;display:inline-grid;place-items:center;font-weight:600;font-size:.875rem;color:var(--text2);background:transparent}
+.pg:hover:not(:disabled):not(.on){background:var(--surface2)}.pg.on{background:var(--forest-700);color:#fff}.pg:disabled{opacity:.4;cursor:default}
+.site-header{position:sticky;top:0;z-index:60;background:rgba(250,249,246,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.header-in{display:flex;align-items:center;gap:26px;height:68px}
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:-.02em}
+.brand>svg{width:30px;height:30px;color:var(--forest-700)}
+.brand-dot{width:6px;height:6px;border-radius:50%;background:var(--orange-500)}
+.main-nav{display:flex;gap:4px}
+.main-nav a{padding:10px 14px;border-radius:10px;font-weight:600;font-size:.9375rem;color:var(--text2)}
+.main-nav a:hover{background:var(--surface2);color:var(--text)}
+.main-nav a[aria-current]{color:#1E4133;background:var(--forest-100)}
+.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hamburger{display:none}
+.user-menu{position:relative}
+.umenu-btn{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--border2);background:#fff}
+.umenu-btn:hover{box-shadow:var(--sh-md)}
+.umenu{position:absolute;right:0;top:calc(100% + 8px);width:236px;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-lg);padding:8px;display:none;z-index:70}
+.user-menu.open .umenu{display:block}
+.umenu .um-head{padding:8px 12px 12px;border-bottom:1px solid var(--border);margin-bottom:6px}.umenu .um-head small{color:var(--text2);display:block}
+.umenu a,.umenu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:10px;font-weight:600;font-size:.875rem;background:none;border:0;color:var(--text)}
+.umenu a:hover,.umenu button:hover{background:var(--surface2)}
+.umenu .ic{width:16px;height:16px;color:var(--text2)}.umenu .danger{color:var(--danger)}.umenu .danger .ic{color:var(--danger)}
+.mobile-nav{display:none;border-top:1px solid var(--border);background:#fff;padding:10px 20px 20px}
+.mobile-nav.open{display:block}
+.mobile-nav a,.mobile-nav button{display:flex;align-items:center;gap:12px;padding:13px 8px;font-weight:600;border-bottom:1px solid var(--border);width:100%;background:none;border-inline:0;border-top:0;color:var(--text);font-size:1rem;text-align:left}
+.mobile-nav .ic{color:var(--text2);width:18px;height:18px}
+@media(max-width:1023px){.main-nav{display:none}.hamburger{display:inline-grid}}
+.hero{padding-top:clamp(28px,5vw,56px)}
+.hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(28px,4vw,56px);align-items:center}
+.hero-title{font-size:clamp(2.15rem,5vw,3.4rem);line-height:1.06;font-weight:800;letter-spacing:-.03em;margin:14px 0 16px}
+.hero-title em{font-style:normal;color:#2C5C49}
+.hero-sub{font-size:1.0625rem;color:var(--text2);max-width:52ch;margin-bottom:22px}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+.hero-points{display:flex;gap:14px 22px;flex-wrap:wrap}
+.hero-points div{display:flex;gap:8px;align-items:center;font-size:.875rem;font-weight:600;color:var(--text2)}
+.hero-points .ic{color:var(--sage-700);width:18px;height:18px}
+.hero-media{position:relative}
+.hero-main{border-radius:var(--r-xl);aspect-ratio:4/3.2;overflow:hidden;box-shadow:var(--sh-lg);position:relative;background:var(--sage-100)}
+.hero-main img,.hero-mini img{width:100%;height:100%;object-fit:cover}
+.hero-mini{position:absolute;left:-14px;bottom:-20px;width:37%;aspect-ratio:4/4.4;border-radius:var(--r-lg);overflow:hidden;border:5px solid var(--bg);box-shadow:var(--sh-md);background:var(--sage-100)}
+.searchbar{margin-top:-34px;position:relative;z-index:5;background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:var(--sh-md);padding:8px;display:grid;grid-template-columns:1.25fr 1fr 1fr .95fr auto;gap:2px;align-items:stretch}
+.sb-cell{display:grid;align-content:center;gap:1px;padding:10px 18px;border-radius:14px;min-width:0}.sb-cell:hover{background:var(--surface2)}
+.sb-cell+.sb-cell{border-left:1px solid var(--border)}
+.sb-cell label{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}
+.sb-cell input,.sb-cell select{border:0;background:transparent;padding:0;font:inherit;font-weight:600;font-size:.9375rem;color:var(--text);width:100%;min-height:26px;outline:none}
+.sb-btn{align-self:center;height:48px;border-radius:14px;padding:0 22px}
+.city-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:18px;color:var(--text2);font-size:.875rem;font-weight:600}
+.chip-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--border2);background:#fff;font-size:.875rem;font-weight:600}
+.chip-btn:hover{border-color:#2C5C49;color:#1E4133}.chip-btn .ic{width:15px;height:15px;color:var(--sage-700)}
+.lgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.lcard{display:block;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:box-shadow .2s,transform .2s}
+.lcard:hover{box-shadow:var(--sh-md);transform:translateY(-2px)}
+.lcard-media{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--sage-100)}
+.lcard-media img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.lcard:hover .lcard-media img{transform:scale(1.04)}
+.lcard-tag{position:absolute;top:12px;left:12px}
+.lcard-body{padding:16px 18px 18px}
+.lcard-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.lcard-top h3{font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.lcard-price{font-weight:800;font-size:1.0625rem;white-space:nowrap}.lcard-price small{font-weight:600;color:var(--text2);font-size:.8125rem}
+.lcard-loc{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:.875rem;margin:4px 0 10px}.lcard-loc .ic{width:15px;height:15px;color:var(--sage-700)}
+.lcard-meta{display:flex;gap:14px;font-size:.8125rem;color:var(--text2);border-top:1px dashed var(--border);padding-top:10px;flex-wrap:wrap}
+.lcard-meta span{display:inline-flex;gap:5px;align-items:center}.lcard-meta .ic{width:14px;height:14px;color:var(--sage-700)}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.step3{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:24px}
+.step3 .n{font-size:.8125rem;font-weight:800;color:var(--orange-600);letter-spacing:.08em}
+.step3 h3{margin:6px 0 8px;font-size:1.0625rem}.step3 p{color:var(--text2);font-size:.9375rem}
+.step3 .ic-badge{width:42px;height:42px;border-radius:12px;background:var(--forest-100);color:var(--forest-700);display:grid;place-items:center;margin-bottom:14px}.step3 .ic-badge .ic{width:20px;height:20px}
+.band{background:var(--forest-700);color:#fff;border-radius:var(--r-xl);padding:clamp(32px,5vw,56px);display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+.band h2{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.02em;line-height:1.2}.band p{color:#D6E3DC;margin-top:10px}
+.band .pts{display:grid;gap:10px;margin-top:20px}.band .pts div{display:flex;gap:10px;align-items:center;font-weight:600;font-size:.9375rem}.band .pts .ic{color:#F0B48A;width:17px;height:17px}
+.band-cta{display:flex;flex-direction:column;gap:12px;justify-self:end;align-items:flex-start}.band .sub{font-size:.8125rem;color:#A9C3B6}
+.search-layout{display:grid;grid-template-columns:264px 1fr;gap:32px;align-items:start;padding-block:28px 64px}
+.filters{position:sticky;top:92px;display:grid;gap:22px;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:22px}
+.fgroup{display:grid;gap:8px}.flabel{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);font-weight:800}
+.range-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}.toolbar .count b{font-size:1.0625rem}.toolbar .select{width:auto}.toolbar .sp{flex:1}
+.filter-btn{display:none}
+.fchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.fchip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--border2);border-radius:999px;padding:6px 7px 6px 12px;font-size:.8125rem;font-weight:600}
+.fchip button{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;color:var(--text2);border:0;background:var(--surface2)}
+.fchip button:hover{color:var(--danger)}.fchip .ic{width:12px;height:12px}
+.rcards{display:grid;gap:18px}
+.rcard{display:grid;grid-template-columns:minmax(240px,320px) 1fr;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:box-shadow .2s,transform .2s}
+.rcard:hover{box-shadow:var(--sh-md);transform:translateY(-2px)}
+.rcard-media{position:relative;min-height:220px;background:var(--sage-100)}.rcard-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.rcard-body{padding:18px 22px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.rcard-body .t{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.rcard-body h3{font-size:1.0625rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcard-desc{color:var(--text2);font-size:.875rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rcard-feats{display:flex;gap:6px;flex-wrap:wrap}
+.mini{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border-radius:999px;padding:4px 10px;font-size:.75rem;font-weight:600;color:var(--text2)}.mini .ic{width:13px;height:13px;color:var(--sage-700)}
+.rcard-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:10px;border-top:1px dashed var(--border)}
+.rcard-owner{display:flex;gap:8px;align-items:center;font-size:.8125rem;color:var(--text2)}
+.rcard-price{text-align:right}.rcard-price b{font-size:1.25rem}.rcard-price small{display:block;color:var(--text2);font-size:.75rem}
+.detail-head{padding-block:20px 18px}
+.crumbs{display:flex;gap:6px;align-items:center;font-size:.8125rem;color:var(--text2);margin-bottom:12px;flex-wrap:wrap}
+.crumbs a:hover{color:#1E4133;text-decoration:underline}.crumbs .ic{width:13px;height:13px}
+.detail-title{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.detail-title h1{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.02em;line-height:1.15}
+.detail-sub{display:flex;gap:10px;align-items:center;color:var(--text2);font-size:.9375rem;margin-top:6px;flex-wrap:wrap}
+.gal{display:grid;grid-template-columns:1.65fr 1fr;grid-template-rows:200px 200px;gap:10px;margin-bottom:32px}
+.gal>div{position:relative;overflow:hidden;border-radius:var(--r-md);background:var(--sage-100);cursor:pointer;min-height:0}
+.gal .main{grid-row:1/3;border-radius:var(--r-lg)}
+.gal img{width:100%;height:100%;object-fit:cover;transition:transform .4s}.gal>div:hover img{transform:scale(1.03)}
+.gal-more{position:absolute;inset:0;background:rgba(22,30,26,.45);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.9375rem}
+.gal-dots{display:none}
+@media(max-width:760px){.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;border-radius:var(--r-lg);margin-bottom:8px}.gal>div{flex:0 0 86%;scroll-snap-align:center;aspect-ratio:4/3}.gal .msc-hide{display:none}.gal-dots{display:flex;gap:6px;justify-content:center;margin:0 0 24px}.gal-dots i{width:6px;height:6px;border-radius:50%;background:var(--border2)}.gal-dots i.on{background:var(--forest-700);width:16px}}
+.detail-grid{display:grid;grid-template-columns:1fr 380px;gap:40px;align-items:start;padding-bottom:90px}
+.sec{margin-bottom:34px}.sec>h2{font-size:1.25rem;margin-bottom:14px;letter-spacing:-.01em}
+.owner-row{display:flex;gap:14px;align-items:center;padding:16px;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg)}
+.owner-row b{display:block;line-height:1.3}.owner-row small{color:var(--text2)}
+.hl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.hl{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;font-weight:600;font-size:.875rem}.hl .ic{width:19px;height:19px;color:var(--sage-700)}
+.spec-dl{display:grid;grid-template-columns:1fr 1fr;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.spec-dl>div{display:flex;justify-content:space-between;gap:12px;padding:12px 18px;font-size:.875rem;border-bottom:1px solid var(--border)}
+.spec-dl>div:nth-child(odd){border-right:1px solid var(--border)}.spec-dl>div:nth-last-child(-n+2){border-bottom:0}
+.spec-dl dt{color:var(--text2)}.spec-dl dd{font-weight:600}
+.feat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.feat-list div{display:flex;gap:9px;align-items:center;font-size:.9375rem}.feat-list .ic{width:17px;height:17px;color:var(--forest-700)}
+.rules-list{display:grid;gap:9px}.rules-list div{display:flex;gap:9px;align-items:flex-start;font-size:.9375rem}.rules-list .ic{width:16px;height:16px;color:var(--sage-700);margin-top:4px}
+.bk{position:sticky;top:92px}
+.bk-card{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:22px}
+.bk-price{display:flex;align-items:baseline;gap:6px;margin-bottom:16px}.bk-price b{font-size:1.6rem;letter-spacing:-.02em}.bk-price span{color:var(--text2)}
+.bk-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.bk-sum{background:var(--surface2);border-radius:var(--r-md);padding:14px 16px;margin:14px 0;display:grid;gap:8px;font-size:.9375rem}
+.bk-sum .row{display:flex;justify-content:space-between;gap:10px}.bk-sum .total{border-top:1px solid var(--border2);padding-top:10px;font-weight:800;font-size:1.0625rem}
+.bk-note{font-size:.8125rem;color:var(--text2);margin-top:12px;line-height:1.5;display:flex;gap:6px}
+.bk-note .ic{width:15px;height:15px;margin-top:3px;flex:none}
+.bk-bar{display:none}
+@media(max-width:1024px){.detail-grid{grid-template-columns:1fr}.bk{position:static}.bk-bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;background:#fff;border-top:1px solid var(--border);box-shadow:0 -8px 24px rgba(28,38,32,.08);padding:10px 16px calc(10px + env(safe-area-inset-bottom));align-items:center;gap:14px;justify-content:space-between}.bk-bar .p b{font-size:1.125rem}.bk-bar .p small{display:block;color:var(--text2);font-size:.75rem}}
+@media(max-width:640px){.hl-grid{grid-template-columns:repeat(2,1fr)}.spec-dl{grid-template-columns:1fr}.spec-dl>div:nth-child(odd){border-right:0}.spec-dl>div:nth-last-child(-n+2){border-bottom:1px solid var(--border)}.spec-dl>div:last-child{border-bottom:0}.feat-list{grid-template-columns:1fr}}
+.auth{min-height:calc(100vh - 68px);display:grid;place-items:center;padding:40px 16px}
+.auth-card{width:100%;max-width:440px;background:#fff;border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-md);padding:32px}
+.auth-card h1{font-size:1.5rem;margin-bottom:6px;letter-spacing:-.01em}
+.auth-card .sub{color:var(--text2);font-size:.9375rem;margin-bottom:22px}
+.divider{display:flex;align-items:center;gap:12px;color:var(--text2);font-size:.8125rem;margin:18px 0}.divider::before,.divider::after{content:"";height:1px;background:var(--border);flex:1}
+.demo-box{margin-top:22px;border:1px dashed var(--border2);border-radius:var(--r-md);padding:14px;background:var(--surface2)}
+.demo-box h4{font-size:.8125rem;margin-bottom:6px;color:var(--text2)}
+.demo-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;font-size:.8125rem;flex-wrap:wrap}
+.auth-foot{text-align:center;margin-top:18px;font-size:.9375rem;color:var(--text2)}.auth-foot a{color:var(--forest-700);font-weight:700}
+.pw-rules{display:grid;gap:4px;margin-top:8px}.pw-rules div{display:flex;gap:7px;align-items:center;font-size:.8125rem;color:var(--text2)}.pw-rules .ok{color:#22734A}
+.acc-layout{display:grid;grid-template-columns:260px 1fr;gap:36px;align-items:start;padding-block:32px 72px}
+.acc-nav{position:sticky;top:92px;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;display:grid;gap:4px}
+.acc-user{display:flex;gap:12px;align-items:center;padding:10px 10px 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.acc-user b{display:block;line-height:1.3}.acc-user small{color:var(--text2)}
+.acc-link{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:10px;font-weight:600;font-size:.9375rem;color:var(--text2)}
+.acc-link:hover{background:var(--surface2);color:var(--text)}
+.acc-link.on{background:var(--forest-100);color:#1E4133}
+.acc-link .ic{width:18px;height:18px}
+.acc-link .cnt{margin-left:auto;background:var(--forest-700);color:#fff;border-radius:999px;min-width:22px;height:22px;display:grid;place-items:center;font-size:.7rem;padding:0 6px}
+.acc-nav .sep{height:1px;background:var(--border);margin:6px 8px}
+.acc-link.out{color:var(--danger)}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}.page-head p{color:var(--text2);margin-top:4px;font-size:.9375rem}
+.stat-line{display:flex;gap:18px;flex-wrap:wrap;color:var(--text2);font-size:.875rem;margin-bottom:18px}.stat-line b{color:var(--text)}
+.tabbar{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:22px;overflow-x:auto}
+.tab{padding:11px 16px;font-weight:600;font-size:.9375rem;color:var(--text2);border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
+.tab .cnt{background:var(--surface2);border-radius:999px;padding:1px 8px;font-size:.75rem}
+.tab.on{color:#1E4133;border-color:var(--forest-700)}.tab.on .cnt{background:var(--forest-100);color:#1E4133}
+.lrows,.trows{display:grid;gap:14px}
+.lrow{display:flex;gap:16px;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;align-items:center;flex-wrap:wrap}
+.lrow-media{width:132px;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--sage-100);flex:none;position:relative}.lrow-media img{width:100%;height:100%;object-fit:cover}
+.lrow-body{flex:1;min-width:200px}.lrow-body h3{font-size:1rem}
+.lrow-body .loc{display:flex;gap:5px;align-items:center;color:var(--text2);font-size:.8125rem;margin-top:3px}.lrow-body .loc .ic{width:13px;height:13px}
+.lrow-meta{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.lrow-side{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-left:auto}
+.lrow-price{font-weight:800;font-size:1.0625rem}.lrow-price small{font-weight:600;color:var(--text2);font-size:.75rem}
+.lrow-actions{display:flex;gap:6px;flex-wrap:wrap}
+.reason{margin-top:8px}
+@media(max-width:640px){.lrow{flex-direction:column;align-items:stretch}.lrow-media{width:100%}.lrow-side{flex-direction:row;justify-content:space-between;align-items:center;margin-left:0;width:100%}}
+.trow{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.trow-media{width:96px;aspect-ratio:4/3;border-radius:10px;overflow:hidden;flex:none;background:var(--sage-100)}.trow-media img{width:100%;height:100%;object-fit:cover}
+.trow-body{flex:1;min-width:220px}.trow-body h3{font-size:1rem}
+.trow-body .who{display:flex;gap:8px;align-items:center;margin-top:6px;color:var(--text2);font-size:.8125rem;flex-wrap:wrap}
+.trow-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.875rem;color:var(--text2)}
+.trow-meta span{display:inline-flex;gap:6px;align-items:center}.trow-meta .ic{width:15px;height:15px;color:var(--sage-700)}
+.trow-side{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-left:auto}
+.trow-price{font-weight:800;text-align:right}.trow-price small{font-weight:600;color:var(--text2);font-size:.75rem;display:block}
+.trow-actions{display:flex;gap:8px;flex-wrap:wrap}
+.msg-q{margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;font-size:.875rem;color:var(--text2);display:flex;gap:8px}.msg-q .ic{width:15px;height:15px;margin-top:3px;color:var(--sage-700);flex:none}
+@media(max-width:640px){.trow{flex-direction:column;align-items:stretch}.trow-media{width:100%;aspect-ratio:16/7}.trow-side{flex-direction:row;justify-content:space-between;width:100%;align-items:center}}
+.steps{display:flex;align-items:center;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:10px;flex:1}
+.step-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border2);background:#fff;display:grid;place-items:center;font-weight:800;font-size:.8125rem;color:var(--text2);flex:none}
+.step.act .step-dot{border-color:var(--forest-700);color:var(--forest-700)}
+.step.done .step-dot{background:var(--forest-700);border-color:var(--forest-700);color:#fff}
+.step-lbl{font-weight:600;font-size:.875rem;color:var(--text2)}.step.act .step-lbl{color:var(--text)}
+.step::after{content:"";flex:1;height:2px;background:var(--border);margin:0 14px}
+.step:last-child{flex:0}.step:last-child::after{display:none}
+.steps-mob{display:none}
+@media(max-width:720px){.steps{display:none}.steps-mob{display:block;margin-bottom:20px}.steps-mob .t{display:flex;justify-content:space-between;font-size:.875rem;font-weight:700;margin-bottom:8px}.bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--forest-700);border-radius:99px;transition:width .3s}}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}.form-grid .full{grid-column:1/-1}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr}}
+.form-foot{display:flex;justify-content:space-between;gap:12px;margin-top:28px;flex-wrap:wrap}
+.feat-checks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px}
+.feat-checks .check{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#fff}
+.feat-checks .check:has(input:checked){border-color:#2C5C49;background:#F0F5F1}
+.feat-checks .ic{width:16px;height:16px;color:var(--sage-700);margin:3px 0 0}
+@media(max-width:820px){.feat-checks{grid-template-columns:repeat(2,1fr)}}
+.drop{border:2px dashed var(--border2);border-radius:var(--r-lg);padding:34px 20px;text-align:center;background:#fff;cursor:pointer}
+.drop:hover,.drop.over{border-color:#2C5C49;background:#F4F8F5}
+.drop .ic{width:30px;height:30px;color:var(--sage-600);margin:0 auto 10px}.drop small{color:var(--text2)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:16px}
+.thumb{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface2)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .cap{position:absolute;top:8px;left:8px}
+.thumb .ops{position:absolute;inset:auto 0 0 0;background:rgba(22,30,26,.55);display:flex;justify-content:center;gap:4px;padding:6px}
+.thumb .ops button{width:30px;height:30px;border-radius:8px;border:0;background:transparent;color:#fff;display:grid;place-items:center}
+.thumb .ops button:hover{background:rgba(255,255,255,.18)}.thumb .ops .ic{width:15px;height:15px}
+.up-note{display:flex;justify-content:space-between;color:var(--text2);font-size:.8125rem;margin-top:10px;gap:10px;flex-wrap:wrap}
+.pv-wrap{max-width:340px;margin-bottom:20px}
+.pv-dl{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 24px;font-size:.875rem;background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:16px 18px}
+.pv-dl div{display:flex;justify-content:space-between;gap:8px}.pv-dl dt{color:var(--text2)}.pv-dl dd{font-weight:600}
+.prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:860px){.prof-grid{grid-template-columns:1fr}}
+.card-title{font-size:1.0625rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px}.card-title .ic{width:19px;height:19px;color:var(--forest-700)}
+.adm-layout{display:grid;grid-template-columns:232px 1fr;min-height:calc(100vh - 69px)}
+.adm-side{background:var(--forest-900);color:#fff;padding:26px 16px;display:flex;flex-direction:column;gap:4px}
+.adm-side .cap{font-size:.7rem;font-weight:800;letter-spacing:.14em;color:#8FAF9E;padding:0 12px 10px}
+.adm-side .sp{flex:1}
+.adm-link{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:10px;font-weight:600;font-size:.9375rem;color:#C9DAD0}
+.adm-link:hover{background:rgba(255,255,255,.07);color:#fff}
+.adm-link.on{background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 3px 0 0 var(--orange-500)}
+.adm-link .ic{width:18px;height:18px}
+.adm-main{padding:28px clamp(18px,3vw,36px) 64px;background:var(--bg);min-width:0}
+.adm-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0}.adm-toolbar .input-wrap{flex:1;min-width:200px;max-width:340px}
+.pill-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;border:1px solid var(--border2);background:#fff;font-weight:600;font-size:.875rem;color:var(--text2)}
+.pill.on{background:var(--forest-700);border-color:var(--forest-700);color:#fff}
+.table-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow-x:auto}
+.table{width:100%;border-collapse:collapse;font-size:.9rem}
+.table th{text-align:left;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);padding:12px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
+.table td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.table tbody tr:last-child td{border-bottom:0}.table tbody tr:hover td{background:#FBFBF7}
+.cell-item{display:flex;gap:12px;align-items:center;min-width:200px}
+.cell-item .thimg{width:56px;height:42px;object-fit:cover;border-radius:8px;flex:none;background:var(--sage-100)}
+.cell-item b{display:block;font-size:.875rem;line-height:1.3}.cell-item small{color:var(--text2)}
+@media(max-width:720px){.adm-layout{grid-template-columns:1fr}.adm-side{flex-direction:row;overflow-x:auto;padding:10px 14px;gap:6px}.adm-side .cap,.adm-side .sp{display:none}.adm-link{white-space:nowrap;padding:9px 14px}}
+@media(max-width:640px){.table tr{display:grid;gap:8px;padding:16px;border-bottom:1px solid var(--border)}.table thead{display:none}.table td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:2px 0}.table td::before{content:attr(data-l);font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}.table td.ci::before{display:none}.table td.ci{flex-direction:column;align-items:flex-start;gap:6px}}
+.overlay{position:fixed;inset:0;background:rgba(24,32,27,.52);z-index:80;display:grid;place-items:center;padding:18px;animation:fade .18s}
+@keyframes fade{from{opacity:0}}
+.modal{width:100%;max-width:480px;background:#fff;border-radius:var(--r-xl);box-shadow:var(--sh-lg);animation:up .22s cubic-bezier(.2,.9,.3,1.1);max-height:calc(100vh - 40px);display:flex;flex-direction:column}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}
+.modal-head{display:flex;align-items:center;gap:10px;padding:20px 22px 0}.modal-head h3{font-size:1.125rem;display:flex;gap:10px;align-items:center}.modal-head h3 .ic{color:var(--text2);width:20px;height:20px}
+.modal-x{margin-left:auto}
+.modal-body{padding:14px 22px;overflow:auto}.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 22px 20px;flex-wrap:wrap}
+.drawer{position:fixed;inset:0 0 0 auto;width:min(480px,100%);background:#fff;z-index:81;box-shadow:var(--sh-lg);animation:slide .25s cubic-bezier(.2,.8,.3,1);display:flex;flex-direction:column}
+@keyframes slide{from{transform:translateX(30px);opacity:0}}
+@media(max-width:640px){.drawer{inset:auto 0 0 0;width:100%;max-height:86vh;border-radius:20px 20px 0 0;animation:sheetup .28s cubic-bezier(.2,.8,.3,1)}}
+@keyframes sheetup{from{transform:translateY(40px);opacity:0}}
+body.lock{overflow:hidden}
+.toast-root{position:fixed;right:16px;bottom:16px;z-index:120;display:grid;gap:10px;justify-items:end}
+.toast{display:flex;gap:10px;align-items:flex-start;background:#202925;color:#fff;border-radius:14px;padding:13px 14px;box-shadow:var(--sh-lg);max-width:380px;animation:up .25s;font-size:.875rem;line-height:1.45}
+.toast .ic{width:18px;height:18px;margin-top:1px}
+.toast.ok .ic{color:#7FD3A2}.toast.err .ic{color:#F0988C}.toast.info .ic{color:#9CC7E0}.toast.warn .ic{color:#EFC377}
+.toast button{background:none;border:0;color:#fff;opacity:.7;padding:2px}
+.toast.out{opacity:0;transform:translateY(6px);transition:.25s}
+@media(max-width:640px){.toast-root{left:16px;right:16px;justify-items:stretch}}
+.lightbox{position:fixed;inset:0;z-index:100;background:rgba(10,14,12,.92);display:flex;flex-direction:column;animation:fade .2s}
+.lb-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;color:#fff}.lb-head .cnt{font-weight:700}
+.lb-stage{flex:1;display:grid;place-items:center;padding:0 clamp(12px,4vw,60px);min-height:0;position:relative}
+.lb-stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.lb-nav{position:absolute;top:50%;translate:0 -50%;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:0;color:#fff;display:grid;place-items:center}
+.lb-nav:hover{background:rgba(255,255,255,.22)}.lb-prev{left:14px}.lb-next{right:14px}
+.sg{display:grid;grid-template-columns:210px 1fr;gap:40px;align-items:start;padding-block:32px 80px}
+.sg-nav{position:sticky;top:92px;display:grid;gap:2px}
+.sg-nav button{text-align:left;padding:9px 12px;border-radius:9px;border:0;background:none;font-weight:600;font-size:.875rem;color:var(--text2)}
+.sg-nav button:hover{background:var(--surface2);color:var(--text)}
+.sg-sec{margin-bottom:48px}.sg-sec h2{margin-bottom:16px}
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.sw{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}.sw .c{height:60px}.sw .m{padding:10px 12px;font-size:.75rem}.sw b{display:block;font-size:.8125rem}
+.demo-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.type-row{display:flex;align-items:baseline;gap:18px;padding:12px 0;border-bottom:1px dashed var(--border);flex-wrap:wrap}
+.type-row code{margin-left:auto;color:var(--text2);font-size:.75rem;background:var(--surface2);padding:2px 8px;border-radius:6px}
+.dd{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.sg{grid-template-columns:1fr}.sg-nav{position:static;display:flex;overflow-x:auto;padding-bottom:6px}.dd{grid-template-columns:1fr}}
+.site-footer{border-top:1px solid var(--border);margin-top:24px;background:#fff}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;padding-block:48px}
+.foot-brand p{color:var(--text2);font-size:.9375rem;max-width:34ch;margin-top:10px}
+.foot-title{font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:12px}
+.foot-col a,.foot-col button{display:block;padding:6px 0;color:var(--text2);font-size:.9375rem;background:none;border:0;text-align:left}
+.foot-col a:hover,.foot-col button:hover{color:#1E4133}
+.foot-bottom{border-top:1px solid var(--border);padding-block:18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--text2);font-size:.8125rem}
+@media(max-width:860px){.foot-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.foot-grid{grid-template-columns:1fr}}
+@media(max-width:900px){
+.hero-grid{grid-template-columns:1fr}.hero-mini{left:8px;bottom:-16px}
+.lgrid{grid-template-columns:repeat(2,1fr)}.steps3{grid-template-columns:1fr}.band{grid-template-columns:1fr}
+.search-layout{grid-template-columns:1fr}.filters{display:none}.rcard{grid-template-columns:1fr}.rcard-media{min-height:0;aspect-ratio:16/9}
+.filter-btn{display:inline-flex}
+.searchbar{grid-template-columns:1fr;padding:12px;margin-top:16px}.sb-cell{padding:12px 8px}.sb-cell+.sb-cell{border-left:0;border-top:1px solid var(--border)}.sb-btn{height:48px;width:100%;margin:4px 0 0}
+.acc-layout{grid-template-columns:1fr;gap:20px}.acc-nav{position:static;display:flex;overflow-x:auto;padding:10px;gap:6px}.acc-user{display:none}.acc-link{white-space:nowrap;padding:9px 14px;border-radius:999px;border:1px solid var(--border)}.acc-link.on{border-color:var(--forest-700)}.acc-nav .sep{display:none}.acc-link.out{margin-left:auto;border:0}
+}
+@media(max-width:640px){.lgrid{grid-template-columns:1fr;gap:20px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">İçeriğe geç</a>
+
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-user-plus" viewBox="0 0 24 24"><path d="M15 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-chev-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5.5"/></symbol>
+<symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-4.4-4.4a2 2 0 0 0-2.8 0L5 19"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.5a11 11 0 0 1 14 0M8.5 15.8a6.5 6.5 0 0 1 7 0M12 19h.01M2 9a15.5 15.5 0 0 1 20 0"/></symbol>
+<symbol id="i-snowflake" viewBox="0 0 24 24"><path d="M12 2v20M20 12H4M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-umbrella" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 10 10H2A10 10 0 0 1 12 2ZM12 12v6a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-2.3-5.5A18 18 0 0 0 12 2c.8 3-.2 5-1.7 6.6C8.8 10.2 5 11 5 15a7 7 0 0 0 7 7Z"/></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 2.7s5.5 5.6 5.5 9.3a5.5 5.5 0 0 1-11 0C6.5 8.3 12 2.7 12 2.7Z"/></symbol>
+<symbol id="i-stove" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2"/><circle cx="8.5" cy="15" r="2"/><circle cx="15.5" cy="15" r="2"/><path d="M6 6h12M8 3h8"/></symbol>
+<symbol id="i-fridge" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M6 10h12M9 6h.01M9 14v3"/></symbol>
+<symbol id="i-shower" viewBox="0 0 24 24"><path d="M4 21v-7a8 8 0 0 1 16 0v7M12 6V3M8 3h8M8 17h.01M12 17h.01M16 17h.01M9.5 20h.01M14.5 20h.01"/></symbol>
+<symbol id="i-wc" viewBox="0 0 24 24"><path d="M14 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM11 12h.01"/></symbol>
+<symbol id="i-bed" viewBox="0 0 24 24"><path d="M2 18v-6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6M2 20v-2M22 20v-2M6 10V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-utensils" viewBox="0 0 24 24"><path d="M5 2v4a3 3 0 0 0 6 0V2M8 2v20"/><circle cx="16.5" cy="6" r="3.5"/><path d="M16.5 9.5V22"/></symbol>
+<symbol id="i-navigation" viewBox="0 0 24 24"><path d="m3 11 19-8-8 19-2.5-8.5Z"/></symbol>
+<symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17" r="3.5"/><circle cx="18.5" cy="17" r="3.5"/><path d="M5.5 17 9 9h6l3.5 8M9 9l3 8h-6.5M13.5 9 15 6h2.5"/></symbol>
+<symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="8" width="16" height="9" rx="2"/><path d="M21 11.5v2M6 10l-2 3h3l-2 3"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.3 17a9 9 0 1 1 17.4 0"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v5l-4 2v-7Z"/></symbol>
+<symbol id="i-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"/><path d="m9 11.5 2 2 4-4.5"/></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5Z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-11 11M22 2 15 22l-4-9-9-4Z"/></symbol>
+<symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2Z"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10.5 9-7.5 9 7.5M5 9v11h14V9"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2v-4l-2-5H5L3 13v4h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6M5 13h14"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H12"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.9 1 6.6 2.6L21 8"/><path d="M21 3v5h-5"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5Z"/></symbol>
+<symbol id="i-banknote" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></symbol>
+</svg>
+
+<header id="site-head"></header>
+<main id="main" tabindex="-1"><div class="boot">Karavan yükleniyor…</div></main>
+<footer id="site-foot"></footer>
+<div id="ov-root"></div>
+<div id="lb-root"></div>
+<div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* ============ Yardımcılar ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => '₺' + Number(n).toLocaleString('tr-TR');
+const icon = (n, cls) => `<svg class="ic ${cls || ''}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const photoUrl = (p, w, h) => p.startsWith('data:') ? p : `https://picsum.photos/seed/${p}/${w}/${h}.jpg`;
+const pic = (seed, w, h, alt) => `<img src="${photoUrl(seed, w, h)}" alt="${esc(alt || '')}" loading="lazy">`;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const uid = p => p + Math.random().toString(36).slice(2, 8);
+
+const iso = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
+const today = () => iso(new Date());
+const addD = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return iso(d); };
+const nights = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5);
+const fD = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+const fDs = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short' });
+const fDsy = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtDay = d => fD.format(new Date(d + 'T00:00:00'));
+const fmtShort = d => fDs.format(new Date(d + 'T00:00:00'));
+const fmtShortY = d => fDsy.format(new Date(d + 'T00:00:00'));
+const fmtRange = (s, e) => new Date(s).getFullYear() === new Date(e).getFullYear()
+  ? fmtShort(s) + ' – ' + fmtShortY(e) : fmtShortY(s) + ' – ' + fmtShortY(e);
+const joinedMonth = ts => new Date(ts).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+const COLORS = ['#234B3B', '#6F8A79', '#C96A2F', '#2C6486', '#7C5A3A', '#4E6E51', '#8A5A7A', '#3E5A4B'];
+const avatar = (u, cls) => {
+  if (!u) return '';
+  const ini = u.name.split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase();
+  return `<span class="av ${cls || ''}" style="--c:${u.color}" aria-hidden="true">${esc(ini)}</span>`;
+};
+
+/* ============ Sabitler ============ */
+const TYPES = { alcove: 'Alkovilli', semiint: 'Yarı Entegre', integ: 'Tam Entegre', van: 'Kamper VAN' };
+const FEATURES = {
+  klima: ['Klima', 'snowflake'], wc: ['WC', 'wc'], dus: ['Duş', 'shower'], sicakSu: ['Sıcak su', 'droplet'],
+  ocak: ['Ocak', 'stove'], buzdolabi: ['Buzdolabı', 'fridge'], mutfakTakimi: ['Mutfak takımı', 'utensils'],
+  yatakTakimi: ['Yatak takımı', 'bed'], gunesPaneli: ['Güneş paneli', 'sun'], tente: ['Tente', 'umbrella'],
+  isitma: ['Isıtma', 'flame'], tv: ['TV', 'tv'], gps: ['GPS', 'navigation'], bisikletTasiyici: ['Bisiklet taşıyıcı', 'bike'],
+  kamera: ['Geri görüş kamerası', 'camera'], invertor: ['İnvertör', 'battery'], wifi: ['WiFi', 'wifi']
+};
+const DEMO_PW = 'karavan123';
+const REQ_LABEL = { pending: 'Bekliyor', approved: 'Onaylandı', rejected: 'Reddedildi', cancelled: 'İptal edildi', completed: 'Tamamlandı' };
+const REQ_CLASS = { pending: 'b-amber', approved: 'b-green', rejected: 'b-red', cancelled: 'b-gray', completed: 'b-sage' };
+const LIST_LABEL = { draft: 'Taslak', pending_review: 'İncelemede', published: 'Yayında', rejected: 'Reddedildi', paused: 'Duraklatıldı' };
+const LIST_CLASS = { draft: 'b-gray', pending_review: 'b-amber', published: 'b-green', rejected: 'b-red', paused: 'b-sage' };
+const LIST_ICON = { draft: 'pencil', pending_review: 'clock', published: 'check-circle', rejected: 'x-circle', paused: 'pause' };
+
+/* ============ Durum & demo veri ============ */
+const state = { user: null, users: [], listings: [], requests: [], draft: null, reqTab: 'in' };
+
+function seedUsers() {
+  const mk = (id, name, email, days, phone, admin, banned) => ({
+    id, name, email, phone: phone || '', admin: !!admin, banned: !!banned,
+    joined: Date.now() - days * 864e5, color: COLORS[(id.charCodeAt(1) + id.charCodeAt(2)) % COLORS.length]
+  });
+  state.users = [
+    mk('u1', 'Zeynep Aksoy', 'zeynep@ornek.com', 520, '0532 214 66 08'),
+    mk('u2', 'Mert Kaya', 'mert@ornek.com', 430, '0533 418 90 21'),
+    mk('u3', 'Elif Demir', 'elif@ornek.com', 380, '0505 771 33 46'),
+    mk('u4', 'Burak Şahin', 'burak@ornek.com', 300, '0542 300 12 84'),
+    mk('u5', 'Ayşe Yıldız', 'ayse@ornek.com', 260, '0537 652 87 19'),
+    mk('u6', 'Can Öztürk', 'can@ornek.com', 210, '0541 986 40 32'),
+    mk('u7', 'Furkan Kılıç', 'furkan@ornek.com', 90, '0538 220 71 05'),
+    mk('u8', 'Selin Turan', 'selin@ornek.com', 150, '', false, true),
+    mk('u10', 'Deniz Yolcu', 'demo@karavan.demo', 30, '0530 000 00 00'),
+    mk('a1', 'Platform Yönetimi', 'admin@karavan.demo', 700, '', true)
+  ];
+}
+
+function seedListings() {
+  const fb = ['wc', 'dus', 'sicakSu', 'ocak', 'buzdolabi', 'mutfakTakimi', 'yatakTakimi'];
+  const L = o => Object.assign({ pets: false, special: '', length: '', bookedRanges: [], rejectReason: '', status: 'published' }, o);
+  state.listings = [
+    L({ id: 'l1', owner: 'u1', title: 'Adria Coral Plus 670 DL', brand: 'Adria', model: 'Coral Plus 670 DL', year: 2022, type: 'alcove', city: 'Antalya', district: 'Konyaaltı', price: 4200, guests: 4, beds: 3, length: '6,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 3, minAge: 25, license: 'B (2 yıl tecrübe)',
+      desc: '2022 model, düzenli bakımı yapılmış alkovilli karavan. Konyaaltı sahilinden teslim alıp Likya Yolu’na doğru yola çıkabilirsin. Geniş tente, dolu su deposu ve temizlenmiş iç mekân ile teslim edilir.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'gps', 'kamera', 'wifi']),
+      special: 'Teslimde su ve gaz depoları dolu verilir.',
+      photos: ['krv-l1-a', 'krv-l1-b', 'krv-l1-c', 'krv-l1-d', 'krv-l1-e', 'krv-l1-f'],
+      createdAt: Date.now() - 6 * 864e5, bookedRanges: [[addD(today(), 5), addD(today(), 8)]] }),
+    L({ id: 'l2', owner: 'u2', title: 'Hobby Optima DeLuxe T65 H', brand: 'Hobby', model: 'Optima DeLuxe T65 H', year: 2023, type: 'alcove', city: 'Muğla', district: 'Fethiye', price: 3850, guests: 4, beds: 4, length: '6,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 3, minAge: 23, license: 'B',
+      desc: 'Fethiye merkezde teslim. Çiftler ve aileler için konforlu bir plan; sabit yataklı arka bölüm gecelerini rahat geçirir. Güneş paneli sayesinde elektrik ihtiyacını kamp alanı dışında da karşılar.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'tv', 'bisikletTasiyici', 'wifi']),
+      photos: ['krv-l2-a', 'krv-l2-b', 'krv-l2-c', 'krv-l2-d', 'krv-l2-e'],
+      createdAt: Date.now() - 12 * 864e5, bookedRanges: [[addD(today(), 10), addD(today(), 13)]] }),
+    L({ id: 'l3', owner: 'u3', title: 'Eura Mobil Profilia RS', brand: 'Eura Mobil', model: 'Profilia RS', year: 2021, type: 'integ', city: 'İzmir', district: 'Çeşme', price: 5100, guests: 5, beds: 4, length: '7,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 4, minAge: 25, license: 'B (2 yıl tecrübe)',
+      desc: 'Tam entegre, otomatik vites ve geniş iç hacmiyle uzun rotalar için ideal. Çeşme, Alaçatı ve Foça çevresinde hafta içi teslimlerde daha esnek olabiliyorum.',
+      features: fb.concat(['klima', 'isitma', 'tv', 'gps', 'invertor', 'kamera', 'bisikletTasiyici']),
+      special: 'Şehir içi dar sokaklarda dikkatli sürüş beklenir.',
+      photos: ['krv-l3-a', 'krv-l3-b', 'krv-l3-c', 'krv-l3-d', 'krv-l3-e', 'krv-l3-f', 'krv-l3-g'],
+      createdAt: Date.now() - 20 * 864e5 }),
+    L({ id: 'l4', owner: 'u2', title: 'Knaus Boxdrive 600 XL', brand: 'Knaus', model: 'Boxdrive 600 XL', year: 2023, type: 'van', city: 'Antalya', district: 'Kaş', price: 2950, guests: 2, beds: 2, length: '5,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 2, minAge: 21, license: 'B',
+      desc: 'Kompakt kamper VAN; şehir içi park sorunu yaşamadan koy ve plaj arasında dolaşmak için tasarlandı. 2 kişilik sabit yatak ve kullanımı akışkan küçük bir mutfak.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'kamera', 'wifi']),
+      photos: ['krv-l4-a', 'krv-l4-b', 'krv-l4-c', 'krv-l4-d'],
+      createdAt: Date.now() - 3 * 864e5 }),
+    L({ id: 'l5', owner: 'u5', title: 'Adria Coral S 670 SC', brand: 'Adria', model: 'Coral S 670 SC', year: 2020, type: 'alcove', city: 'Muğla', district: 'Akyaka', price: 4450, guests: 4, beds: 3, length: '6,99 m', gearbox: 'Manuel', fuel: 'Dizel', minNights: 3, minAge: 23, license: 'B',
+      desc: 'Akyaka çevresi için manuel şanzımanlı, bakımlı bir alkovilli. Az giden bir araç; son servis kayıtları teslimde gösterilir. Tente ve açık mutfak düzeniyle bahar aylarında çok keyifli.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'invertor']),
+      pets: true, special: 'Evcil hayvanla seyahatte yatak takımı için ek çarşaf kullanılır.',
+      photos: ['krv-l5-a', 'krv-l5-b', 'krv-l5-c', 'krv-l5-d', 'krv-l5-e', 'krv-l5-f'],
+      createdAt: Date.now() - 33 * 864e5 }),
+    L({ id: 'l6', owner: 'u6', title: 'Volkswagen Grand California 600', brand: 'Volkswagen', model: 'Grand California 600', year: 2022, type: 'van', city: 'Çanakkale', district: 'Bozcaada', price: 4750, guests: 3, beds: 2, length: '6,00 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 3, minAge: 25, license: 'B',
+      desc: 'Bozcaada feribotuna uygun boyutta, otomatik vitesli kamper VAN. Adada dar sokaklarda rahat etmen için kompakt boyut seçtim; ada trafiğine ve plaj yollarına uygundur.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'gps', 'kamera', 'wifi']),
+      photos: ['krv-l6-a', 'krv-l6-b', 'krv-l6-c', 'krv-l6-d', 'krv-l6-e'],
+      createdAt: Date.now() - 9 * 864e5 }),
+    L({ id: 'l7', owner: 'u3', title: 'Hymer Exsis-i 580', brand: 'Hymer', model: 'Exsis-i 580', year: 2019, type: 'integ', city: 'Nevşehir', district: 'Göreme', price: 4950, guests: 4, beds: 3, length: '6,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 2, minAge: 25, license: 'B',
+      desc: 'Kapadokya turu için yıllardır kiraladığım güvenilir araç. Kışın kaloriferi, yazın kliması ile dört sezon kullanılabilir. Teslim Göreme merkezde yapılır.',
+      features: fb.concat(['klima', 'isitma', 'tv', 'gps', 'invertor']),
+      special: 'Kış lastikli; kar zinciri araçta mevcut.',
+      photos: ['krv-l7-a', 'krv-l7-b', 'krv-l7-c', 'krv-l7-d', 'krv-l7-e', 'krv-l7-f'],
+      createdAt: Date.now() - 45 * 864e5 }),
+    L({ id: 'l8', owner: 'u4', title: 'Bürstner Lyseo Harmony 690', brand: 'Bürstner', model: 'Lyseo Harmony 690', year: 2021, type: 'alcove', city: 'Balıkesir', district: 'Ayvalık', price: 3400, guests: 4, beds: 4, length: '6,99 m', gearbox: 'Manuel', fuel: 'Dizel', minNights: 2, minAge: 21, license: 'B',
+      desc: 'Ayvalık ve Cunda çevresinde keşif için ideal. Yatak takımları ve mutfak donanımı dahildir; sadece kıyafetlerini al gel.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'bisikletTasiyici']),
+      pets: true,
+      photos: ['krv-l8-a', 'krv-l8-b', 'krv-l8-c', 'krv-l8-d', 'krv-l8-e'],
+      createdAt: Date.now() - 15 * 864e5 }),
+    L({ id: 'l9', owner: 'u5', title: 'Pilote Essentiel C700', brand: 'Pilote', model: 'Essentiel C700', year: 2020, type: 'alcove', city: 'Çanakkale', district: 'Assos', price: 5600, guests: 6, beds: 5, length: '7,49 m', gearbox: 'Manuel', fuel: 'Dizel', minNights: 4, minAge: 25, license: 'B',
+      desc: 'Kalabalık aileler ve arkadaş grupları için 6 kişilik geniş karavan. Assos ve Ayvacık çevresindeki uzun rotalar için minimum 4 gece kiralıyoruz.',
+      features: fb.concat(['klima', 'tente', 'isitma', 'tv']),
+      special: 'Teslim ve dönüş günleri hafta sonudur.',
+      photos: ['krv-l9-a', 'krv-l9-b', 'krv-l9-c', 'krv-l9-d', 'krv-l9-e', 'krv-l9-f'],
+      createdAt: Date.now() - 28 * 864e5, bookedRanges: [[addD(today(), 2), addD(today(), 4)]] }),
+    L({ id: 'l10', owner: 'u1', title: 'Chausson Welcome 711', brand: 'Chausson', model: 'Welcome 711', year: 2021, type: 'alcove', city: 'İstanbul', district: 'Şile', price: 3650, guests: 4, beds: 4, length: '6,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 2, minAge: 23, license: 'B',
+      desc: 'Şile ve Karadeniz kıyıları için ideal bir aile karavanı. Kısa süreliğine listemden kaldırdım; yakında yeniden yayında olacak.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'wifi']),
+      status: 'paused', photos: ['krv-l10-a', 'krv-l10-b', 'krv-l10-c', 'krv-l10-d'],
+      createdAt: Date.now() - 18 * 864e5 }),
+    L({ id: 'l11', owner: 'u6', title: 'Benimar Primero 314', brand: 'Benimar', model: 'Primero 314', year: 2022, type: 'semiint', city: 'Trabzon', district: 'Uzungöl', price: 4350, guests: 5, beds: 4, length: '6,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 3, minAge: 23, license: 'B',
+      desc: 'Uzungöl ve Rize yaylaları rotaları için otomatik vitesli, yeni model yarı entegre. Engebeli yollarda motoru güçlü; çay bahçelerinde kamp için tente ve dış aydınlatma mevcut.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'gps', 'kamera', 'invertor', 'wifi']),
+      photos: ['krv-l11-a', 'krv-l11-b', 'krv-l11-c', 'krv-l11-d', 'krv-l11-e'],
+      createdAt: Date.now() - 7 * 864e5 }),
+    L({ id: 'l12', owner: 'u4', title: 'Sunlight V66', brand: 'Sunlight', model: 'V66', year: 2023, type: 'van', city: 'Muğla', district: 'Datça', price: 3100, guests: 2, beds: 2, length: '5,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 2, minAge: 21, license: 'B',
+      desc: 'Datça koylarına gidecek kadar çevik, yeterince konforlu bir kamper VAN. 2023 model, düşük kilometre. Sessiz bölgelerde güneş paneli kullanımını öneririm.',
+      features: fb.concat(['gunesPaneli', 'tente', 'kamera', 'wifi']),
+      pets: true, photos: ['krv-l12-a', 'krv-l12-b', 'krv-l12-c', 'krv-l12-d'],
+      createdAt: Date.now() - 1 * 864e5 }),
+    L({ id: 'l13', owner: 'u7', title: 'Roller Team Zefiro 675', brand: 'Roller Team', model: 'Zefiro 675', year: 2021, type: 'alcove', city: 'Antalya', district: 'Kaş', price: 3600, guests: 5, beds: 4, length: '7,00 m', gearbox: 'Manuel', fuel: 'Dizel', minNights: 3, minAge: 23, license: 'B',
+      desc: 'Kaş çevresi için geniş aile karavanı. Tente, dış duş ve geniş garaj ile teslim edilir.',
+      features: fb.concat(['klima', 'tente', 'isitma', 'gps']),
+      status: 'pending_review', photos: ['krv-l13-a', 'krv-l13-b', 'krv-l13-c', 'krv-l13-d', 'krv-l13-e', 'krv-l13-f'],
+      createdAt: Date.now() - 2 * 864e5 }),
+    L({ id: 'l14', owner: 'u7', title: 'Dethleffs Trend T7057 DBM', brand: 'Dethleffs', model: 'Trend T7057 DBM', year: 2022, type: 'alcove', city: 'Balıkesir', district: 'Ayvalık', price: 1900, guests: 4, beds: 3, length: '7,00 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 2, minAge: 21, license: 'B',
+      desc: 'Ayvalık çevresi için otomatik vitesli karavan.',
+      features: fb.concat(['klima', 'tente']),
+      status: 'pending_review', photos: ['krv-l14-a'],
+      createdAt: Date.now() - 1 * 864e5 }),
+    L({ id: 'l15', owner: 'u6', title: 'Etrusco A 5900 DB', brand: 'Etrusco', model: 'A 5900 DB', year: 2023, type: 'alcove', city: 'İzmir', district: 'Çeşme', price: 4200, guests: 4, beds: 4, length: '5,99 m', gearbox: 'Otomatik', fuel: 'Dizel', minNights: 3, minAge: 23, license: 'B',
+      desc: 'Çeşme çıkışlı, yeni model aile karavanı. Hafta içi teslimlerde esnekim.',
+      features: fb.concat(['klima', 'gunesPaneli', 'tente', 'isitma', 'wifi']),
+      status: 'pending_review', photos: ['krv-l15-a', 'krv-l15-b', 'krv-l15-c', 'krv-l15-d'],
+      createdAt: Date.now() - 5 * 864e5 }),
+    L({ id: 'l16', owner: 'u1', title: 'Dethleffs Globebus T6', brand: 'Dethleffs', model: 'Globebus T6', year: 2020, type: 'van', city: 'Muğla', district: 'Marmaris', price: 3300, guests: 3, beds: 2, length: '5,99 m', gearbox: 'Manuel', fuel: 'Dizel', minNights: 2, minAge: 21, license: 'B',
+      desc: 'Marmaris çevresi için kompakt ve çevik bir kamper VAN. Sezon dışında geçici olarak duraklatıldı.',
+      features: fb.concat(['gunesPaneli', 'tente', 'wifi']),
+      status: 'paused', photos: ['krv-l16-a', 'krv-l16-b', 'krv-l16-c'],
+      createdAt: Date.now() - 40 * 864e5 }),
+    L({ id: 'l17', owner: 'u1', title: 'Knaus Live Wave 700 MEG', brand: 'Knaus', model: 'Live Wave 700 MEG', year: 2019, type: 'alcove', city: 'Antalya', district: 'Side', price: 3500, guests: 4, beds: 4, length: '7,00 m', gearbox: 'Manuel', fuel: 'Dizel', minNights: 2, minAge: 23, license: 'B',
+      desc: 'Side çevresi için ferah bir aile karavanı. İlanı hazırlıyoruz, yakında yayında.',
+      features: fb.concat(['tente', 'isitma']),
+      status: 'draft', photos: ['krv-l17-a', 'krv-l17-b'],
+      createdAt: Date.now() - 2 * 864e5 }),
+    L({ id: 'l18', owner: 'u1', title: 'Rimor Super Brig 95', brand: 'Rimor', model: 'Super Brig 95', year: 2018, type: 'alcove', city: 'Muğla', district: 'Ölüdeniz', price: 4800, guests: 6, beds: 5, length: '7,00 m', gearbox: 'Manuel', fuel: 'Dizel', minNights: 3, minAge: 25, license: 'B',
+      desc: 'Ölüdeniz çevresi için 6 kişilik karavan.',
+      features: fb.concat(['klima', 'tente', 'tv']),
+      status: 'rejected', photos: ['krv-l18-a', 'krv-l18-b'],
+      rejectReason: 'Fotoğrafların en az biri karavanın dış görünümünü net göstermiyor; teknik bilgilerdeki yakıt ve vites alanları eksik görünüyor. Lütfen tamamlayıp tekrar gönder.',
+      createdAt: Date.now() - 5 * 864e5 })
+  ];
+}
+
+function seedRequests() {
+  const R = o => Object.assign({ message: '', rejectReason: '' }, o);
+  state.requests = [
+    R({ id: 'r1', listingId: 'l1', tenantId: 'u2', start: addD(today(), 5), end: addD(today(), 8), guests: 2, message: 'Merhaba! Antalya tatilimiz için 3 gece düşünüyoruz. Teslim saati konusunda esneklik olabilir mi?', status: 'pending', createdAt: Date.now() - 1 * 864e5 }),
+    R({ id: 'r2', listingId: 'l1', tenantId: 'u3', start: addD(today(), 6), end: addD(today(), 9), guests: 4, message: 'Kapadokya sonrası sahil turu planlıyoruz. 4 kişiyiz, uzayabilir miyiz?', status: 'pending', createdAt: Date.now() - 0.4 * 864e5 }),
+    R({ id: 'r3', listingId: 'l1', tenantId: 'u5', start: addD(today(), -40), end: addD(today(), -37), guests: 2, status: 'completed', createdAt: Date.now() - 45 * 864e5 }),
+    R({ id: 'r4', listingId: 'l2', tenantId: 'u1', start: addD(today(), 10), end: addD(today(), 13), guests: 2, message: 'Fethiye hafta sonu kaçamağı için baktım, şimdiden teşekkürler!', status: 'approved', createdAt: Date.now() - 2 * 864e5 }),
+    R({ id: 'r5', listingId: 'l5', tenantId: 'u1', start: addD(today(), 20), end: addD(today(), 23), guests: 3, message: '3 kişiyiz, Akyaka çevresinde sakin kamp alanları önerirsen seviniriz.', status: 'pending', createdAt: Date.now() - 0.2 * 864e5 }),
+    R({ id: 'r6', listingId: 'l9', tenantId: 'u1', start: addD(today(), -25), end: addD(today(), -20), guests: 4, status: 'rejected', createdAt: Date.now() - 30 * 864e5,
+      rejectReason: 'O tarihlerde karavanımız yıllık bakımda olduğu için maalesef uygun değil.' })
+  ];
+}
+
+/* ============ Oturum & sorgular ============ */
+function saveSession() { try { state.user ? localStorage.setItem('k_session', state.user.email) : localStorage.removeItem('k_session'); } catch (e) {} }
+function restoreSession() { try { const em = localStorage.getItem('k_session'); const u = state.users.find(x => x.email === em); if (u && !u.banned) state.user = u; } catch (e) {} }
+const listing = id => state.listings.find(l => l.id === id);
+const user = id => state.users.find(u => u.id === id);
+const cities = () => [...new Set(state.listings.filter(l => l.status === 'published').map(l => l.city))].sort((a, b) => a.localeCompare(b, 'tr'));
+
+function bookedRangesOf(l) {
+  const ranges = (l.bookedRanges || []).slice();
+  state.requests.forEach(r => { if (r.listingId === l.id && (r.status === 'approved' || r.status === 'pending')) ranges.push([r.start, r.end]); });
+  return ranges;
+}
+function findOverlap(l, s, e) {
+  for (const rg of bookedRangesOf(l)) { if (s <= rg[1] && rg[0] <= e) return rg; }
+  return null;
+}
+
+/* ============ Toast / Modal / Confirm / Lightbox ============ */
+function toast(msg, type) {
+  type = type || 'ok';
+  const icMap = { ok: 'check-circle', err: 'alert-circle', info: 'info', warn: 'alert-triangle' };
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.setAttribute('role', 'status');
+  el.innerHTML = `${icon(icMap[type])}<div>${esc(msg)}</div><button aria-label="Bildirimi kapat">${icon('x')}</button>`;
+  el.querySelector('button').addEventListener('click', () => el.remove());
+  $('#toast-root').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4200);
+}
+let cdResolve = null;
+function openLayer(html, cls) {
+  $('#ov-root').innerHTML = `<div class="overlay"><div class="${cls}" role="dialog" aria-modal="true">${html}</div></div>`;
+  document.body.classList.add('lock');
+  const f = $('#ov-root').querySelector('button,input,select,textarea');
+  if (f) f.focus();
+}
+function closeModal() { $('#ov-root').innerHTML = ''; document.body.classList.remove('lock'); cdResolve = null; }
+function confirmDialog(o) {
+  return new Promise(res => {
+    cdResolve = res;
+    openLayer(`
+      <div class="modal-head"><h3>${icon(o.ic || 'info')} ${esc(o.title)}</h3><button class="ibtn modal-x" data-cd="0" aria-label="Kapat">${icon('x')}</button></div>
+      <div class="modal-body"><p class="muted">${o.message}</p></div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-cd="0">${esc(o.cancelLabel || 'Vazgeç')}</button>
+        <button class="btn ${o.tone === 'danger' ? 'btn-destructive' : 'btn-primary'}" data-cd="1">${esc(o.confirmLabel || 'Onayla')}</button>
+      </div>`, 'modal');
+  });
+}
+let lbState = { list: [], i: 0 };
+function openLightbox(list, i) { lbState = { list: list.slice(), i: i }; paintLb(); }
+function paintLb() {
+  const n = lbState.list.length;
+  if (!n) return;
+  $('#lb-root').innerHTML = `
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="Fotoğraf galerisi">
+      <div class="lb-head"><span class="cnt num">${lbState.i + 1} / ${n}</span>
+        <button class="ibtn" data-action="lb-close" style="color:#fff" aria-label="Kapat">${icon('x')}</button></div>
+      <div class="lb-stage">
+        <img src="${lbState.list[lbState.i]}" alt="Fotoğraf ${lbState.i + 1}">
+        ${n > 1 ? `<button class="lb-nav lb-prev" data-action="lb-prev" aria-label="Önceki">${icon('chev-left')}</button>
+        <button class="lb-nav lb-next" data-action="lb-next" aria-label="Sonraki">${icon('chev-right')}</button>` : ''}
+      </div>
+    </div>`;
+}
+function lbMove(d) { const n = lbState.list.length; lbState.i = (lbState.i + d + n) % n; paintLb(); }
+
+/* ============ Header / Footer ============ */
+const logoSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 17h2v-4l-2-5H5L3 13v4h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6M5 13h14"/></svg>`;
+
+function renderHeader(active) {
+  const u = state.user;
+  const cur = p => p === active ? ' aria-current="page"' : '';
+  let right;
+  if (u) {
+    right = `
+      <div class="user-menu" id="umenu">
+        <button class="umenu-btn" data-action="umenu" aria-haspopup="menu" aria-expanded="false">${avatar(u)} ${icon('chev-down')}</button>
+        <div class="umenu" role="menu">
+          <div class="um-head"><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div>
+          <a role="menuitem" href="#/hesap/taleplerim">${icon('inbox')} Taleplerim</a>
+          <a role="menuitem" href="#/hesap/ilanlarim">${icon('list')} İlanlarım</a>
+          <a role="menuitem" href="#/hesap/profil">${icon('user')} Profilim</a>
+          ${u.admin ? `<a role="menuitem" href="#/admin/ilanlar">${icon('shield')} Yönetim Paneli</a>` : ''}
+          <button role="menuitem" class="danger" data-action="logout">${icon('log-out')} Çıkış yap</button>
+        </div>
+      </div>
+      <a class="btn btn-primary" href="#/hesap/ilanlarim/yeni">Karavanını Listele</a>`;
+  } else {
+    right = `<a class="btn btn-ghost" href="#/giris">Giriş yap</a><a class="btn btn-primary" href="#/kayit">Kayıt ol</a>`;
+  }
+  $('#site-head').innerHTML = `
+    <div class="site-header">
+      <div class="container header-in">
+        <a class="brand" href="#/" aria-label="Karavan ana sayfa">${logoSvg}<span>Karavan</span><span class="brand-dot"></span></a>
+        <nav class="main-nav" aria-label="Ana menü">
+          <a href="#/arama"${cur('arama')}>Karavanları Keşfet</a>
+          <a href="#/" data-action="go-how">Nasıl Çalışır</a>
+        </nav>
+        <div class="header-actions">${right}
+          <button class="ibtn hamburger" data-action="hamburger" aria-label="Menüyü aç" aria-expanded="false">${icon('menu')}</button>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mnav" aria-label="Mobil menü">
+        <a href="#/arama">${icon('search')} Karavanları Keşfet</a>
+        <button data-action="go-how">${icon('route')} Nasıl Çalışır</button>
+        ${u
+          ? `<a href="#/hesap/taleplerim">${icon('inbox')} Taleplerim</a>
+             <a href="#/hesap/ilanlarim">${icon('list')} İlanlarım</a>
+             <a href="#/hesap/profil">${icon('user')} Profilim</a>
+             ${u.admin ? `<a href="#/admin/ilanlar">${icon('shield')} Yönetim Paneli</a>` : ''}
+             <button data-action="logout" class="danger">${icon('log-out')} Çıkış yap</button>`
+          : `<a href="#/giris">${icon('user')} Giriş yap</a>
+             <a href="#/kayit">${icon('user-plus')} Kayıt ol</a>`}
+      </nav>
+    </div>`;
+}
+
+function renderFooter() {
+  $('#site-foot').innerHTML = `
+    <footer class="site-footer"><div class="container">
+      <div class="foot-grid">
+        <div class="foot-brand"><a class="brand" href="#/">${logoSvg}<span>Karavan</span><span class="brand-dot"></span></a>
+          <p>Türkiye’nin karavan sahipleri ile özgürlük arayan gezginleri buluşturan güvenilir kiralama pazaryeri.</p></div>
+        <div class="foot-col"><div class="foot-title">Keşfet</div>
+          <a href="#/arama">Karavanları Keşfet</a><button data-action="go-how">Nasıl Çalışır</button>
+          <a href="#/stil-rehberi">Tasarım Sistemi</a></div>
+        <div class="foot-col"><div class="foot-title">Katıl</div>
+          <a href="#/hesap/ilanlarim/yeni">Karavanını Listele</a><a href="#/kayit">Hesap Oluştur</a><a href="#/giris">Giriş Yap</a></div>
+        <div class="foot-col"><div class="foot-title">Popüler Şehirler</div>
+          <a href="#/arama?sehir=${encodeURIComponent('Antalya')}">Antalya</a>
+          <a href="#/arama?sehir=${encodeURIComponent('Muğla')}">Muğla</a>
+          <a href="#/arama?sehir=${encodeURIComponent('İzmir')}">İzmir</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 Karavan. Tüm hakları saklıdır.</span><span>Rezervasyonlar talep ve onay süreciyle yürütülür.</span></div>
+    </div></footer>`;
+}
+
+/* ============ Ortak parçalar ============ */
+function badgeHTML(label, cls, ic) { return `<span class="badge ${cls}">${icon(ic)}${esc(label)}</span>`; }
+function emptyHTML(ic, title, text, actions) {
+  return `<div class="empty"><div class="empty-ic">${icon(ic)}</div><h3 class="h3">${esc(title)}</h3><p>${esc(text)}</p><div class="row">${actions || ''}</div></div>`;
+}
+function cardHTML(l, cls) {
+  const o = user(l.owner);
+  const isList = cls === 'lcard';
+  const feats = l.features.slice(0, 3).map(k => `<span class="mini">${icon(FEATURES[k][1])}${FEATURES[k][0]}</span>`).join('');
+  const media = `<div class="${isList ? 'lcard-media' : 'rcard-media'}">${pic(l.photos[0], 800, 600, l.title)}
+    ${l.status === 'paused' ? `<span class="badge b-sage lcard-tag">${icon('pause')} Duraklatıldı</span>` : ''}</div>`;
+  const top = `<div class="${isList ? 'lcard-top' : 't'}"><h3>${esc(l.title)}</h3>
+    <span class="lcard-price">${money(l.price)} <small>/ gece</small></span></div>
+    <div class="lcard-loc">${icon('map-pin')}${esc(l.city)}, ${esc(l.district)} · ${TYPES[l.type]}</div>`;
+  const rest = isList
+    ? `<div class="lcard-meta"><span>${icon('users')}${l.guests} kişi</span><span>${icon('bed')}${l.beds} yatak</span><span>${icon('gauge')}${esc(l.gearbox)}</span></div>`
+    : `<p class="rcard-desc">${esc(l.desc)}</p><div class="rcard-feats">${feats}</div>
+       <div class="rcard-foot"><span class="rcard-owner">${avatar(o, 'av-sm')} ${esc(o.name)}</span>
+       <span class="rcard-price"><b class="num">${money(l.price)}</b><small>gecelik · tarih seçiminde hesaplanır</small></span></div>`;
+  return `<a class="${cls}" href="#/ilan/${l.id}">${media}<div class="${isList ? 'lcard-body' : 'rcard-body'}">${top}${rest}</div></a>`;
+}
+function pagerHTML(page, total, per) {
+  const pages = Math.max(1, Math.ceil(total / per));
+  if (pages <= 1) return '';
+  const mk = (p, lbl, dis, on) => `<button class="pg${on ? ' on' : ''}" data-action="page-go" data-page="${p}"${dis ? ' disabled' : ''} aria-label="Sayfa ${p}">${lbl || p}</button>`;
+  let out = mk(page - 1, icon('chev-left'), page === 1);
+  for (let p = 1; p <= pages; p++) {
+    if (p === 1 || p === pages || Math.abs(p - page) <= 1) out += mk(p, null, false, p === page);
+    else if (Math.abs(p - page) === 2) out += `<span class="pg" style="cursor:default">…</span>`;
+  }
+  out += mk(page + 1, icon('chev-right'), page === pages);
+  return `<nav class="pager" aria-label="Sayfalama">${out}</nav>`;
+}
+
+/* ============ Ana sayfa ============ */
+function pageHome() {
+  const pub = state.listings.filter(l => l.status === 'published').sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
+  const cityOpts = cities().map(c => `<option>${esc(c)}</option>`).join('');
+  const guestOpts = [2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === 2 ? ' selected' : ''}>${n} kişi</option>`).join('');
+  const chips = ['Antalya', 'Muğla', 'İzmir', 'Çanakkale', 'Nevşehir', 'Balıkesir']
+    .map(c => `<a class="chip-btn" href="#/arama?sehir=${encodeURIComponent(c)}">${icon('map-pin')}${esc(c)}</a>`).join('');
+  const cards = pub.map(l => cardHTML(l, 'lcard')).join('');
+  $('#main').innerHTML = `
+    <section class="hero container">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow">${icon('compass')} Türkiye’nin karavan pazaryeri</span>
+          <h1 class="hero-title">Evini al, yola çık.<br><em>Türkiye’yi keşfet.</em></h1>
+          <p class="hero-sub">Karavanını güvenilir sahiplerinden kiralayıp Likya Yolu’ndan Kapadokya’ya kadar istediğin rotaya çık. Rezervasyon, doğrudan sahip onayıyla tamamlanır.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="#/arama">Karavanları Keşfet ${icon('arrow-right')}</a>
+            <a class="btn btn-outline btn-lg" href="#/hesap/ilanlarim/yeni">Karavanını Listele</a>
+          </div>
+          <div class="hero-points">
+            <div>${icon('shield-check')} Sahip onaylı rezervasyon</div>
+            <div>${icon('banknote')} Ödeme araç tesliminde</div>
+            <div>${icon('message')} Talep öncesi mesaj</div>
+          </div>
+        </div>
+        <div class="hero-media">
+          <div class="hero-main">${pic('krv-hero-main', 1200, 960, 'Yolda bir karavan')}</div>
+          <div class="hero-mini">${pic('krv-hero-mini', 600, 660, 'Kamp alanında karavan')}</div>
+        </div>
+      </div>
+    </section>
+    <div class="container">
+      <form class="searchbar" id="f-home-search" aria-label="Karavan ara">
+        <div class="sb-cell"><label for="hs-city">Şehir</label>
+          <select id="hs-city" name="city"><option value="">Tüm şehirler</option>${cityOpts}</select></div>
+        <div class="sb-cell"><label for="hs-in">Giriş tarihi</label>
+          <input id="hs-in" name="start" type="date" min="${today()}"></div>
+        <div class="sb-cell"><label for="hs-out">Çıkış tarihi</label>
+          <input id="hs-out" name="end" type="date" min="${addD(today(), 1)}"></div>
+        <div class="sb-cell"><label for="hs-g">Kişi</label>
+          <select id="hs-g" name="guests">${guestOpts}</select></div>
+        <button class="btn btn-primary sb-btn" type="submit">${icon('search')} Ara</button>
+      </form>
+      <div class="city-chips"><span>Popüler:</span>${chips}</div>
+    </div>
+    <section class="section container">
+      <div class="sec-head"><div><h2 class="h2">Son eklenen karavanlar</h2><p>Sahipleri tarafından yeni listelenen, yayında olan ilanlar</p></div>
+      <a class="sec-more" href="#/arama">Tümünü gör ${icon('arrow-right')}</a></div>
+      <div class="lgrid">${cards}</div>
+    </section>
+    <section class="section container" id="nasil">
+      <div class="sec-head"><div><h2 class="h2">Nasıl çalışır?</h2><p>Üç adımda yola çık</p></div></div>
+      <div class="steps3">
+        <div class="step3"><div class="ic-badge">${icon('search')}</div><span class="n">ADIM 1</span><h3>Ara ve karşılaştır</h3><p>Şehir, tarih ve kişi sayısına göre filtrele; donanım, fiyat ve sahibine göre ilanları karşılaştır.</p></div>
+        <div class="step3"><div class="ic-badge">${icon('send')}</div><span class="n">ADIM 2</span><h3>Kiralama talebi gönder</h3><p>Tarihlerini seç, kısa bir mesajla talebini gönder. Talep bir ödeme değildir; sahip onayını bekler.</p></div>
+        <div class="step3"><div class="ic-badge">${icon('check-circle')}</div><span class="n">ADIM 3</span><h3>Onayla ve yola çık</h3><p>Sahip onayladığında rezervasyon kesinleşir. Teslim detaylarını sahibiyle görüşürsün.</p></div>
+      </div>
+    </section>
+    <section class="container" style="padding-bottom:64px">
+      <div class="band">
+        <div>
+          <h2>Karavanın mı boşta duruyor?</h2>
+          <p>Yılda birkaç hafta kullanılan karavanın, geri kalan zamanında başkalarının tatiline dönüşsün. Sen tesisleri ve takvimi yönet, talepleri onayla.</p>
+          <div class="pts">
+            <div>${icon('check-circle')} İlanını ücretsiz oluştur, yayına alınmadan önce ekip inceler</div>
+            <div>${icon('check-circle')} Gelen talepleri kabul et ya da gerekçeli reddet</div>
+            <div>${icon('check-circle')} Ödeme, araç tesliminde doğrudan yapılır</div>
+          </div>
+        </div>
+        <div class="band-cta">
+          <a class="btn btn-accent btn-lg" href="#/hesap/ilanlarim/yeni">${icon('plus')} İlan Oluştur</a>
+          <span class="sub">${state.users.length} üye · ${state.listings.filter(l => l.status === 'published').length} yayında ilan</span>
+        </div>
+      </div>
+    </section>`;
+  $('#f-home-search').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const p = new URLSearchParams();
+    if (fd.get('city')) p.set('sehir', fd.get('city'));
+    if (fd.get('start')) p.set('giris', fd.get('start'));
+    if (fd.get('end')) p.set('cikis', fd.get('end'));
+    if (fd.get('guests')) p.set('kisi', fd.get('guests'));
+    nav('#/arama' + (p.toString() ? '?' + p.toString() : ''));
+  });
+}
+
+/* ============ Arama ============ */
+const PER_PAGE = 6;
+function queryFromParams(p) {
+  return {
+    city: p.get('sehir') || '',
+    start: p.get('giris') || '',
+    end: p.get('cikis') || '',
+    guests: p.get('kisi') || '',
+    min: p.get('min') || '',
+    max: p.get('max') || '',
+    types: (p.get('tip') || '').split(',').filter(Boolean),
+    sort: p.get('sirala') || 'rec',
+    page: Math.max(1, parseInt(p.get('sayfa') || '1', 10) || 1)
+  };
+}
+function filterPanelHTML(formId, q) {
+  const cityOpts = cities().map(c => `<option value="${esc(c)}"${q.city === c ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  const typeChecks = Object.entries(TYPES).map(t =>
+    `<label class="check"><input type="checkbox" class="f-type" value="${t[0]}"${q.types.includes(t[0]) ? ' checked' : ''}><span class="t">${t[1]}</span></label>`).join('');
+  const guestOpts = [2, 3, 4, 5, 6].map(n =>
+    `<option value="${n}"${String(q.guests) === String(n) ? ' selected' : ''}>${n}+ kişi</option>`).join('');
+  return `
+    <form id="${formId}" class="f-filter-form">
+      <div class="fgroup"><span class="flabel">Şehir</span>
+        <select class="input select f-city" aria-label="Şehir filtresi"><option value="">Tüm şehirler</option>${cityOpts}</select></div>
+      <div class="fgroup"><span class="flabel">Araç tipi</span>${typeChecks}</div>
+      <div class="fgroup"><span class="flabel">Gecelik fiyat</span>
+        <div class="range-row">
+          <input class="input f-min" type="number" min="0" placeholder="Min" aria-label="Minimum fiyat" value="${esc(q.min)}">
+          <input class="input f-max" type="number" min="0" placeholder="Max" aria-label="Maksimum fiyat" value="${esc(q.max)}">
+        </div></div>
+      <div class="fgroup"><span class="flabel">Kişi sayısı</span>
+        <select class="input select f-guests" aria-label="Kişi sayısı"><option value="">Tümü</option>${guestOpts}</select></div>
+      <button class="btn btn-primary btn-block" type="submit">Filtreleri Uygula</button>
+      <button class="btn btn-ghost btn-block" type="button" data-action="clear-filters">Tümünü temizle</button>
+    </form>`;
+}
+function wireFilterForm(form, fromDrawer) {
+  if (!form) return;
+  form.addEventListener('submit', e => { e.preventDefault(); applyFilters(form, fromDrawer); });
+  if (!fromDrawer) form.addEventListener('change', () => applyFilters(form, false));
+}
+function applyFilters(form, fromDrawer) {
+  const cur = queryFromParams(parseHash().params);
+  const p = new URLSearchParams();
+  const city = form.querySelector('.f-city').value;
+  const types = [...form.querySelectorAll('.f-type:checked')].map(c => c.value);
+  const min = form.querySelector('.f-min').value;
+  const max = form.querySelector('.f-max').value;
+  const guests = form.querySelector('.f-guests').value;
+  if (city) p.set('sehir', city);
+  if (cur.start) p.set('giris', cur.start);
+  if (cur.end) p.set('cikis', cur.end);
+  if (types.length) p.set('tip', types.join(','));
+  if (min) p.set('min', min);
+  if (max) p.set('max', max);
+  if (guests) p.set('kisi', guests);
+  if (cur.sort && cur.sort !== 'rec') p.set('sirala', cur.sort);
+  if (fromDrawer) closeModal();
+  nav('#/arama' + (p.toString() ? '?' + p.toString() : ''));
+}
+function chipsHTML(q) {
+  const chips = [];
+  if (q.city) chips.push({ k: 'sehir', v: q.city, l: 'Şehir: ' + q.city });
+  if (q.start && q.end) chips.push({ k: 'tarih', v: '', l: fmtRange(q.start, q.end) });
+  if (q.guests) chips.push({ k: 'kisi', v: q.guests, l: q.guests + '+ kişi' });
+  if (q.min) chips.push({ k: 'min', v: q.min, l: 'Min ' + money(q.min) });
+  if (q.max) chips.push({ k: 'max', v: q.max, l: 'Max ' + money(q.max) });
+  q.types.forEach(t => chips.push({ k: 'tip', v: t, l: TYPES[t] }));
+  if (!chips.length) return '';
+  const items = chips.map(c =>
+    `<span class="fchip">${esc(c.l)}<button data-action="chip-remove" data-k="${c.k}" data-v="${esc(c.v)}" aria-label="Filtreyi kaldır: ${esc(c.l)}">${icon('x')}</button></span>`).join('');
+  return items + `<button class="btn btn-ghost btn-sm" data-action="clear-filters">${icon('x')} Tümünü temizle</button>`;
+}
+function pageSearch() {
+  const q = queryFromParams(parseHash().params);
+  const sortOpts = [
+    ['rec', 'Önerilen'], ['price-asc', 'Fiyat (artan)'], ['price-desc', 'Fiyat (azalan)'], ['new', 'En yeni']
+  ].map(o => `<option value="${o[0]}"${q.sort === o[0] ? ' selected' : ''}>${o[1]}</option>`).join('');
+  const skeleton = Array.from({ length: 4 }, () =>
+    `<div class="card card-pad"><div style="display:grid;grid-template-columns:220px 1fr;gap:18px">
+     <div class="sk sk-img"></div><div><div class="sk sk-line w60"></div><div class="sk sk-line"></div><div class="sk sk-line w40"></div></div></div></div>`).join('');
+  $('#main').innerHTML = `
+    <div class="container search-layout">
+      <aside class="filters" aria-label="Filtreler">${filterPanelHTML('f-side', q)}</aside>
+      <div>
+        <div class="toolbar">
+          <span class="count"><b id="res-count">…</b> karavan</span><span class="sp"></span>
+          <label class="small" for="sort-sel" style="font-weight:600">Sırala</label>
+          <select id="sort-sel" class="select">${sortOpts}</select>
+          <button class="btn btn-outline filter-btn" data-action="open-filters">${icon('filter')} Filtreler</button>
+        </div>
+        <div id="fchips" class="fchips"></div>
+        <div id="results"><div class="rcards">${skeleton}</div></div>
+        <div id="pager-root"></div>
+      </div>
+    </div>`;
+  wireFilterForm($('#f-side'), false);
+  $('#sort-sel').addEventListener('change', () => {
+    const p = new URLSearchParams(location.hash.split('?')[1] || '');
+    if ($('#sort-sel').value === 'rec') p.delete('sirala'); else p.set('sirala', $('#sort-sel').value);
+    p.delete('sayfa');
+    nav('#/arama' + (p.toString() ? '?' + p.toString() : ''));
+  });
+  setTimeout(paintResults, 450);
+}
+function paintResults() {
+  const q = queryFromParams(parseHash().params);
+  const root = $('#results');
+  if (!root) return;
+  let list = state.listings.filter(l => l.status === 'published');
+  if (q.city) list = list.filter(l => l.city === q.city);
+  if (q.types.length) list = list.filter(l => q.types.includes(l.type));
+  if (q.min) list = list.filter(l => l.price >= Number(q.min));
+  if (q.max) list = list.filter(l => l.price <= Number(q.max));
+  if (q.guests) list = list.filter(l => l.guests >= Number(q.guests));
+  if (q.start && q.end && nights(q.start, q.end) > 0) {
+    list = list.filter(l => l.minNights <= nights(q.start, q.end) && !findOverlap(l, q.start, q.end));
+  }
+  if (q.sort === 'price-asc') list.sort((a, b) => a.price - b.price);
+  else if (q.sort === 'price-desc') list.sort((a, b) => b.price - a.price);
+  else if (q.sort === 'new') list.sort((a, b) => b.createdAt - a.createdAt);
+  const total = list.length;
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const page = Math.min(q.page, pages);
+  const slice = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const cnt = $('#res-count');
+  if (cnt) cnt.textContent = String(total);
+  const chips = $('#fchips');
+  if (chips) chips.innerHTML = chipsHTML(q);
+  if (!total) {
+    root.innerHTML = emptyHTML('search', 'Sonuç bulunamadı', 'Seçtiğin filtrelere uyan yayında ilan yok. Filtreleri gevşetmeyi ya da başka bir şehir denemeyi öneririz.',
+      `<button class="btn btn-outline" data-action="clear-filters">Filtreleri temizle</button><a class="btn btn-primary" href="#/arama">Tüm karavanlar</a>`);
+  } else {
+    root.innerHTML = `<div class="rcards">${slice.map(l => cardHTML(l, 'rcard')).join('')}</div>`;
+  }
+  const pr = $('#pager-root');
+  if (pr) pr.innerHTML = pagerHTML(page, total, PER_PAGE);
+}
+
+/* ============ İlan detayı ============ */
+function pageDetail(id) {
+  const l = listing(id);
+  if (!l || l.status === 'draft') { page404(); return; }
+  const o = user(l.owner);
+  const feats = Object.keys(FEATURES).filter(k => l.features.includes(k));
+  const gallery = l.photos.map((p, i) => {
+    const more = (i === 4 && l.photos.length > 5) ? `<div class="gal-more">+${l.photos.length - 5} fotoğraf</div>` : '';
+    const cls = i === 0 ? ' class="main"' : (i > 4 ? ' class="msc-hide"' : '');
+    return `<div${cls} data-action="lb-open" data-id="${l.id}" data-i="${i}" role="button" tabindex="0" aria-label="Fotoğraf ${i + 1}">${pic(p, i === 0 ? 1200 : 600, i === 0 ? 900 : 450, l.title)}${more}</div>`;
+  }).join('');
+  const dots = l.photos.map((_, i) => `<i class="${i === 0 ? 'on' : ''}"></i>`).join('');
+  const guestOpts = Array.from({ length: l.guests }, (_, i) => i + 1)
+    .map(n => `<option value="${n}"${n === 2 ? ' selected' : ''}>${n} misafir</option>`).join('');
+  const specRows = [
+    ['Marka', l.brand], ['Model', l.model], ['Model yılı', l.year], ['Araç tipi', TYPES[l.type]],
+    ['Vites', l.gearbox], ['Yakıt', l.fuel], ['Uzunluk', l.length || '—'], ['Yatak kapasitesi', l.beds + ' kişilik']
+  ].map(r => `<div><dt>${r[0]}</dt><dd>${esc(r[1])}</dd></div>`).join('');
+  const featRows = feats.map(k => `<div>${icon(FEATURES[k][1])}${FEATURES[k][0]}</div>`).join('');
+  const rules = `
+    <div>${icon('calendar')} Minimum kiralama süresi: <b>&nbsp;${l.minNights} gece</b></div>
+    <div>${icon('user')} Minimum sürücü yaşı: <b>&nbsp;${l.minAge}</b> · Ehliyet: <b>&nbsp;${esc(l.license)}</b></div>
+    <div>${icon(l.pets ? 'check' : 'x-circle')} ${l.pets ? 'Evcil hayvan kabul ediliyor' : 'Evcil hayvan kabul edilmiyor'}</div>
+    <div>${icon('info')} Araç temiz ve depolar kontrollü teslim edilir; iç mekânda sigara içilmez</div>
+    ${l.special ? `<div>${icon('alert-triangle')} ${esc(l.special)}</div>` : ''}`;
+  $('#main').innerHTML = `
+    <div class="container">
+      <nav class="crumbs" aria-label="Konum">
+        <a href="#/">Ana sayfa</a> ${icon('chev-right')} <a href="#/arama">Karavanlar</a> ${icon('chev-right')} <span>${esc(l.city)}</span>
+      </nav>
+      <div class="detail-head detail-title">
+        <div>
+          <h1>${esc(l.title)}</h1>
+          <div class="detail-sub">${icon('map-pin')}${esc(l.city)}, ${esc(l.district)} · ${TYPES[l.type]} · ${esc(l.brand)} ${esc(l.model)} · ${l.year} model
+          ${l.status === 'paused' ? badgeHTML('Duraklatıldı', 'b-sage', 'pause') : ''}</div>
+        </div>
+        <span class="lcard-price" style="font-size:1.25rem">${money(l.price)} <small>/ gece</small></span>
+      </div>
+      <div class="gal" id="gal">${gallery}</div>
+      <div class="gal-dots" id="gal-dots">${dots}</div>
+      <div class="detail-grid">
+        <div>
+          <div class="hl-grid" style="margin-bottom:26px">
+            <div class="hl">${icon('users')}${l.guests} kişi</div>
+            <div class="hl">${icon('bed')}${l.beds} yatak</div>
+            <div class="hl">${icon('gauge')}${esc(l.gearbox)}</div>
+            <div class="hl">${icon('route')}${esc(l.fuel)}</div>
+          </div>
+          <section class="sec"><h2>Bu karavan hakkında</h2><p class="muted" style="max-width:70ch">${esc(l.desc)}</p></section>
+          <section class="sec"><h2>Teknik özellikler</h2><dl class="spec-dl">${specRows}</dl></section>
+          <section class="sec"><h2>Donanım</h2><div class="feat-list">${featRows}</div></section>
+          <section class="sec"><h2>Kurallar</h2><div class="rules-list">${rules}</div></section>
+          <section class="sec"><h2>Karavanın sahibi</h2>
+            <div class="owner-row">${avatar(o, 'av-lg')}
+              <div style="flex:1"><b>${esc(o.name)}</b><small>Üyelik: ${joinedMonth(o.joined)} · ${state.listings.filter(x => x.owner === o.id).length} ilan</small></div>
+              <span class="badge b-sage">${icon('shield-check')} Kimlik onaylı üye</span>
+            </div>
+          </section>
+        </div>
+        <div>
+          <div class="bk">
+            <div class="bk-card">
+              <form id="f-booking" novalidate>
+                <div class="bk-price"><b class="num">${money(l.price)}</b><span>/ gece</span></div>
+                <div class="bk-dates">
+                  <div class="field"><label class="label" for="bk-in">Giriş</label><input class="input" type="date" id="bk-in" name="start" min="${today()}"></div>
+                  <div class="field"><label class="label" for="bk-out">Çıkış</label><input class="input" type="date" id="bk-out" name="end" min="${addD(today(), 1)}"></div>
+                </div>
+                <div class="field"><label class="label" for="bk-g">Misafir sayısı</label>
+                  <select class="select" id="bk-g" name="guests">${guestOpts}</select></div>
+                <div class="field" style="margin-top:12px"><label class="label" for="bk-msg">Sahibe notun <span class="opt">(isteğe bağlı)</span></label>
+                  <textarea class="textarea" id="bk-msg" name="message" rows="3" placeholder="Rota planını, teslim saatini ya da sorularını kısaca yaz"></textarea></div>
+                <div id="bk-sum-root"></div>
+                <div id="bk-err-root"></div>
+                <button class="btn btn-primary btn-lg btn-block" type="submit" style="margin-top:14px">Kiralama Talebi Gönder</button>
+                <p class="bk-note">${icon('info')}<span>Bu bir <b>ödeme değildir</b>; talebin sahibine iletilir, onayladığında rezervasyon kesinleşir.</span></p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bk-bar">
+      <div class="p"><b class="num">${money(l.price)} <span style="font-weight:600;color:var(--text2);font-size:.875rem">/ gece</span></b>
+      <small id="bar-sub">${esc(l.city)} · ${l.guests} kişiye kadar</small></div>
+      <button class="btn btn-primary" data-action="scroll-book">Talep Gönder</button>
+    </div>`;
+  const gal = $('#gal');
+  if (gal && window.innerWidth <= 760) {
+    gal.addEventListener('scroll', () => {
+      const i = Math.round(gal.scrollLeft / (gal.scrollWidth / l.photos.length));
+      $('#gal-dots').querySelectorAll('i').forEach((d, j) => d.classList.toggle('on', j === i));
+    }, { passive: true });
+  }
+  const calc = () => {
+    const s = $('#bk-in').value, e = $('#bk-out').value;
+    if (!s || !e || nights(s, e) <= 0) {
+      $('#bk-sum-root').innerHTML = '';
+      $('#bar-sub').textContent = `${l.city} · ${l.guests} kişiye kadar`;
+      return;
+    }
+    const n = nights(s, e);
+    const tot = n * l.price;
+    $('#bk-sum-root').innerHTML = `
+      <div class="bk-sum num">
+        <div class="row"><span>${money(l.price)} × ${n} gece</span><span>${money(tot)}</span></div>
+        <div class="row total"><span>Toplam</span><span>${money(tot)}</span></div>
+      </div>`;
+    $('#bar-sub').textContent = `${fmtRange(s, e)} · ${money(tot)}`;
+  };
+  $('#bk-in').addEventListener('change', calc);
+  $('#bk-out').addEventListener('change', calc);
+  $('#f-booking').addEventListener('submit', async e => {
+    e.preventDefault();
+    const s = e.target.start.value, eEnd = e.target.end.value;
+    const errRoot = $('#bk-err-root');
+    const showErr = msg => { errRoot.innerHTML = `<div class="note n-err" style="margin-top:10px">${icon('alert-circle')}<span>${esc(msg)}</span></div>`; };
+    errRoot.innerHTML = '';
+    if (!s || !eEnd || nights(s, eEnd) <= 0) return showErr('Lütfen geçerli bir giriş ve çıkış tarihi seç.');
+    if (s < today()) return showErr('Giriş tarihi geçmişte olamaz.');
+    if (nights(s, eEnd) < l.minNights) return showErr(`Bu karavan için minimum kiralama süresi ${l.minNights} gecedir.`);
+    const ov = findOverlap(l, s, eEnd);
+    if (ov) return showErr(`Seçtiğin tarihler (${fmtRange(ov[0], ov[1])}) müsait değil. Farklı bir tarih dene.`);
+    if (!state.user) { toast('Devam etmek için giriş yap', 'info'); nav('#/giris'); return; }
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.classList.add('is-loading');
+    btn.insertAdjacentHTML('afterbegin', '<span class="spinner"></span>');
+    await wait(700);
+    state.requests.unshift({ id: uid('r'), listingId: l.id, tenantId: state.user.id, start: s, end: eEnd, guests: Number(e.target.guests.value), message: e.target.message.value.trim(), status: 'pending', createdAt: Date.now(), rejectReason: '' });
+    btn.classList.remove('is-loading');
+    const sp = btn.querySelector('.spinner'); if (sp) sp.remove();
+    toast('Kiralama talebin gönderildi, sahibin onayını bekliyor');
+    nav('#/hesap/taleplerim?tab=giden');
+  });
+}
+
+/* ============ Giriş / Kayıt ============ */
+function pageLogin() {
+  if (state.user) { nav('#/'); return; }
+  $('#main').innerHTML = `
+    <div class="auth"><div class="auth-card">
+      <h1>Giriş yap</h1><p class="sub">Hesabınla taleplerini ve ilanlarını yönet.</p>
+      <div id="login-alert"></div>
+      <form id="f-login" novalidate>
+        <div class="field" style="margin-bottom:14px"><label class="label" for="lg-email">E-posta</label>
+          <div class="input-wrap">${icon('mail')}<input class="input" id="lg-email" type="email" autocomplete="email" placeholder="ornek@eposta.com"></div>
+          <span class="f-err" id="e-lg-email" hidden></span></div>
+        <div class="field" style="margin-bottom:18px"><label class="label" for="lg-pw">Şifre</label>
+          <div class="input-wrap">${icon('lock')}<input class="input" id="lg-pw" type="password" autocomplete="current-password" placeholder="Şifren"></div>
+          <span class="f-err" id="e-lg-pw" hidden></span></div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit" id="lg-btn">Giriş Yap</button>
+      </form>
+      <div class="divider">veya</div>
+      <button class="btn btn-outline btn-block" data-action="demo-google">
+        <svg class="ic" viewBox="0 0 24 24" style="stroke:none;fill:currentColor"><path d="M21.6 12.2c0-.7-.06-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4Z" fill="#4285F4"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1a5.9 5.9 0 0 1-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z" fill="#34A853"/><path d="M6.4 14a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9Z" fill="#FBBC05"/><path d="M12 6a5.4 5.4 0 0 1 3.8 1.5L18.7 5A10 10 0 0 0 3.1 7.5L6.4 10A5.9 5.9 0 0 1 12 6Z" fill="#EA4335"/></svg>
+        Google ile devam et</button>
+      <p class="auth-foot">Hesabın yok mu? <a href="#/kayit">Ücretsiz kayıt ol</a></p>
+      <div class="demo-box"><h4>Demo hesaplar (şifre: ${DEMO_PW})</h4>
+        <div class="demo-row"><span>Gezgin + sahip: <b>demo@karavan.demo</b></span><button class="btn btn-sm btn-outline" data-action="fill-demo">Doldur</button></div>
+        <div class="demo-row"><span>Yönetici: <b>admin@karavan.demo</b></span><button class="btn btn-sm btn-outline" data-action="fill-demo-admin">Doldur</button></div>
+      </div>
+    </div></div>`;
+  $('#f-login').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('#lg-email'), pw = $('#lg-pw'), alertBox = $('#login-alert');
+    const fe = (id, msg) => { const el = $(id); el.hidden = !msg; if (msg) el.innerHTML = icon('alert-circle') + ' ' + esc(msg); el.parentElement.querySelector('.input').classList.toggle('err', !!msg); };
+    let ok = true;
+    if (!email.value.trim()) { fe('#e-lg-email', 'E-posta adresini gir.'); ok = false; } else fe('#e-lg-email', '');
+    if (!pw.value) { fe('#e-lg-pw', 'Şifreni gir.'); ok = false; } else fe('#e-lg-pw', '');
+    alertBox.innerHTML = '';
+    if (!ok) return;
+    const btn = $('#lg-btn');
+    btn.classList.add('is-loading');
+    btn.insertAdjacentHTML('afterbegin', '<span class="spinner"></span>');
+    await wait(700);
+    const u = state.users.find(x => x.email === email.value.trim().toLowerCase());
+    btn.classList.remove('is-loading');
+    const sp = btn.querySelector('.spinner'); if (sp) sp.remove();
+    if (!u || pw.value !== DEMO_PW) {
+      alertBox.innerHTML = `<div class="note n-err" style="margin-bottom:16px">${icon('alert-circle')}<span>E-posta veya şifre hatalı. Demo şifreyi kullandığından emin ol.</span></div>`;
+      return;
+    }
+    if (u.banned) {
+      alertBox.innerHTML = `<div class="note n-err" style="margin-bottom:16px">${icon('ban')}<span>Hesabın askıya alınmış. Destek ekibiyle iletişime geç.</span></div>`;
+      return;
+    }
+    state.user = u; saveSession();
+    toast('Tekrar hoş geldin, ' + u.name.split(' ')[0]);
+    nav('#/');
+  });
+}
+function pageRegister() {
+  if (state.user) { nav('#/'); return; }
+  $('#main').innerHTML = `
+    <div class="auth"><div class="auth-card">
+      <h1>Hesap oluştur</h1><p class="sub">Tek hesapla hem karavan kiralayabilir hem de kendi ilanını yayınlayabilirsin.</p>
+      <div id="reg-alert"></div>
+      <form id="f-register" novalidate>
+        <div class="field" style="margin-bottom:14px"><label class="label" for="rg-name">Ad Soyad</label>
+          <input class="input" id="rg-name" type="text" autocomplete="name" placeholder="Adın Soyadın">
+          <span class="f-err" id="e-rg-name" hidden></span></div>
+        <div class="field" style="margin-bottom:14px"><label class="label" for="rg-email">E-posta</label>
+          <input class="input" id="rg-email" type="email" autocomplete="email" placeholder="ornek@eposta.com">
+          <span class="f-err" id="e-rg-email" hidden></span></div>
+        <div class="field" style="margin-bottom:6px"><label class="label" for="rg-pw">Şifre</label>
+          <input class="input" id="rg-pw" type="password" autocomplete="new-password" placeholder="En az 8 karakter">
+          <div class="pw-rules" id="pw-rules">
+            <div data-rule="len">${icon('check')} En az 8 karakter</div>
+            <div data-rule="num">${icon('check')} En az bir rakam</div>
+          </div>
+          <span class="f-err" id="e-rg-pw" hidden></span></div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit" id="rg-btn" style="margin-top:14px">Hesabımı Oluştur</button>
+      </form>
+      <p class="auth-foot">Zaten üye misin? <a href="#/giris">Giriş yap</a></p>
+    </div></div>`;
+  $('#rg-pw').addEventListener('input', e => {
+    const v = e.target.value;
+    $('#pw-rules').querySelector('[data-rule=len]').classList.toggle('ok', v.length >= 8);
+    $('#pw-rules').querySelector('[data-rule=num]').classList.toggle('ok', /\d/.test(v));
+  });
+  $('#f-register').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('#rg-name'), email = $('#rg-email'), pw = $('#rg-pw'), alertBox = $('#reg-alert');
+    const fe = (id, msg, inp) => { const el = $(id); el.hidden = !msg; if (msg) el.innerHTML = icon('alert-circle') + ' ' + esc(msg); if (inp) $(inp).classList.toggle('err', !!msg); };
+    let ok = true;
+    if (name.value.trim().length < 2) { fe('#e-rg-name', 'Ad soyad en az 2 karakter olmalı.', '#rg-name'); ok = false; } else fe('#e-rg-name', '', '#rg-name');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { fe('#e-rg-email', 'Geçerli bir e-posta adresi gir.', '#rg-email'); ok = false; }
+    else if (state.users.some(u => u.email === email.value.trim().toLowerCase())) { fe('#e-rg-email', 'Bu e-posta ile kayıtlı bir hesap zaten var.', '#rg-email'); ok = false; }
+    else fe('#e-rg-email', '', '#rg-email');
+    if (pw.value.length < 8 || !/\d/.test(pw.value)) { fe('#e-rg-pw', 'Şifre en az 8 karakter ve bir rakam içermeli.', '#rg-pw'); ok = false; } else fe('#e-rg-pw', '', '#rg-pw');
+    alertBox.innerHTML = '';
+    if (!ok) return;
+    const btn = $('#rg-btn');
+    btn.classList.add('is-loading');
+    btn.insertAdjacentHTML('afterbegin', '<span class="spinner"></span>');
+    await wait(800);
+    const u = { id: uid('u'), name: name.value.trim(), email: email.value.trim().toLowerCase(), phone: '', admin: false, banned: false, joined: Date.now(), color: COLORS[state.users.length % COLORS.length] };
+    state.users.push(u); state.user = u; saveSession();
+    btn.classList.remove('is-loading');
+    const sp = btn.querySelector('.spinner'); if (sp) sp.remove();
+    toast('Hesabın oluşturuldu, hoş geldin!');
+    nav('#/');
+  });
+}
+
+/* ============ Hesap iskeleti ============ */
+function accGuard() {
+  if (!state.user) { toast('Devam etmek için giriş yap', 'info'); nav('#/giris'); return false; }
+  return true;
+}
+function accShell(active, content) {
+  const u = state.user;
+  const pend = state.requests.filter(r => { const l = listing(r.listingId); return l && l.owner === u.id && r.status === 'pending'; }).length;
+  const links = [
+    ['#/hesap/ilanlarim', 'list', 'İlanlarım', 0],
+    ['#/hesap/taleplerim', 'inbox', 'Taleplerim', pend],
+    ['#/hesap/profil', 'user', 'Profilim', 0]
+  ].map(l => `<a class="acc-link${active === l[0] ? ' on' : ''}" href="${l[0]}">${icon(l[1])}${l[2]}${l[3] ? `<span class="cnt">${l[3]}</span>` : ''}</a>`).join('');
+  $('#main').innerHTML = `
+    <div class="container acc-layout">
+      <nav class="acc-nav" aria-label="Hesap menüsü">
+        <div class="acc-user">${avatar(u, 'av-lg')}<div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div></div>
+        ${links}
+        <div class="sep"></div>
+        <a class="acc-link" href="#/hesap/ilanlarim/yeni">${icon('plus')} Yeni İlan</a>
+        ${u.admin ? `<a class="acc-link" href="#/admin/ilanlar">${icon('shield')} Yönetim</a>` : ''}
+        <button class="acc-link out" data-action="logout">${icon('log-out')} Çıkış</button>
+      </nav>
+      <div>${content}</div>
+    </div>`;
+}
+
+/* ============ İlanlarım ============ */
+function pageMyListings() {
+  if (!accGuard()) return;
+  const mine = state.listings.filter(l => l.owner === state.user.id).sort((a, b) => b.createdAt - a.createdAt);
+  const stat = s => mine.filter(l => l.status === s).length;
+  const rows = mine.map(l => {
+    const acts = [];
+    if (l.status === 'draft') acts.push(`<button class="btn btn-sm btn-primary" data-action="ml-send" data-id="${l.id}">${icon('send')} İncelemeye gönder</button>`);
+    if (l.status === 'published') acts.push(`<button class="btn btn-sm btn-outline" data-action="ml-pause" data-id="${l.id}">${icon('pause')} Duraklat</button>`);
+    if (l.status === 'paused') acts.push(`<button class="btn btn-sm btn-primary" data-action="ml-resume" data-id="${l.id}">${icon('play')} Yeniden yayınla</button>`);
+    acts.push(`<a class="btn btn-sm btn-outline" href="#/hesap/ilanlarim/duzenle/${l.id}">${icon('pencil')} Düzenle</a>`);
+    acts.push(`<button class="ibtn danger bordered" data-action="ml-del" data-id="${l.id}" aria-label="${esc(l.title)} ilanını sil">${icon('trash')}</button>`);
+    return `
+      <article class="lrow">
+        <a class="lrow-media" href="#/ilan/${l.id}" aria-label="${esc(l.title)} detayı">${pic(l.photos[0] || 'krv-none', 400, 300, l.title)}</a>
+        <div class="lrow-body">
+          <h3>${esc(l.title)}</h3>
+          <div class="loc">${icon('map-pin')}${esc(l.city)}, ${esc(l.district)}</div>
+          <div class="lrow-meta">${badgeHTML(LIST_LABEL[l.status], LIST_CLASS[l.status], LIST_ICON[l.status])}<span class="small muted">${TYPES[l.type]} · ${l.guests} kişi</span></div>
+          ${l.status === 'rejected' && l.rejectReason ? `<div class="note n-err reason">${icon('alert-circle')}<span><b>Red gerekçesi:</b> ${esc(l.rejectReason)}</span></div>` : ''}
+        </div>
+        <div class="lrow-side">
+          <span class="lrow-price">${money(l.price)} <small>/ gece</small></span>
+          <div class="lrow-actions">${acts.join('')}</div>
+        </div>
+      </article>`;
+  }).join('');
+  accShell('#/hesap/ilanlarim', `
+    <div class="page-head">
+      <div><h1 class="h1" style="font-size:1.6rem">İlanlarım</h1><p>Kendi ilanlarını yönet; tek hesapla kiracı ve sahip işlemlerini birlikte yürüt.</p></div>
+      <a class="btn btn-primary" href="#/hesap/ilanlarim/yeni">${icon('plus')} Yeni İlan Oluştur</a>
+    </div>
+    <div class="stat-line">
+      <span><b>${mine.length}</b> toplam ilan</span><span><b>${stat('published')}</b> yayında</span>
+      <span><b>${stat('pending_review')}</b> incelemede</span><span><b>${stat('draft')}</b> taslak</span>
+    </div>
+    ${mine.length ? `<div class="lrows">${rows}</div>`
+      : emptyHTML('car', 'Henüz ilanın yok', 'Karavanını listelemek için 4 adımlı formu doldur; yayına alınmadan önce ekip ilanı inceler.',
+        `<a class="btn btn-primary" href="#/hesap/ilanlarim/yeni">${icon('plus')} İlk ilanımı oluştur</a>`)}`);
+}
+
+/* ============ İlan formu (4 adım) ============ */
+const STEPS = ['Temel bilgiler', 'Donanım ve kurallar', 'Fotoğraflar', 'Önizleme ve gönder'];
+function startDraft(id) {
+  if (id) {
+    const l = listing(id);
+    if (!l || l.owner !== state.user.id) { page404(); return; }
+    state.draft = { editId: l.id, step: 1, data: Object.assign({}, l), photos: l.photos.slice() };
+  } else {
+    state.draft = {
+      editId: null, step: 1, photos: [],
+      data: { title: '', brand: '', model: '', year: '', type: 'alcove', city: '', district: '', guests: 2, beds: 2, length: '', gearbox: 'Manuel', fuel: 'Dizel', price: '', minNights: 2, minAge: 21, license: 'B', desc: '', special: '', pets: false, features: [] }
+    };
+  }
+}
+function stepBody(s) {
+  const dt = state.draft.data;
+  const fe = name => `<span class="f-err" data-err="${name}" hidden></span>`;
+  if (s === 1) {
+    return `
+      <form class="form-grid" id="f-step" novalidate>
+        <div class="field full"><label class="label" for="fi-title">İlan başlığı *</label>
+          <input class="input" id="fi-title" data-f="title" value="${esc(dt.title)}" placeholder="Örn: Adria Coral Plus 670 DL — Antalya">
+          <span class="f-help">Marka, model ve şehri içeren kısa bir başlık yaz.</span>${fe('title')}</div>
+        <div class="field"><label class="label" for="fi-brand">Marka *</label>
+          <input class="input" id="fi-brand" data-f="brand" value="${esc(dt.brand)}" placeholder="Adria">${fe('brand')}</div>
+        <div class="field"><label class="label" for="fi-model">Model *</label>
+          <input class="input" id="fi-model" data-f="model" value="${esc(dt.model)}" placeholder="Coral Plus 670 DL">${fe('model')}</div>
+        <div class="field"><label class="label" for="fi-year">Model yılı *</label>
+          <input class="input" id="fi-year" data-f="year" type="number" min="1980" max="2027" value="${esc(dt.year)}" placeholder="2022">${fe('year')}</div>
+        <div class="field"><label class="label" for="fi-type">Araç tipi *</label>
+          <select class="select" id="fi-type" data-f="type">${Object.entries(TYPES).map(t => `<option value="${t[0]}"${dt.type === t[0] ? ' selected' : ''}>${t[1]}</option>`).join('')}</select></div>
+        <div class="field"><label class="label" for="fi-city">Şehir *</label>
+          <input class="input" id="fi-city" data-f="city" value="${esc(dt.city)}" placeholder="Antalya">${fe('city')}</div>
+        <div class="field"><label class="label" for="fi-district">İlçe *</label>
+          <input class="input" id="fi-district" data-f="district" value="${esc(dt.district)}" placeholder="Konyaaltı">${fe('district')}</div>
+        <div class="field"><label class="label" for="fi-guests">Kişi kapasitesi *</label>
+          <input class="input" id="fi-guests" data-f="guests" type="number" min="1" max="8" value="${esc(dt.guests)}">${fe('guests')}</div>
+        <div class="field"><label class="label" for="fi-beds">Yatak sayısı *</label>
+          <input class="input" id="fi-beds" data-f="beds" type="number" min="1" max="8" value="${esc(dt.beds)}">${fe('beds')}</div>
+        <div class="field"><label class="label" for="fi-length">Uzunluk <span class="opt">(isteğe bağlı)</span></label>
+          <input class="input" id="fi-length" data-f="length" value="${esc(dt.length)}" placeholder="6,99 m"></div>
+        <div class="field"><label class="label" for="fi-gearbox">Vites</label>
+          <select class="select" id="fi-gearbox" data-f="gearbox"><option${dt.gearbox === 'Manuel' ? ' selected' : ''}>Manuel</option><option${dt.gearbox === 'Otomatik' ? ' selected' : ''}>Otomatik</option></select></div>
+        <div class="field"><label class="label" for="fi-fuel">Yakıt</label>
+          <select class="select" id="fi-fuel" data-f="fuel"><option${dt.fuel === 'Dizel' ? ' selected' : ''}>Dizel</option><option${dt.fuel === 'Benzin' ? ' selected' : ''}>Benzin</option><option${dt.fuel === 'LPG' ? ' selected' : ''}>LPG</option></select></div>
+        <div class="field"><label class="label" for="fi-price">Gecelik fiyat (₺) *</label>
+          <input class="input" id="fi-price" data-f="price" type="number" min="500" value="${esc(dt.price)}" placeholder="3500">${fe('price')}</div>
+      </form>`;
+  }
+  if (s === 2) {
+    const checks = Object.entries(FEATURES).map(f =>
+      `<label class="check"><input type="checkbox" data-f="feat" value="${f[0]}"${dt.features.includes(f[0]) ? ' checked' : ''}>${icon(f[1][1])}<span class="t">${f[1][0]}</span></label>`).join('');
+    return `
+      <form class="form-grid" id="f-step" novalidate>
+        <fieldset class="field full" style="border:0;padding:0">
+          <legend class="label" style="margin-bottom:10px">Donanım <span class="opt">(en az 3 seç)</span></legend>
+          <div class="feat-checks">${checks}</div>${fe('features')}
+        </fieldset>
+        <div class="field"><label class="label" for="fi-minn">Minimum kiralama (gece) *</label>
+          <input class="input" id="fi-minn" data-f="minNights" type="number" min="1" max="14" value="${esc(dt.minNights)}">${fe('minNights')}</div>
+        <div class="field"><label class="label" for="fi-minage">Minimum sürücü yaşı *</label>
+          <input class="input" id="fi-minage" data-f="minAge" type="number" min="18" max="30" value="${esc(dt.minAge)}">${fe('minAge')}</div>
+        <div class="field"><label class="label" for="fi-license">Ehliyet gereksinimi</label>
+          <select class="select" id="fi-license" data-f="license">
+            <option${dt.license === 'B' ? ' selected' : ''}>B</option>
+            <option${dt.license === 'B (2 yıl tecrübe)' ? ' selected' : ''}>B (2 yıl tecrübe)</option>
+            <option${dt.license === 'C' ? ' selected' : ''}>C</option>
+          </select></div>
+        <div class="field"><label class="label">Evcil hayvan</label>
+          <label class="radio"><input type="radio" name="pets" value="1"${dt.pets ? ' checked' : ''}><span class="t">Kabul ediliyor</span></label>
+          <label class="radio"><input type="radio" name="pets" value="0"${!dt.pets ? ' checked' : ''}><span class="t">Kabul edilmiyor</span></label></div>
+        <div class="field full"><label class="label" for="fi-desc">Açıklama *</label>
+          <textarea class="textarea" id="fi-desc" data-f="desc" rows="4" placeholder="Karavanını, teslim şeklini ve önerdiğin rotaları anlat">${esc(dt.desc)}</textarea>${fe('desc')}</div>
+        <div class="field full"><label class="label" for="fi-special">Özel not / kural <span class="opt">(isteğe bağlı)</span></label>
+          <input class="input" id="fi-special" data-f="special" value="${esc(dt.special)}" placeholder="Örn: Teslimde depolar dolu verilir"></div>
+      </form>`;
+  }
+  if (s === 3) {
+    return `
+      <div class="drop" id="drop" role="button" tabindex="0" aria-label="Fotoğraf yükle">
+        ${icon('upload')}<p><b>Fotoğrafları buraya sürükle</b> ya da seç</p>
+        <small>En fazla 10 fotoğraf · dosya başına 5 MB · JPEG, PNG, WebP</small>
+        <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple hidden>
+      </div>
+      <div class="up-note"><span><b id="ph-count">${state.draft.photos.length}</b>/10 fotoğraf</span><span>İlk fotoğraf = kapak</span></div>
+      <div id="thumb-root" class="thumbs">${thumbsHTML()}</div>
+      <div id="ph-err-root"></div>`;
+  }
+  const l = Object.assign({}, dt, { photos: state.draft.photos, owner: state.user.id, id: '__pv', status: 'draft' });
+  const rows = [
+    ['Konum', dt.city + ' / ' + dt.district], ['Gecelik fiyat', money(dt.price)],
+    ['Kapasite', dt.guests + ' kişi · ' + dt.beds + ' yatak'], ['Donanım', dt.features.length + ' özellik'],
+    ['Min. kiralama', dt.minNights + ' gece'], ['Fotoğraf', state.draft.photos.length + ' adet']
+  ].map(r => `<div><dt>${r[0]}</dt><dd>${esc(r[1])}</dd></div>`).join('');
+  return `
+    <h3 class="h3" style="margin-bottom:14px">İlanın yayınlanmadan önce böyle görünecek</h3>
+    <div class="pv-wrap">${cardHTML(l, 'lcard')}</div>
+    <dl class="pv-dl">${rows}</dl>
+    <div class="note n-info" style="margin-top:16px">${icon('info')}<span>Gönderildiğinde ilanın <b>İncelemede</b> durumuna geçer. Yayına alınmadan önce ekip fotoğrafları ve bilgileri kontrol eder; sonuç buradan bildirilir.</span></div>`;
+}
+function thumbsHTML() {
+  const d = state.draft;
+  return d.photos.map((p, i) => `
+    <div class="thumb"><img src="${photoUrl(p, 300, 225)}" alt="Fotoğraf ${i + 1}">
+    ${i === 0 ? `<span class="cap badge b-green">${icon('image')} Kapak</span>` : ''}
+    <div class="ops"><button data-action="ph-del" data-i="${i}" aria-label="Fotoğrafı sil">${icon('trash')}</button></div></div>`).join('');
+}
+function wireUploader() {
+  const input = $('#photo-input'), drop = $('#drop');
+  if (!input || !drop) return;
+  drop.addEventListener('click', () => input.click());
+  drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+  ['dragover', 'dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+  input.addEventListener('change', () => { if (input.files.length) handleFiles(input.files); input.value = ''; });
+}
+function handleFiles(files) {
+  const d = state.draft, errs = [];
+  [...files].forEach(f => {
+    if (d.photos.length >= 10) { errs.push('En fazla 10 fotoğraf ekleyebilirsin.'); return; }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) { errs.push(`"${f.name}" desteklenmiyor. Yalnızca JPEG, PNG ve WebP.`); return; }
+    if (f.size > 5 * 1024 * 1024) { errs.push(`"${f.name}" 5 MB sınırını aşıyor.`); return; }
+    const rd = new FileReader();
+    rd.onload = () => { d.photos.push(rd.result); refreshThumbs(); };
+    rd.readAsDataURL(f);
+  });
+  const uniq = [...new Set(errs)];
+  $('#ph-err-root').innerHTML = uniq.length ? `<div class="note n-err" style="margin-top:12px">${icon('alert-circle')}<span>${uniq.map(esc).join('<br>')}</span></div>` : '';
+}
+function refreshThumbs() {
+  $('#thumb-root').innerHTML = thumbsHTML();
+  $('#ph-count').textContent = String(state.draft.photos.length);
+}
+function readStepData(s) {
+  const dt = state.draft.data;
+  document.querySelectorAll('#f-step [data-f]').forEach(el => {
+    if (el.type === 'checkbox') return;
+    dt[el.dataset.f] = el.type === 'number' ? (el.value === '' ? '' : Number(el.value)) : el.value.trim();
+  });
+  if (s === 2) {
+    dt.features = [...document.querySelectorAll('#f-step [data-f=feat]:checked')].map(c => c.value);
+    const p = document.querySelector('input[name="pets"]:checked');
+    if (p) dt.pets = p.value === '1';
+  }
+}
+function validateStep(s) {
+  const dt = state.draft.data, errs = {};
+  readStepData(s);
+  if (s === 1) {
+    if (!dt.title || dt.title.length < 8) errs.title = 'İlan başlığı en az 8 karakter olmalı.';
+    if (!dt.brand) errs.brand = 'Marka zorunlu.';
+    if (!dt.model) errs.model = 'Model zorunlu.';
+    const y = Number(dt.year);
+    if (!y || y < 1980 || y > 2027) errs.year = 'Model yılı 1980–2027 aralığında olmalı.';
+    if (!dt.city) errs.city = 'Şehir zorunlu.';
+    if (!dt.district) errs.district = 'İlçe zorunlu.';
+    if (!dt.guests || dt.guests < 1) errs.guests = 'Kişi kapasitesi en az 1 olmalı.';
+    if (!dt.beds || dt.beds < 1) errs.beds = 'Yatak sayısı en az 1 olmalı.';
+    if (!dt.price || dt.price < 500) errs.price = 'Gecelik fiyat en az ₺500 olmalı.';
+  } else if (s === 2) {
+    if (dt.features.length < 3) errs.features = 'En az 3 donanım özelliği seç.';
+    if (!dt.minNights || dt.minNights < 1) errs.minNights = 'Minimum kiralama süresi en az 1 gece.';
+    if (!dt.minAge || dt.minAge < 18) errs.minAge = 'Minimum sürücü yaşı en az 18 olmalı.';
+    if (!dt.desc || dt.desc.length < 30) errs.desc = 'Açıklama en az 30 karakter olmalı.';
+  } else if (s === 3) {
+    if (state.draft.photos.length === 0) errs.photos = 'İlan için en az 1 fotoğraf gerekli.';
+  }
+  document.querySelectorAll('#main .f-err[data-err]').forEach(el => { el.hidden = true; });
+  Object.keys(errs).forEach(k => {
+    const el = document.querySelector(`[data-err="${k}"]`);
+    if (el) { el.hidden = false; el.innerHTML = icon('alert-circle') + ' ' + esc(errs[k]); }
+  });
+  if (errs.photos) {
+    $('#ph-err-root').innerHTML = `<div class="note n-err" style="margin-top:12px">${icon('alert-circle')}<span>${esc(errs.photos)}</span></div>`;
+  }
+  return Object.keys(errs).length === 0;
+}
+function pageListingForm() {
+  if (!accGuard()) return;
+  const d = state.draft;
+  if (!d) { nav('#/hesap/ilanlarim'); return; }
+  const s = d.step;
+  const stepBar = `
+    <ol class="steps" aria-label="Form adımları">${STEPS.map((t, i) => {
+      const n = i + 1;
+      const cls = n === s ? 'act' : (n < s ? 'done' : '');
+      return `<li class="step ${cls}"><span class="step-dot">${n < s ? icon('check') : n}</span><span class="step-lbl">${t}</span></li>`;
+    }).join('')}</ol>
+    <div class="steps-mob"><div class="t"><span>Adım ${s}/4</span><span>${STEPS[s - 1]}</span></div>
+    <div class="bar"><i style="width:${s * 25}%"></i></div></div>`;
+  const foot = s < 4
+    ? `<button class="btn btn-ghost" data-action="step-back"${s === 1 ? ' disabled' : ''}>${icon('arrow-left')} Geri</button>
+       <div style="display:flex;gap:10px;flex-wrap:wrap">
+         <button class="btn btn-outline" data-action="draft-save">Taslak kaydet</button>
+         <button class="btn btn-primary" data-action="step-next">${s === 3 ? 'Devam' : 'İleri'} ${icon('arrow-right')}</button>
+       </div>`
+    : `<button class="btn btn-primary btn-lg" data-action="listing-submit">${icon('send')} İncelemeye Gönder</button>`;
+  accShell('#/hesap/ilanlarim', `
+    <div class="page-head">
+      <div><h1 class="h1" style="font-size:1.6rem">${d.editId ? 'İlanı düzenle' : 'Yeni ilan oluştur'}</h1>
+      <p>${d.editId ? esc(d.data.title) : 'Bilgileri adım adım doldur; taslak olarak kaydedebilirsin.'}</p></div>
+    </div>
+    ${stepBar}
+    <div class="card card-pad">${stepBody(s)}
+      <div class="form-foot">${foot}</div>
+    </div>`);
+  if (s === 3) wireUploader();
+}
+
+/* ============ Taleplerim ============ */
+function pageRequests(params) {
+  if (!accGuard()) return;
+  state.reqTab = params.get('tab') === 'giden' ? 'out' : 'in';
+  renderRequestsBody(true);
+  setTimeout(() => renderRequestsBody(false), 400);
+}
+function renderRequestsBody(skeleton) {
+  const u = state.user, tab = state.reqTab;
+  let rows;
+  if (tab === 'in') {
+    rows = state.requests.filter(r => { const l = listing(r.listingId); return l && l.owner === u.id; });
+  } else {
+    rows = state.requests.filter(r => r.tenantId === u.id);
+  }
+  rows = rows.slice().sort((a, b) => b.createdAt - a.createdAt);
+  const pendingIn = state.requests.filter(r => { const l = listing(r.listingId); return l && l.owner === u.id && r.status === 'pending'; }).length;
+  const rowHTML = r => {
+    const l = listing(r.listingId);
+    if (!l) return '';
+    const other = tab === 'in' ? user(r.tenantId) : user(l.owner);
+    const acts = [];
+    if (tab === 'in' && r.status === 'pending') {
+      acts.push(`<button class="btn btn-sm btn-primary" data-action="rq-approve" data-id="${r.id}">${icon('check')} Onayla</button>`);
+      acts.push(`<button class="btn btn-sm btn-danger-outline" data-action="rq-reject" data-id="${r.id}">Reddet</button>`);
+    }
+    if (tab === 'out' && r.status === 'pending') {
+      acts.push(`<button class="btn btn-sm btn-danger-outline" data-action="rq-cancel" data-id="${r.id}">${icon('x')} İptal et</button>`);
+    }
+    return `
+      <article class="trow">
+        <a class="trow-media" href="#/ilan/${l.id}">${pic(l.photos[0], 300, 225, l.title)}</a>
+        <div class="trow-body">
+          <h3>${esc(l.title)}</h3>
+          <div class="who">${avatar(other, 'av-sm')} ${tab === 'in' ? 'Kiracı' : 'Sahip'}: <b>&nbsp;${esc(other.name)}</b></div>
+          <div class="trow-meta">
+            <span>${icon('calendar')}${fmtRange(r.start, r.end)} (${nights(r.start, r.end)} gece)</span>
+            <span>${icon('users')}${r.guests} misafir</span>
+          </div>
+          ${r.message ? `<div class="msg-q">${icon('message')}<span>“${esc(r.message)}”</span></div>` : ''}
+          ${r.status === 'rejected' && r.rejectReason ? `<div class="msg-q">${icon('info')}<span><b>Red gerekçesi:</b> ${esc(r.rejectReason)}</span></div>` : ''}
+        </div>
+        <div class="trow-side">
+          ${badgeHTML(REQ_LABEL[r.status], REQ_CLASS[r.status], 'clock')}
+          <span class="trow-price num">${money(nights(r.start, r.end) * l.price)}<small>${nights(r.start, r.end)} gece toplam</small></span>
+          ${acts.length ? `<div class="trow-actions">${acts.join('')}</div>` : ''}
+        </div>
+      </article>`;
+  };
+  const body = skeleton
+    ? `<div class="trows">${Array.from({ length: 3 }, () =>
+        `<div class="card card-pad" style="display:flex;gap:16px"><div class="sk" style="width:96px;aspect-ratio:4/3"></div>
+         <div style="flex:1"><div class="sk sk-line w60"></div><div class="sk sk-line"></div><div class="sk sk-line w40"></div></div></div>`).join('')}</div>`
+    : (rows.length ? `<div class="trows">${rows.map(rowHTML).join('')}</div>`
+      : (tab === 'in'
+        ? emptyHTML('inbox', 'Henüz gelen talep yok', 'Karavan ilanın yayına aldığında kiracı talepleri burada listelenir.', `<a class="btn btn-primary" href="#/hesap/ilanlarim/yeni">Yeni ilan oluştur</a>`)
+        : emptyHTML('send', 'Henüz talep göndermedin', 'Beğendiğin bir karavanın ilan detayından tarih seçip kiralama talebi gönderebilirsin.', `<a class="btn btn-primary" href="#/arama">Karavanları keşfet</a>`)));
+  accShell('#/hesap/taleplerim', `
+    <div class="page-head"><div><h1 class="h1" style="font-size:1.6rem">Taleplerim</h1><p>Gelen ve giden kiralama taleplerini tek yerden yönet.</p></div></div>
+    <div class="tabbar" role="tablist">
+      <button class="tab${tab === 'in' ? ' on' : ''}" role="tab" aria-selected="${tab === 'in'}" data-action="req-tab" data-tab="in">Bana gelen <span class="cnt">${pendingIn}</span></button>
+      <button class="tab${tab === 'out' ? ' on' : ''}" role="tab" aria-selected="${tab === 'out'}" data-action="req-tab" data-tab="out">Gönderdiklerim</button>
+    </div>
+    <div id="req-root">${body}</div>`);
+}
+
+/* ============ Profil ============ */
+function pageProfile() {
+  if (!accGuard()) return;
+  const u = state.user;
+  accShell('#/hesap/profil', `
+    <div class="page-head"><div><h1 class="h1" style="font-size:1.6rem">Profilim</h1><p>Hesap bilgilerini güncelle.</p></div></div>
+    <div class="prof-grid">
+      <form class="card card-pad" id="f-profile" novalidate>
+        <h2 class="card-title">${icon('user')} Kişisel bilgiler</h2>
+        <div class="field" style="margin-bottom:14px"><label class="label" for="pf-name">Ad Soyad</label>
+          <input class="input" id="pf-name" value="${esc(u.name)}"><span class="f-err" id="e-pf-name" hidden></span></div>
+        <div class="field" style="margin-bottom:14px"><label class="label" for="pf-phone">Telefon</label>
+          <input class="input" id="pf-phone" type="tel" value="${esc(u.phone)}" placeholder="05xx xxx xx xx"><span class="f-err" id="e-pf-phone" hidden></span></div>
+        <div class="field" style="margin-bottom:18px"><label class="label" for="pf-email">E-posta</label>
+          <input class="input" id="pf-email" value="${esc(u.email)}" disabled>
+          <span class="f-help">E-posta değişimi bu sürümde desteklenmiyor.</span></div>
+        <button class="btn btn-primary" type="submit" id="pf-btn">Bilgileri Kaydet</button>
+        <div id="pf-msg" style="margin-top:12px"></div>
+      </form>
+      <form class="card card-pad" id="f-password" novalidate>
+        <h2 class="card-title">${icon('lock')} Şifre değiştir</h2>
+        <div class="field" style="margin-bottom:14px"><label class="label" for="pw-cur">Mevcut şifre</label>
+          <input class="input" id="pw-cur" type="password" autocomplete="current-password"><span class="f-err" id="e-pw-cur" hidden></span></div>
+        <div class="field" style="margin-bottom:14px"><label class="label" for="pw-new">Yeni şifre</label>
+          <input class="input" id="pw-new" type="password" autocomplete="new-password"><span class="f-err" id="e-pw-new" hidden></span></div>
+        <div class="field" style="margin-bottom:18px"><label class="label" for="pw-re">Yeni şifre (tekrar)</label>
+          <input class="input" id="pw-re" type="password" autocomplete="new-password"><span class="f-err" id="e-pw-re" hidden></span></div>
+        <button class="btn btn-secondary" type="submit" id="pw-btn">Şifreyi Güncelle</button>
+        <div id="pw-msg" style="margin-top:12px"></div>
+      </form>
+    </div>`);
+  const fe = (id, msg, inp) => { const el = $(id); el.hidden = !msg; if (msg) el.innerHTML = icon('alert-circle') + ' ' + esc(msg); if (inp) $(inp).classList.toggle('err', !!msg); };
+  $('#f-profile').addEventListener('submit', e => {
+    e.preventDefault();
+    let ok = true;
+    if ($('#pf-name').value.trim().length < 2) { fe('#e-pf-name', 'Ad soyad en az 2 karakter olmalı.', '#pf-name'); ok = false; } else fe('#e-pf-name', '', '#pf-name');
+    const ph = $('#pf-phone').value.trim();
+    if (ph && !/^[0-9\s()+-]{10,16}$/.test(ph)) { fe('#e-pf-phone', 'Geçerli bir telefon numarası gir.', '#pf-phone'); ok = false; } else fe('#e-pf-phone', '', '#pf-phone');
+    if (!ok) return;
+    state.user.name = $('#pf-name').value.trim();
+    state.user.phone = ph;
+    saveSession(); renderHeader('hesap');
+    $('#pf-msg').innerHTML = `<div class="note n-ok">${icon('check-circle')}<span>Bilgilerin güncellendi.</span></div>`;
+    toast('Profil bilgileri kaydedildi');
+  });
+  $('#f-password').addEventListener('submit', async e => {
+    e.preventDefault();
+    let ok = true;
+    if ($('#pw-cur').value !== DEMO_PW) { fe('#e-pw-cur', 'Mevcut şifre hatalı.', '#pw-cur'); ok = false; } else fe('#e-pw-cur', '', '#pw-cur');
+    const nw = $('#pw-new').value;
+    if (nw.length < 8 || !/\d/.test(nw)) { fe('#e-pw-new', 'Şifre en az 8 karakter ve bir rakam içermeli.', '#pw-new'); ok = false; } else fe('#e-pw-new', '', '#pw-new');
+    if ($('#pw-re').value !== nw) { fe('#e-pw-re', 'Şifreler eşleşmiyor.', '#pw-re'); ok = false; } else fe('#e-pw-re', '', '#pw-re');
+    if (!ok) return;
+    const btn = $('#pw-btn');
+    btn.classList.add('is-loading');
+    btn.insertAdjacentHTML('afterbegin', '<span class="spinner"></span>');
+    await wait(600);
+    btn.classList.remove('is-loading');
+    const sp = btn.querySelector('.spinner'); if (sp) sp.remove();
+    $('#pw-msg').innerHTML = `<div class="note n-ok">${icon('check-circle')}<span>Şifren güncellendi.</span></div>`;
+    toast('Şifre güncellendi');
+  });
+}
+
+/* ============ Admin ============ */
+function admGuard() {
+  if (!state.user) { toast('Devam etmek için giriş yap', 'info'); nav('#/giris'); return false; }
+  if (!state.user.admin) { page404(); return false; }
+  return true;
+}
+function admShell(active, content) {
+  const links = [['#/admin/ilanlar', 'list', 'İlan Moderasyonu'], ['#/admin/kullanicilar', 'users', 'Kullanıcılar']]
+    .map(l => `<a class="adm-link${active === l[0] ? ' on' : ''}" href="${l[0]}">${icon(l[1])}${l[2]}</a>`).join('');
+  $('#main').innerHTML = `
+    <div class="adm-layout">
+      <aside class="adm-side" aria-label="Yönetim menüsü">
+        <span class="cap">YÖNETİM</span>${links}
+        <span class="sp"></span>
+        <a class="adm-link" href="#/">${icon('home')} Siteye dön</a>
+      </aside>
+      <div class="adm-main">${content}</div>
+    </div>`;
+}
+function pageAdminListings(params) {
+  if (!admGuard()) return;
+  const st = params.get('durum') || 'pending_review';
+  const sq = (params.get('q') || '').toLowerCase();
+  let list = state.listings.filter(l => st === 'all' ? true : l.status === st);
+  if (sq) list = list.filter(l => (l.title + ' ' + user(l.owner).name).toLowerCase().includes(sq));
+  const order = { pending_review: 0, published: 1, paused: 2, rejected: 3, draft: 4 };
+  list = list.slice().sort((a, b) => (order[a.status] - order[b.status]) || (b.createdAt - a.createdAt));
+  const counts = {};
+  state.listings.forEach(l => { counts[l.status] = (counts[l.status] || 0) + 1; });
+  const pills = [['pending_review', 'İncelemede'], ['published', 'Yayında'], ['paused', 'Duraklatıldı'], ['rejected', 'Reddedildi'], ['all', 'Tümü']]
+    .map(p => `<a class="pill${st === p[0] ? ' on' : ''}" href="#/admin/ilanlar?durum=${p[0]}">${p[1]} <span class="num">${p[0] === 'all' ? state.listings.length : (counts[p[0]] || 0)}</span></a>`).join('');
+  const rows = list.map(l => {
+    const o = user(l.owner);
+    const acts = [];
+    if (l.status === 'pending_review') {
+      acts.push(`<button class="btn btn-sm btn-primary" data-action="adm-approve" data-id="${l.id}">${icon('check')} Onayla</button>`);
+      acts.push(`<button class="btn btn-sm btn-danger-outline" data-action="adm-reject" data-id="${l.id}">Reddet</button>`);
+    }
+    if (l.status === 'published') acts.push(`<button class="btn btn-sm btn-outline" data-action="adm-pause" data-id="${l.id}">${icon('pause')} Duraklat</button>`);
+    acts.push(`<button class="btn btn-sm btn-outline" data-action="adm-preview" data-id="${l.id}">${icon('eye')} Önizle</button>`);
+    return `
+      <tr>
+        <td class="ci"><div class="cell-item"><span class="thimg">${pic(l.photos[0] || 'krv-none', 120, 90, l.title)}</span>
+          <span><b>${esc(l.title)}</b><small>${esc(o.name)} · ${joinedMonth(o.joined)}</small></span></div></td>
+        <td data-l="Konum">${esc(l.city)} / ${esc(l.district)}</td>
+        <td data-l="Fiyat"><b class="num">${money(l.price)}</b> /gece</td>
+        <td data-l="Fotoğraf" class="num">${l.photos.length}</td>
+        <td data-l="Durum">${badgeHTML(LIST_LABEL[l.status], LIST_CLASS[l.status], LIST_ICON[l.status])}</td>
+        <td data-l="İşlemler"><div style="display:flex;gap:6px;flex-wrap:wrap">${acts.join('')}</div></td>
+      </tr>`;
+  }).join('');
+  admShell('#/admin/ilanlar', `
+    <div class="page-head"><div><h1 class="h1" style="font-size:1.6rem">İlan Moderasyonu</h1><p>Gönderilen ilanları incele; onayla, gerekçeli reddet ya da duraklat.</p></div></div>
+    <div class="pill-tabs">${pills}</div>
+    <div class="adm-toolbar">
+      <div class="input-wrap">${icon('search')}<input class="input" id="adm-q" type="search" placeholder="İlan veya sahip ara" value="${esc(params.get('q') || '')}"></div>
+    </div>
+    ${list.length
+      ? `<div class="table-wrap"><table class="table">
+          <thead><tr><th>İlan</th><th>Konum</th><th>Fiyat</th><th>Fotoğraf</th><th>Durum</th><th>İşlemler</th></tr></thead>
+          <tbody>${rows}</tbody></table></div>`
+      : emptyHTML('check-circle', 'Bu listede ilan yok', 'Seçili durum filtresine uyan ilan bulunmuyor. Başka bir durum seçebilirsin.',
+          `<a class="btn btn-outline" href="#/admin/ilanlar?durum=all">Tüm ilanlar</a>`)}`);
+  $('#adm-q').addEventListener('change', e => {
+    const p = new URLSearchParams();
+    p.set('durum', st);
+    if (e.target.value) p.set('q', e.target.value);
+    nav('#/admin/ilanlar?' + p.toString());
+  });
+}
+function adminPreviewModal(l) {
+  const o = user(l.owner);
+  const rows = [
+    ['Fiyat', money(l.price) + ' / gece'], ['Kapasite', l.guests + ' kişi'],
+    ['Model', l.brand + ' ' + l.model + ' · ' + l.year], ['Vites / Yakıt', l.gearbox + ' · ' + l.fuel],
+    ['Min. kiralama', l.minNights + ' gece'], ['Ehliyet', l.license]
+  ].map(r => `<div><dt>${r[0]}</dt><dd>${esc(r[1])}</dd></div>`).join('');
+  openLayer(`
+    <div class="modal-head"><h3>${icon('eye')} İlan önizleme</h3><button class="ibtn modal-x" data-action="close" aria-label="Kapat">${icon('x')}</button></div>
+    <div class="modal-body">
+      <div style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;margin-bottom:14px;position:relative;background:var(--sage-100)">${pic(l.photos[0], 800, 450, l.title)}</div>
+      <h3 style="font-size:1.0625rem">${esc(l.title)}</h3>
+      <p class="small muted" style="margin:4px 0 12px">${esc(l.city)} / ${esc(l.district)} · ${TYPES[l.type]} · ${esc(o.name)}’e ait</p>
+      <dl class="pv-dl">${rows}</dl>
+      <p class="small muted" style="margin-top:12px">${esc(l.desc)}</p>
+    </div>
+    <div class="modal-foot">${l.status === 'pending_review'
+      ? `<button class="btn btn-danger-outline" data-action="adm-reject" data-id="${l.id}">Reddet</button>
+         <button class="btn btn-primary" data-action="adm-approve" data-id="${l.id}">${icon('check')} Onayla</button>`
+      : `<button class="btn btn-ghost" data-action="close">Kapat</button>`}</div>`, 'modal');
+}
+function pageAdminUsers() {
+  if (!admGuard()) return;
+  const rows = state.users.slice().sort((a, b) => b.joined - a.joined).map(u => {
+    const isSelf = u.id === state.user.id;
+    const action = u.banned
+      ? `<button class="btn btn-sm btn-outline" data-action="usr-unban" data-id="${u.id}"${isSelf ? ' disabled' : ''}>${icon('play')} Engeli kaldır</button>`
+      : `<button class="btn btn-sm btn-danger-outline" data-action="usr-ban" data-id="${u.id}"${(isSelf || u.admin) ? ' disabled title="Kendi hesabın veya yönetici hesapları engellenemez"' : ''}>${icon('ban')} Engelle</button>`;
+    return `
+      <tr>
+        <td class="ci"><div class="cell-item">${avatar(u)}
+          <span><b>${esc(u.name)}</b><small>${esc(u.email)}${u.phone ? ' · ' + esc(u.phone) : ''}</small></span></div></td>
+        <td data-l="Kayıt">${fmtShortY(iso(u.joined))}</td>
+        <td data-l="Rol">${u.admin ? `<span class="badge b-sage">${icon('shield')} Yönetici</span>` : `<span class="badge b-gray">Üye</span>`}</td>
+        <td data-l="Durum">${u.banned ? badgeHTML('Engelli', 'b-red', 'ban') : badgeHTML('Aktif', 'b-green', 'check-circle')}</td>
+        <td data-l="İşlem">${action}</td>
+      </tr>`;
+  }).join('');
+  admShell('#/admin/kullanicilar', `
+    <div class="page-head"><div><h1 class="h1" style="font-size:1.6rem">Kullanıcılar</h1><p>Platform üyelerini görüntüle; gerekçeli engelle veya engeli kaldır.</p></div></div>
+    <div class="stat-line"><span><b>${state.users.length}</b> kayıtlı üye</span><span><b>${state.users.filter(x => x.banned).length}</b> engelli</span></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Kullanıcı</th><th>Kayıt tarihi</th><th>Rol</th><th>Durum</th><th>İşlem</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`);
+}
+
+/* ============ Sistem sayfaları ============ */
+function page404() {
+  $('#main').innerHTML = `
+    <div class="container"><div class="empty" style="padding-block:90px">
+      <div class="empty-ic" style="width:88px;height:88px">${icon('compass')}</div>
+      <h1 class="h1" style="font-size:1.8rem;margin-bottom:8px">Bu yol haritada yok</h1>
+      <p>Aradığın sayfa taşınmış ya da hiç var olmamış olabilir. İyi haber: doğru karavan hâlâ seni bekliyor.</p>
+      <div class="row"><a class="btn btn-primary" href="#/">Ana sayfaya dön</a><a class="btn btn-outline" href="#/arama">${icon('search')} Karavan ara</a></div>
+    </div></div>`;
+}
+function pageError() {
+  $('#main').innerHTML = `
+    <div class="container"><div class="empty" style="padding-block:90px">
+      <div class="empty-ic" style="background:var(--danger-bg);color:var(--danger)">${icon('alert-triangle')}</div>
+      <h1 class="h1" style="font-size:1.8rem;margin-bottom:8px">Yolda küçük bir aksaklık</h1>
+      <p>Sayfa yüklenirken beklenmeyen bir hata oluştu. Bağlantını kontrol edip tekrar deneyebilirsin.</p>
+      <div class="row"><button class="btn btn-primary" data-action="retry">${icon('refresh')} Tekrar dene</button><a class="btn btn-outline" href="#/">Ana sayfa</a></div>
+    </div></div>`;
+}
+function pageLoading() {
+  $('#main').innerHTML = `
+    <div class="container" style="padding-block:32px">
+      <div class="sk sk-line" style="width:200px;height:20px"></div>
+      <div class="sk sk-img" style="margin:18px 0 28px;aspect-ratio:21/9"></div>
+      <div class="lgrid">${Array.from({ length: 6 }, () =>
+        `<div><div class="sk sk-img"></div><div class="sk sk-line" style="margin-top:12px"></div><div class="sk sk-line w60"></div></div>`).join('')}</div>
+    </div>`;
+  setTimeout(() => { if (parseHash().path === '/yukleniyor') nav('#/arama'); }, 1200);
+}
+
+/* ============ Style guide ============ */
+function pageStyleguide() {
+  const C = [
+    ['forest-700', 'Primary · Orman yeşili', '#234B3B'], ['forest-600', 'Primary hover', '#2C5C49'],
+    ['sage', 'Secondary · Adaçayı', '#829985'], ['sage-100', 'Soft yüzey', '#EAF0EB'],
+    ['orange-500', 'Accent · Sıcak turuncu', '#E58B52'], ['bg', 'Background · Kırık beyaz', '#FAF9F6'],
+    ['surface', 'Surface · Beyaz', '#FFFFFF'], ['text', 'Text · Antrasit', '#202722'],
+    ['text2', 'Text · İkincil', '#66716A'], ['border', 'Border · Nötr', '#E4E7E3'],
+    ['success', 'Success', '#22734A'], ['warning', 'Warning', '#9A6A0B'],
+    ['danger', 'Danger', '#B23A2E'], ['info', 'Info', '#2C6486']
+  ].map(c => `<div class="sw"><div class="c" style="background:${c[2]}"></div><div class="m"><b>${c[0]}</b>${c[1]}<br><span style="color:var(--text2)">${c[2]}</span></div></div>`).join('');
+  const T = [
+    ['H1 · Hero', 'clamp(2.15–3.4rem) · 800', 'font-size:2.2rem;font-weight:800;letter-spacing:-.02em', 'Başlık örneği'],
+    ['H2 · Bölüm', 'clamp(1.4–1.75rem) · 700', 'font-size:1.6rem;font-weight:700', 'Bölüm başlığı'],
+    ['H3 · Kart', '1.125rem · 700', 'font-size:1.125rem;font-weight:700', 'Kart başlığı'],
+    ['Body', '0.9375–1rem · 400', 'font-size:1rem', 'Açıklama metni — Öğrenci şehirde karavan tatili'],
+    ['Small', '0.8125rem · 400', 'font-size:.8125rem;color:var(--text2)', 'Yardımcı küçük metin']
+  ].map(t => `<div class="type-row"><span style="${t[2]}">${t[3]}</span><code>${t[0]} · ${t[1]}</code></div>`).join('');
+  const demoL = { id: '__sg', owner: state.user ? state.user.id : 'a1', title: 'Örnek İlan — Adria Coral 670', city: 'Antalya', district: 'Konyaaltı', price: 4200, guests: 4, beds: 3, gearbox: 'Otomatik', type: 'alcove', features: ['klima', 'tente', 'wifi'], desc: 'Örnek açıklama metni.', status: 'published', photos: ['krv-sg-demo'] };
+  const sec = (id, t, inner) => `<section class="sg-sec" id="${id}"><h2 class="h2">${t}</h2>${inner}</section>`;
+  $('#main').innerHTML = `
+    <div class="container sg">
+      <nav class="sg-nav" aria-label="Style guide bölümleri">${[['sg-color', 'Renkler'], ['sg-type', 'Tipografi'], ['sg-btn', 'Butonlar'], ['sg-form', 'Formlar'], ['sg-card', 'Kartlar'], ['sg-badge', 'Durum etiketleri'], ['sg-depth', 'Derinlik'], ['sg-resp', 'Responsive'], ['sg-dd', 'Yap / Yapma']]
+        .map(l => `<button data-action="sg-go" data-sec="${l[0]}">${l[1]}</button>`).join('')}</nav>
+      <div>
+        <div style="margin-bottom:40px"><span class="eyebrow">${icon('compass')} Karavan tasarım sistemi</span>
+          <h1 class="h1" style="font-size:1.9rem">Style Guide</h1>
+          <p class="muted">Tüm ekranlar bu token ve bileşenlerle inşa edilir.</p></div>
+        ${sec('sg-color', 'Renk paleti ve roller', `<div class="sw-grid">${C}</div>`)}
+        ${sec('sg-type', 'Tipografi — Figtree', `<div>${T}</div><p class="f-help" style="margin-top:12px">Tüm Türkçe karakterler (çğıöşüÇĞİÖŞÜ) eksiksiz desteklenir.</p>`)}
+        ${sec('sg-btn', 'Butonlar', `<div class="demo-row"><button class="btn btn-primary">Birincil</button><button class="btn btn-secondary">İkincil</button><button class="btn btn-outline">Kontur</button><button class="btn btn-ghost">Ghost</button><button class="btn btn-destructive">Yıkıcı</button><button class="btn btn-accent">Vurgu</button></div>
+          <div class="demo-row" style="margin-top:14px"><button class="btn btn-primary btn-sm">Küçük</button><button class="btn btn-primary btn-lg">Büyük</button><button class="btn btn-primary" disabled>Devre dışı</button><button class="btn btn-primary is-loading"><span class="spinner"></span>Yükleniyor</button></div>`)}
+        ${sec('sg-form', 'Form alanları', `<div class="dd">
+          <div class="field"><label class="label">Normal input</label><input class="input" placeholder="Metin gir"></div>
+          <div class="field"><label class="label">Hata durumu</label><input class="input err" value="geçersiz"><span class="f-err">${icon('alert-circle')} Bu alan zorunludur.</span></div>
+          <div class="field"><label class="label">Select</label><select class="select"><option>Seçenek A</option></select></div>
+          <div class="field"><label class="label">Devre dışı</label><input class="input" disabled value="Düzenlenemez"></div>
+        </div><div class="demo-row" style="margin-top:14px"><label class="check"><input type="checkbox" checked><span class="t">Onay kutusu</span></label><label class="radio"><input type="radio" checked><span class="t">Radyo</span></label></div>`)}
+        ${sec('sg-card', 'Kartlar ve yüzeyler', `<div style="max-width:340px">${cardHTML(demoL, 'lcard')}</div>`)}
+        ${sec('sg-badge', 'Durum etiketleri', `<div class="demo-row">${badgeHTML('Yayında', 'b-green', 'check-circle')}${badgeHTML('Bekliyor', 'b-amber', 'clock')}${badgeHTML('Reddedildi', 'b-red', 'x-circle')}${badgeHTML('Duraklatıldı', 'b-sage', 'pause')}${badgeHTML('Nötr', 'b-gray', 'info')}</div>`)}
+        ${sec('sg-depth', 'Derinlik ve radius', `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+          <div style="background:#fff;border:1px solid var(--border);border-radius:12px;height:74px;display:grid;place-items:center;font-size:.75rem;color:var(--text2)">L1 · Kart (border)</div>
+          <div style="background:#fff;border-radius:12px;height:74px;display:grid;place-items:center;font-size:.75rem;color:var(--text2);box-shadow:var(--sh-md)">L2 · Önemli yüzey</div>
+          <div style="background:#fff;border-radius:12px;height:74px;display:grid;place-items:center;font-size:.75rem;color:var(--text2);box-shadow:var(--sh-lg)">L3 · Modal</div>
+        </div><p class="f-help" style="margin-top:10px">Radius: 8 / 12 / 16 / 22 px. Gölge yalnızca katman ayrımı için.</p>`)}
+        ${sec('sg-resp', 'Responsive davranış', `<div class="dd">
+          <div class="note n-info">${icon('info')}<span><b>360–390px:</b> tek kolon, arama formu dikey yığın, filtre alt çekmece, tablo→kart.</span></div>
+          <div class="note n-info">${icon('info')}<span><b>768px:</b> 2 kolon grid, yatay kaydırılan galeri ve hesap navigasyonu.</span></div>
+          <div class="note n-info">${icon('info')}<span><b>1024px+:</b> üç kolon, sabit filtre ve rezervasyon paneli.</span></div>
+          <div class="note n-info">${icon('info')}<span><b>1440px+:</b> 1240px konteyner, ferah boşluk. Dokunma hedefleri ≥44px.</span></div>
+        </div>`)}
+        ${sec('sg-dd', 'Yapılması ve kaçınılması gerekenler', `<div class="dd">
+          <div class="note n-ok">${icon('check')}<span><b>Yap:</b> token kullan, net CTA hiyerarşisi kur, gerçek içerik göster, tüm durumları tasarla.</span></div>
+          <div class="note n-err">${icon('x')}<span><b>Yapma:</b> gradient/glassmorphism, emoji ikon, işlevsiz buton, MVP dışı ödeme/akış gösterimi, sayfa başına farklı radius/gölge.</span></div>
+        </div>`)}
+      </div>
+    </div>`;
+}
+
+/* ============ Router ============ */
+function parseHash() {
+  const h = location.hash.slice(1) || '/';
+  const qi = h.indexOf('?');
+  const path = qi === -1 ? h : h.slice(0, qi);
+  const params = new URLSearchParams(qi === -1 ? '' : h.slice(qi + 1));
+  const parts = path.split('/').filter(Boolean);
+  return { path, parts, params };
+}
+function nav(h) { location.hash = h.charAt(0) === '#' ? h : '#' + h; }
+function routeActive() {
+  const p = parseHash().parts;
+  if (!p.length) return 'home';
+  if (p[0] === 'arama') return 'arama';
+  if (p[0] === 'hesap' || p[0] === 'admin' || p[0] === 'giris' || p[0] === 'kayit') return p[0];
+  return '';
+}
+function route() {
+  const { parts, params } = parseHash();
+  closeModal();
+  $('#lb-root').innerHTML = '';
+  window.scrollTo({ top: 0 });
+  renderHeader(routeActive());
+  renderFooter();
+  const r = parts[0] || '';
+  if (!r) pageHome();
+  else if (r === 'arama') pageSearch();
+  else if (r === 'ilan' && parts[1]) pageDetail(parts[1]);
+  else if (r === 'giris') pageLogin();
+  else if (r === 'kayit') pageRegister();
+  else if (r === 'hesap') {
+    if (parts[1] === 'ilanlarim' && parts[2] === 'yeni') { if (accGuard()) { startDraft(null); pageListingForm(); } }
+    else if (parts[1] === 'ilanlarim' && parts[2] === 'duzenle' && parts[3]) { if (accGuard()) { startDraft(parts[3]); pageListingForm(); } }
+    else if (parts[1] === 'ilanlarim') pageMyListings();
+    else if (parts[1] === 'taleplerim') pageRequests(params);
+    else if (parts[1] === 'profil') pageProfile();
+    else page404();
+  }
+  else if (r === 'admin') {
+    if (parts[1] === 'ilanlar') pageAdminListings(params);
+    else if (parts[1] === 'kullanicilar') pageAdminUsers();
+    else page404();
+  }
+  else if (r === 'stil-rehberi') pageStyleguide();
+  else if (r === 'yukleniyor') pageLoading();
+  else if (r === 'hata') pageError();
+  else page404();
+  $('#main').focus({ preventScroll: true });
+}
+function safeRoute() {
+  try { route(); }
+  catch (err) { console.error(err); pageError(); }
+}
+
+/* ============ Eylem yönetimi ============ */
+function requireDraft() {
+  if (!state.draft) { nav('#/hesap/ilanlarim'); return false; }
+  return true;
+}
+const HANDLERS = {
+  'close': () => closeModal(),
+  'umenu': el => {
+    const m = $('#umenu');
+    m.classList.toggle('open');
+    el.setAttribute('aria-expanded', m.classList.contains('open') ? 'true' : 'false');
+  },
+  'hamburger': el => {
+    const m = $('#mnav');
+    m.classList.toggle('open');
+    el.setAttribute('aria-expanded', m.classList.contains('open') ? 'true' : 'false');
+  },
+  'go-how': () => {
+    const m = $('#mnav'); if (m) m.classList.remove('open');
+    if (parseHash().parts.length === 0) { const n = $('#nasil'); if (n) n.scrollIntoView({ behavior: 'smooth' }); }
+    else { nav('#/'); setTimeout(() => { const n = $('#nasil'); if (n) n.scrollIntoView({ behavior: 'smooth' }); }, 200); }
+  },
+  'logout': () => { state.user = null; saveSession(); toast('Çıkış yapıldı', 'info'); nav('#/'); },
+  'fill-demo': () => { $('#lg-email').value = 'demo@karavan.demo'; $('#lg-pw').value = DEMO_PW; },
+  'fill-demo-admin': () => { $('#lg-email').value = 'admin@karavan.demo'; $('#lg-pw').value = DEMO_PW; },
+  'demo-google': () => {
+    const u = state.users.find(x => x.email === 'demo@karavan.demo');
+    state.user = u; saveSession();
+    toast('Demo hesabıyla giriş yapıldı (Google girişi bu ortamda simüle edilir)', 'info');
+    nav('#/');
+  },
+  'lb-open': el => {
+    const l = listing(el.dataset.id);
+    if (l) openLightbox(l.photos.map(p => photoUrl(p, 1600, 1200)), Number(el.dataset.i));
+  },
+  'lb-close': () => { $('#lb-root').innerHTML = ''; },
+  'lb-prev': () => lbMove(-1),
+  'lb-next': () => lbMove(1),
+  'page-go': el => {
+    const p = new URLSearchParams(location.hash.split('?')[1] || '');
+    p.set('sayfa', el.dataset.page);
+    nav('#/arama?' + p.toString());
+  },
+  'chip-remove': el => {
+    const p = new URLSearchParams(location.hash.split('?')[1] || '');
+    const k = el.dataset.k;
+    if (k === 'tarih') { p.delete('giris'); p.delete('cikis'); }
+    else if (k === 'tip') {
+      const cur = (p.get('tip') || '').split(',').filter(x => x && x !== el.dataset.v);
+      if (cur.length) p.set('tip', cur.join(',')); else p.delete('tip');
+    }
+    else p.delete(k);
+    p.delete('sayfa');
+    nav('#/arama' + (p.toString() ? '?' + p.toString() : ''));
+  },
+  'clear-filters': () => {
+    const cur = queryFromParams(parseHash().params);
+    const p = new URLSearchParams();
+    if (cur.start) p.set('giris', cur.start);
+    if (cur.end) p.set('cikis', cur.end);
+    closeModal();
+    nav('#/arama' + (p.toString() ? '?' + p.toString() : ''));
+  },
+  'open-filters': () => {
+    const q = queryFromParams(parseHash().params);
+    openLayer(`<button class="ibtn" data-action="close" style="position:absolute;top:10px;right:10px;z-index:2" aria-label="Kapat">${icon('x')}</button>
+      <div style="padding:22px 22px 28px;overflow:auto"><h2 class="h3" style="margin-bottom:18px">Filtreler</h2>${filterPanelHTML('f-drawer', q)}</div>`, 'drawer');
+    wireFilterForm($('#f-drawer'), true);
+  },
+  'scroll-book': () => { const b = $('#bk-in'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); },
+  'req-tab': el => { state.reqTab = el.dataset.tab; renderRequestsBody(true); setTimeout(() => renderRequestsBody(false), 400); },
+  'retry': () => safeRoute(),
+  'sg-go': el => { const s = document.getElementById(el.dataset.sec); if (s) s.scrollIntoView({ behavior: 'smooth' }); },
+  'ph-del': el => { if (requireDraft()) { state.draft.photos.splice(Number(el.dataset.i), 1); refreshThumbs(); } },
+  'step-back': () => { if (requireDraft() && state.draft.step > 1) { state.draft.step--; pageListingForm(); } },
+  'step-next': () => {
+    if (!requireDraft()) return;
+    if (!validateStep(state.draft.step)) return;
+    state.draft.step = Math.min(4, state.draft.step + 1);
+    pageListingForm();
+  },
+  'draft-save': () => {
+    if (!requireDraft()) return;
+    if (!validateStep(state.draft.step)) return;
+    const d = state.draft;
+    if (d.editId) {
+      const l = listing(d.editId);
+      Object.assign(l, d.data, { photos: d.photos.slice() });
+    } else {
+      state.listings.unshift(Object.assign({}, d.data, { id: uid('l'), owner: state.user.id, photos: d.photos.slice(), status: 'draft', createdAt: Date.now(), bookedRanges: [], rejectReason: '', pets: d.data.pets, special: d.data.special, length: d.data.length || '' }));
+    }
+    state.draft = null;
+    toast('Taslak kaydedildi');
+    nav('#/hesap/ilanlarim');
+  },
+  'listing-submit': () => {
+    if (!requireDraft()) return;
+    const d = state.draft;
+    if (d.photos.length === 0) { toast('En az 1 fotoğraf eklemelisin', 'err'); state.draft.step = 3; pageListingForm(); return; }
+    if (d.editId) {
+      const l = listing(d.editId);
+      Object.assign(l, d.data, { photos: d.photos.slice(), status: 'pending_review', rejectReason: '' });
+      toast('İlan güncellendi ve incelemeye gönderildi');
+    } else {
+      state.listings.unshift(Object.assign({}, d.data, { id: uid('l'), owner: state.user.id, photos: d.photos.slice(), status: 'pending_review', createdAt: Date.now(), bookedRanges: [], rejectReason: '', pets: d.data.pets, special: d.data.special, length: d.data.length || '' }));
+      toast('İlan oluşturuldu, inceleme sonrası yayına alınır');
+    }
+    state.draft = null;
+    nav('#/hesap/ilanlarim');
+  },
+  'ml-send': el => { const l = listing(el.dataset.id); l.status = 'pending_review'; toast('İlan incelemeye gönderildi'); safeRoute(); },
+  'ml-pause': async el => {
+    const l = listing(el.dataset.id);
+    const ok = await confirmDialog({ title: 'İlan duraklatılsın mı?', message: `<b>${esc(l.title)}</b> geçici olarak arama sonuçlarından kaldırılır; mevcut onaylı talepler etkilenmez.`, confirmLabel: 'Duraklat', ic: 'pause' });
+    if (ok) { l.status = 'paused'; toast('İlan duraklatıldı'); safeRoute(); }
+  },
+  'ml-resume': async el => {
+    const ok = await confirmDialog({ title: 'Yeniden yayınla', message: 'Bu ilan daha önce onaylanmıştı. Doğrudan yayına alınsın mı?', confirmLabel: 'Yayınla', ic: 'play' });
+    if (ok) { listing(el.dataset.id).status = 'published'; toast('İlan yeniden yayında'); safeRoute(); }
+  },
+  'ml-del': async el => {
+    const l = listing(el.dataset.id);
+    const ok = await confirmDialog({ title: 'İlan silinsin mi?', message: `<b>${esc(l.title)}</b> kalıcı olarak silinecek. Bu işlem geri alınamaz.`, confirmLabel: 'Kalıcı olarak sil', tone: 'danger', ic: 'trash' });
+    if (ok) {
+      state.listings = state.listings.filter(x => x.id !== l.id);
+      state.requests = state.requests.filter(r => r.listingId !== l.id);
+      toast('İlan silindi');
+      safeRoute();
+    }
+  },
+  'rq-approve': async el => {
+    const r = state.requests.find(x => x.id === el.dataset.id);
+    const l = listing(r.listingId);
+    if ((l.bookedRanges || []).some(rg => r.start <= rg[1] && rg[0] <= r.end)) {
+      toast('Bu tarihlerde bu ilan için zaten onaylı bir rezervasyon var. Talebi reddetmelisin.', 'err');
+      return;
+    }
+    const ok = await confirmDialog({ title: 'Talep onaylansın mı?', message: `${esc(user(r.tenantId).name)}’in <b>${fmtRange(r.start, r.end)}</b> tarihli talebini onaylarsan tarihler takvimde kilitlenir.`, confirmLabel: 'Onayla', ic: 'check' });
+    if (ok) { r.status = 'approved'; l.bookedRanges.push([r.start, r.end]); toast('Talep onaylandı, tarihler kilitlendi'); safeRoute(); }
+  },
+  'rq-cancel': async el => {
+    const r = state.requests.find(x => x.id === el.dataset.id);
+    const ok = await confirmDialog({ title: 'Talep iptal edilsin mi?', message: `<b>${fmtRange(r.start, r.end)}</b> tarihli talebin iptal edilir. Sahip bilgilendirilir.`, confirmLabel: 'İptal et', tone: 'danger', ic: 'x-circle' });
+    if (ok) { r.status = 'cancelled'; toast('Talebin iptal edildi'); safeRoute(); }
+  },
+  'rq-reject': el => rejectModal(el.dataset.id, 'req'),
+  'adm-reject': el => rejectModal(el.dataset.id, 'listing'),
+  'reject-submit': el => {
+    const txt = $('#rej-text').value.trim();
+    if (!txt) { $('#e-rej').hidden = false; return; }
+    if (el.dataset.mode === 'req') {
+      const r = state.requests.find(x => x.id === el.dataset.id);
+      r.status = 'rejected'; r.rejectReason = txt;
+      toast('Talep gerekçesiyle reddedildi');
+    } else {
+      const l = listing(el.dataset.id);
+      l.status = 'rejected'; l.rejectReason = txt;
+      toast('İlan gerekçesiyle reddedildi');
+    }
+    closeModal(); safeRoute();
+  },
+  'adm-approve': async el => {
+    const l = listing(el.dataset.id);
+    const ok = await confirmDialog({ title: 'İlan onaylansın mı?', message: `<b>${esc(l.title)}</b> yayına alınacak ve arama sonuçlarında görünecek.`, confirmLabel: 'Onayla ve yayınla', ic: 'check-circle' });
+    if (ok) { l.status = 'published'; toast('İlan onaylandı ve yayına alındı'); safeRoute(); }
+  },
+  'adm-pause': async el => {
+    const l = listing(el.dataset.id);
+    const ok = await confirmDialog({ title: 'Aktif ilan duraklatılsın mı?', message: `<b>${esc(l.title)}</b> arama sonuçlarından geçici olarak kaldırılır.`, confirmLabel: 'Duraklat', ic: 'pause' });
+    if (ok) { l.status = 'paused'; toast('İlan duraklatıldı'); safeRoute(); }
+  },
+  'adm-preview': el => adminPreviewModal(listing(el.dataset.id)),
+  'usr-ban': async el => {
+    const u = user(el.dataset.id);
+    const ok = await confirmDialog({ title: 'Kullanıcı engellensin mi?', message: `<b>${esc(u.name)}</b> hesabına giriş yapamayacak; yayında ilanları gizlenecek. Bu kritik bir işlemdir.`, confirmLabel: 'Engelle', tone: 'danger', ic: 'ban' });
+    if (ok) { u.banned = true; toast(u.name + ' engellendi'); safeRoute(); }
+  },
+  'usr-unban': async el => {
+    const u = user(el.dataset.id);
+    const ok = await confirmDialog({ title: 'Engel kaldırılsın mı?', message: `<b>${esc(u.name)}</b> yeniden hesabına giriş yapabilecek.`, confirmLabel: 'Engeli kaldır', ic: 'play' });
+    if (ok) { u.banned = false; toast('Engel kaldırıldı'); safeRoute(); }
+  }
+};
+function rejectModal(id, mode) {
+  openLayer(`
+    <div class="modal-head"><h3>${icon('x-circle')} Red gerekçesi</h3><button class="ibtn modal-x" data-action="close" aria-label="Kapat">${icon('x')}</button></div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="label" for="rej-text">Gerekçe</label>
+        <textarea class="textarea" id="rej-text" rows="3" placeholder="Karşı tarafa iletilecek kısa bir açıklama yaz"></textarea>
+        <span class="f-err" id="e-rej" hidden>${icon('alert-circle')} Red gerekçesi boş bırakılamaz.</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-action="close">Vazgeç</button>
+      <button class="btn btn-destructive" data-action="reject-submit" data-id="${id}" data-mode="${mode}">${mode === 'req' ? 'Talebi Reddet' : 'İlanı Reddet'}</button>
+    </div>`, 'modal');
+}
+document.addEventListener('click', e => {
+  if (e.target.classList && e.target.classList.contains('overlay')) { closeModal(); return; }
+  const el = e.target.closest('[data-action],[data-cd]');
+  if (!el) {
+    const um = $('#umenu');
+    if (um && um.classList.contains('open') && !e.target.closest('#umenu')) um.classList.remove('open');
+    return;
+  }
+  if (el.dataset.cd !== undefined) {
+    if (cdResolve) cdResolve(el.dataset.cd === '1');
+    closeModal();
+    return;
+  }
+  const fn = HANDLERS[el.dataset.action];
+  if (fn) fn(el, e);
+});
+document.addEventListener('keydown', e => {
+  const lbOpen = $('#lb-root').innerHTML !== '';
+  if (e.key === 'Escape') {
+    if (lbOpen) { $('#lb-root').innerHTML = ''; return; }
+    closeModal();
+  }
+  if (lbOpen && e.key === 'ArrowRight') lbMove(1);
+  if (lbOpen && e.key === 'ArrowLeft') lbMove(-1);
+});
+
+/* ============ Hata yüzeyi (sessiz beyaz ekranı engeller) ============ */
+function showErrorBanner(msg) {
+  if (document.querySelector('.err-banner')) return;
+  const b = document.createElement('div');
+  b.className = 'err-banner';
+  b.setAttribute('role', 'alert');
+  b.textContent = 'Bir hata oluştu: ' + msg;
+  document.body.appendChild(b);
+}
+window.addEventListener('error', e => {
+  const t = e.target;
+  if (t && t.tagName === 'IMG') {
+    if (t.dataset.failed) return;
+    t.dataset.failed = '1';
+    const p = t.parentElement;
+    if (p) {
+      t.remove();
+      p.classList.add('img-fail');
+      p.insertAdjacentHTML('beforeend', `<div class="img-fb">${icon('image')}<span>Görsel yüklenemedi</span></div>`);
+    }
+    return;
+  }
+  showErrorBanner((e.message || 'Bilinmeyen hata') + ' (satır ' + (e.lineno || '?') + ')');
+}, true);
+window.addEventListener('unhandledrejection', e => {
+  showErrorBanner('Beklenmeyen hata: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+});
+
+/* ============ Başlatma ============ */
+seedUsers();
+seedListings();
+seedRequests();
+restoreSession();
+window.addEventListener('hashchange', safeRoute);
+safeRoute();
+</script>
+</body>
+</html>
