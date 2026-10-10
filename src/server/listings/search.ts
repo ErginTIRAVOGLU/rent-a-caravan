@@ -1,4 +1,5 @@
-import type { Listing, Prisma, VehicleType } from "@prisma/client";
+import type { Listing, Prisma } from "@prisma/client";
+import { VehicleType } from "@prisma/client";
 import { z } from "zod";
 
 import { prisma } from "../../lib/prisma";
@@ -47,11 +48,14 @@ const dateField = z.iso.date();
 const kisiField = z.coerce.number().int().min(1);
 const priceField = z.coerce.number().min(0);
 const pageField = z.coerce.number().int().min(1);
-const vehicleTypeField = z.enum([
-  "TOWED_CARAVAN",
-  "PANELVAN",
-  "MOTORHOME",
-] as const);
+// DB enum'unun kendisinden türetilir — yeni bir vehicleType değeri eklendiğinde
+// arama da otomatik destekler (sessizce filtre dışı kalmaz).
+const vehicleTypeField = z.enum(VehicleType);
+
+/** ILIKE joker karakterleri (%, _, \) kaçırılır — şehir girdisi literal aranır. */
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
 
 /** Tek alanı çözer: yok/boş → undefined, geçersiz → undefined (yok sayılır). */
 function parseField<T>(
@@ -110,7 +114,7 @@ export async function searchListings(
 
   const where: Prisma.ListingWhereInput = { status: "ACTIVE" };
   if (parsed.sehir) {
-    where.city = { contains: parsed.sehir, mode: "insensitive" };
+    where.city = { contains: escapeLike(parsed.sehir), mode: "insensitive" };
   }
   if (parsed.kisi !== undefined) {
     where.capacity = { gte: parsed.kisi };

@@ -1,12 +1,8 @@
-"use client";
-
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-
 import { VEHICLE_TYPE_OPTIONS } from "../lib/labels";
 
-// Genel arama filtresi — GET navigasyonu (router.push + URL query).
-// Boş alanlar URL'ye yazılmaz; yeni arama `sayfa`'yı sıfırlar (URL'de yok).
+// Genel arama filtre formu — saf HTML GET (method="get" action="/arama").
+// JS zorunlu değil: tarayıcı doğrudan /arama?... navigasyonu yapar; boş
+// alanlar URL'ye boş değer olarak yazılır (parseSearchParams boşu yok sayar).
 // / ve /arama sayfalarında aynı bileşen kullanılır (URL round-trip).
 
 export type SearchFilterValues = {
@@ -17,16 +13,6 @@ export type SearchFilterValues = {
   minFiyat: string;
   maxFiyat: string;
   aracTipi: string;
-};
-
-const EMPTY: SearchFilterValues = {
-  sehir: "",
-  baslangic: "",
-  bitis: "",
-  kisi: "",
-  minFiyat: "",
-  maxFiyat: "",
-  aracTipi: "",
 };
 
 const inputClassName =
@@ -40,35 +26,10 @@ export function SearchFilters({
   /** URL query'den gelen mevcut değerler (arama sayfasında formu korur). */
   initial?: Partial<SearchFilterValues>;
 }) {
-  const router = useRouter();
-  const [form, setForm] = useState<SearchFilterValues>({
-    ...EMPTY,
-    ...initial,
-  });
-
-  function setField<K extends keyof SearchFilterValues>(
-    name: K,
-    value: SearchFilterValues[K],
-  ) {
-    setForm((prev) => ({ ...prev, [name]: value }));
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(form)) {
-      const trimmed = value.trim();
-      if (trimmed !== "") {
-        params.set(key, trimmed);
-      }
-    }
-    const query = params.toString();
-    router.push(query ? `/arama?${query}` : "/arama");
-  }
-
   return (
     <form
-      onSubmit={handleSubmit}
+      method="get"
+      action="/arama"
       className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
     >
       <div>
@@ -77,9 +38,9 @@ export function SearchFilters({
         </label>
         <input
           id="search-sehir"
+          name="sehir"
           type="text"
-          value={form.sehir}
-          onChange={(e) => setField("sehir", e.target.value)}
+          defaultValue={initial?.sehir ?? ""}
           placeholder="Antalya"
           className={inputClassName}
         />
@@ -90,9 +51,9 @@ export function SearchFilters({
         </label>
         <input
           id="search-baslangic"
+          name="baslangic"
           type="date"
-          value={form.baslangic}
-          onChange={(e) => setField("baslangic", e.target.value)}
+          defaultValue={initial?.baslangic ?? ""}
           className={inputClassName}
         />
       </div>
@@ -102,9 +63,9 @@ export function SearchFilters({
         </label>
         <input
           id="search-bitis"
+          name="bitis"
           type="date"
-          value={form.bitis}
-          onChange={(e) => setField("bitis", e.target.value)}
+          defaultValue={initial?.bitis ?? ""}
           className={inputClassName}
         />
       </div>
@@ -114,11 +75,11 @@ export function SearchFilters({
         </label>
         <input
           id="search-kisi"
+          name="kisi"
           type="number"
           min={1}
           max={16}
-          value={form.kisi}
-          onChange={(e) => setField("kisi", e.target.value)}
+          defaultValue={initial?.kisi ?? ""}
           placeholder="4"
           className={inputClassName}
         />
@@ -129,10 +90,10 @@ export function SearchFilters({
         </label>
         <input
           id="search-minfiyat"
+          name="minFiyat"
           type="number"
           min={0}
-          value={form.minFiyat}
-          onChange={(e) => setField("minFiyat", e.target.value)}
+          defaultValue={initial?.minFiyat ?? ""}
           placeholder="500"
           className={inputClassName}
         />
@@ -143,10 +104,10 @@ export function SearchFilters({
         </label>
         <input
           id="search-maxfiyat"
+          name="maxFiyat"
           type="number"
           min={0}
-          value={form.maxFiyat}
-          onChange={(e) => setField("maxFiyat", e.target.value)}
+          defaultValue={initial?.maxFiyat ?? ""}
           placeholder="3000"
           className={inputClassName}
         />
@@ -157,8 +118,8 @@ export function SearchFilters({
         </label>
         <select
           id="search-aractipi"
-          value={form.aracTipi}
-          onChange={(e) => setField("aracTipi", e.target.value)}
+          name="aracTipi"
+          defaultValue={initial?.aracTipi ?? ""}
           className={inputClassName}
         >
           <option value="">Tümü</option>

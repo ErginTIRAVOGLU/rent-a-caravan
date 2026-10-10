@@ -80,9 +80,11 @@ export default async function AramaPage({
     aracTipi: firstValue(query.aracTipi),
   };
 
+  // Fiyat özeti yalnız doğrulanmış (parsed) tarihlerle kurulur — ham query'den
+  // gelen geçersiz tarih kart linklerine taşınmaz.
   const stay =
-    initial.baslangic !== "" && initial.bitis !== ""
-      ? { baslangic: initial.baslangic, bitis: initial.bitis }
+    parsed.baslangic && parsed.bitis
+      ? { baslangic: parsed.baslangic, bitis: parsed.bitis }
       : undefined;
 
   return (

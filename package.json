@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check": "next typegen && tsc --noEmit && eslint . && vitest run",
+    "check": "prisma generate && next typegen && tsc --noEmit && eslint . && vitest run",
+    "postinstall": "prisma generate",
     "seed": "prisma db seed"
   },
   "prisma": {
