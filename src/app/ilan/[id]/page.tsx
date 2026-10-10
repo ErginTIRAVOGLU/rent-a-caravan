@@ -13,6 +13,7 @@ import { prisma } from "../../../lib/prisma";
 import { calculateNights, calculateTotalPrice } from "../../../lib/pricing";
 import { parseSearchParams } from "../../../server/listings/search";
 import { PhotoGallery } from "../../../components/PhotoGallery";
+import { BookingRequestForm } from "./BookingRequestForm";
 
 // İlan detayı — genel okuma yüzeyi: yalnız ACTIVE ilanlar görünür
 // (sahip/admin bypass bu görevde YOK; sahipleri kendi ilanını hesabından görür).
@@ -232,13 +233,24 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
                   </div>
                 )}
 
-                {/* Talep formu bölgesi — T9'da bağlanacak (şimdilik yer tutucu). */}
-                <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-                  {user ? (
-                    <p>
-                      Rezervasyon talebi formu yakında burada olacak.
-                    </p>
+                {/* Talep formu (T9): oturum yoksa giriş çağrısı, sahipse not. */}
+                {user ? (
+                  user.id === listing.ownerId ? (
+                    <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+                      <p>Bu sizin ilanınız; kendi ilanınıza talep oluşturamazsınız.</p>
+                    </div>
                   ) : (
+                    <div className="mt-4">
+                      <BookingRequestForm
+                        listingId={listing.id}
+                        minRentalDays={listing.minRentalDays}
+                        capacity={listing.capacity}
+                        nightlyPrice={nightlyPrice}
+                      />
+                    </div>
+                  )
+                ) : (
+                  <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
                     <p>
                       Talep göndermek için{" "}
                       <Link
@@ -249,8 +261,8 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
                       </Link>
                       .
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
               </section>
             </div>
           </aside>

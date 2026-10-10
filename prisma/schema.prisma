@@ -136,11 +136,13 @@ model BookingRequest {
   renterId   String
   startDate  DateTime              @db.Date
   endDate    DateTime              @db.Date
-  guests     Int
-  totalPrice Decimal               @db.Decimal(10, 2)
-  message    String?
-  status     BookingRequestStatus  @default(PENDING)
-  createdAt  DateTime              @default(now())
+  guests            Int
+  totalPrice        Decimal               @db.Decimal(10, 2)
+  message           String?
+  status            BookingRequestStatus  @default(PENDING)
+  // Red gerekçesi (spec §4.1) — Listing.rejectionReason ile aynı ad/kalıp.
+  rejectionReason   String?
+  createdAt         DateTime              @default(now())
 
   reviews Review[]
 
