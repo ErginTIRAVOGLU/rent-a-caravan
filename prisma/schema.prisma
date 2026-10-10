@@ -71,16 +71,18 @@ enum ReportStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String?
-  googleId     String?  @unique
-  avatarUrl    String?
-  phone        String?
-  role         Role     @default(USER)
-  isBanned     Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  passwordHash   String?
+  googleId       String?   @unique
+  avatarUrl      String?
+  phone          String?
+  role           Role      @default(USER)
+  isBanned       Boolean   @default(false)
+  emailVerified  DateTime?
+  reviewsVisible Boolean   @default(true)
+  createdAt      DateTime  @default(now())
 
   listings              Listing[]
   bookingRequests       BookingRequest[]      @relation("RenterBookings")
@@ -153,18 +155,22 @@ model BookingRequest {
 }
 
 model Conversation {
-  id        String   @id @default(cuid())
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  listingId String
-  renter    User     @relation("RenterConversations", fields: [renterId], references: [id], onDelete: Cascade)
-  renterId  String
-  owner     User     @relation("OwnerConversations", fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId   String
-  createdAt DateTime @default(now())
+  id                String   @id @default(cuid())
+  listing           Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId         String
+  renter            User     @relation("RenterConversations", fields: [renterId], references: [id], onDelete: Cascade)
+  renterId          String
+  owner             User     @relation("OwnerConversations", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId           String
+  lastMessageAt     DateTime?
+  lastMessagePreview String?
+  createdAt         DateTime @default(now())
 
   messages Message[]
 
   @@unique([listingId, renterId])
+  @@index([renterId, lastMessageAt])
+  @@index([ownerId, lastMessageAt])
 }
 
 model Message {
@@ -190,6 +196,8 @@ model Review {
   bookingId  String         @unique
   rating     Int
   comment    String?
+  ipAddress  String?
+  updatedAt  DateTime?
   createdAt  DateTime       @default(now())
 }
 
@@ -201,6 +209,7 @@ model Report {
   targetId   String
   reason     String           @db.Text
   status     ReportStatus     @default(OPEN)
+  updatedAt  DateTime?
   createdAt  DateTime         @default(now())
 }
 
