@@ -286,6 +286,30 @@ it("reject: boş gerekçe fail döner, durum PENDING kalır, email gitmez", asyn
   expect(sendListingStatusChanged).not.toHaveBeenCalled();
 });
 
+it("reject: 1000 karakteri aşan gerekçe fail döner, durum değişmez", async () => {
+  await resetDb();
+  const admin = await prisma.user.create({
+    data: makeUser({ role: "ADMIN" }),
+  });
+  const owner = await prisma.user.create({ data: makeUser() });
+  const listing = await prisma.listing.create({
+    data: makeListing(owner.id, { status: "PENDING" }),
+  });
+
+  const result = await rejectListingCore(
+    adminSession(admin),
+    listing.id,
+    "x".repeat(1001),
+  );
+
+  expect(result.ok).toBe(false);
+  if (!result.ok) {
+    expect(result.field).toBe("reason");
+  }
+  expect((await getListing(listing.id)).status).toBe("PENDING");
+  expect(sendListingStatusChanged).not.toHaveBeenCalled();
+});
+
 it("reject: PENDING olmayan ilan reddedilemez (ACTIVE→REJECTED yok), mutation yok", async () => {
   await resetDb();
   const admin = await prisma.user.create({

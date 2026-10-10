@@ -105,21 +105,26 @@ export async function approveListingCore(
   }
 
   const result = await safeTx<Decision>(async (tx) => {
-    const fresh = await tx.listing.findUnique({
+    // Atomik geçiş: id + beklenen durum (PENDING) koşulu tek yazımada — iki
+    // moderatör aynı PENDING ilana aynı anda karar verse bile matris
+    // yetkili kalır; last-write-wins yok, count===0 hem "yok" hem "yanlış durum".
+    const res = await tx.listing.updateMany({
+      where: { id, status: "PENDING" },
+      data: { status: "ACTIVE", rejectionReason: null },
+    });
+    if (res.count === 0) {
+      // Tanı ayrımı yalnız hata yolunda: yok mu, yoksa yanlış durumda mı?
+      const exists = await tx.listing.findUnique({
+        where: { id },
+        select: { id: true },
+      });
+      return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
+    }
+    const updated = await tx.listing.findUniqueOrThrow({
       where: { id },
       include: { owner: { select: { email: true } } },
     });
-    if (!fresh) {
-      return fail<Decision>(ILAN_BULUNAMADI);
-    }
-    if (fresh.status !== "PENDING") {
-      return fail<Decision>(GECERSIZ_DURUM); // matriste olmayan geçiş
-    }
-    const updated = await tx.listing.update({
-      where: { id },
-      data: { status: "ACTIVE", rejectionReason: null },
-    });
-    return ok({ listing: updated, ownerEmail: fresh.owner.email });
+    return ok({ listing: updated, ownerEmail: updated.owner.email });
   });
 
   if (result.ok) {
@@ -154,21 +159,23 @@ export async function rejectListingCore(
   }
 
   const result = await safeTx<Decision>(async (tx) => {
-    const fresh = await tx.listing.findUnique({
+    // Atomik geçiş (approve ile aynı kalıp): id + PENDING koşulu tek yazımada.
+    const res = await tx.listing.updateMany({
+      where: { id, status: "PENDING" },
+      data: { status: "REJECTED", rejectionReason: trimmed },
+    });
+    if (res.count === 0) {
+      const exists = await tx.listing.findUnique({
+        where: { id },
+        select: { id: true },
+      });
+      return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
+    }
+    const updated = await tx.listing.findUniqueOrThrow({
       where: { id },
       include: { owner: { select: { email: true } } },
     });
-    if (!fresh) {
-      return fail<Decision>(ILAN_BULUNAMADI);
-    }
-    if (fresh.status !== "PENDING") {
-      return fail<Decision>(GECERSIZ_DURUM);
-    }
-    const updated = await tx.listing.update({
-      where: { id },
-      data: { status: "REJECTED", rejectionReason: trimmed },
-    });
-    return ok({ listing: updated, ownerEmail: fresh.owner.email });
+    return ok({ listing: updated, ownerEmail: updated.owner.email });
   });
 
   if (result.ok) {
@@ -195,21 +202,23 @@ export async function pauseListingCore(
   }
 
   const result = await safeTx<Decision>(async (tx) => {
-    const fresh = await tx.listing.findUnique({
+    // Atomik geçiş (approve ile aynı kalıp): id + ACTIVE koşulu tek yazımada.
+    const res = await tx.listing.updateMany({
+      where: { id, status: "ACTIVE" },
+      data: { status: "PAUSED" },
+    });
+    if (res.count === 0) {
+      const exists = await tx.listing.findUnique({
+        where: { id },
+        select: { id: true },
+      });
+      return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
+    }
+    const updated = await tx.listing.findUniqueOrThrow({
       where: { id },
       include: { owner: { select: { email: true } } },
     });
-    if (!fresh) {
-      return fail<Decision>(ILAN_BULUNAMADI);
-    }
-    if (fresh.status !== "ACTIVE") {
-      return fail<Decision>(GECERSIZ_DURUM);
-    }
-    const updated = await tx.listing.update({
-      where: { id },
-      data: { status: "PAUSED" },
-    });
-    return ok({ listing: updated, ownerEmail: fresh.owner.email });
+    return ok({ listing: updated, ownerEmail: updated.owner.email });
   });
 
   if (result.ok) {
@@ -241,23 +250,32 @@ export async function setUserBannedCore(
     return fail(KENDI_HESABI); // koruma 1: mutation yok
   }
 
-  const target = await prisma.user.findUnique({ where: { id: userId } });
-  if (!target) {
-    return fail(KULLANICI_BULUNAMADI);
-  }
-  // Koruma 2: hedef aktif yöneticiyse ve ban sonrası aktif yönetici kalmazsa.
-  if (banned && target.role === "ADMIN" && !target.isBanned) {
-    const activeAdmins = await prisma.user.count({
-      where: { role: "ADMIN", isBanned: false },
-    });
-    if (activeAdmins <= 1) {
-      return fail(SON_AKTIF_YONETICI); // mutation yok
+  // Koruma 2 (atomik): hedef satır hâlâ var mı + aktif yönetici sayımı AYNI
+  // transaction'da — ban-yarışında (iki yönetici aynı anda birbirini banlarsa)
+  // sayımlar tutarlı kalır. writeMany sonucu 0 ise hedef silinmiş (P2025) demektir.
+  const updated = await prisma.$transaction(async (tx) => {
+    const fresh = await tx.user.findUnique({ where: { id: userId } });
+    if (!fresh) {
+      return fail<User>(KULLANICI_BULUNAMADI);
     }
-  }
-
-  const updated = await prisma.user.update({
-    where: { id: userId },
-    data: { isBanned: banned },
+    if (banned && fresh.role === "ADMIN" && !fresh.isBanned) {
+      const activeAdmins = await tx.user.count({
+        where: { role: "ADMIN", isBanned: false },
+      });
+      if (activeAdmins <= 1) {
+        return fail<User>(SON_AKTIF_YONETICI); // mutation yok
+      }
+    }
+    // updateMany + id filtresi: satır bu arada silinmişse P2025 fırlatmak yerine
+    // count===0 ile sessizce "bulunamadı" döner (safeTx asla throw etmez).
+    const res = await tx.user.updateMany({
+      where: { id: userId },
+      data: { isBanned: banned },
+    });
+    if (res.count === 0) {
+      return fail<User>(KULLANICI_BULUNAMADI);
+    }
+    return ok(await tx.user.findUniqueOrThrow({ where: { id: userId } }));
   });
-  return ok(updated);
+  return updated;
 }

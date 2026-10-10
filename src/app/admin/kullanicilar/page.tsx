@@ -24,6 +24,15 @@ export default async function AdminUsersPage() {
   const admin = await requireAdmin();
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
+    // passwordHash render kapsamına hiç alınmaz (asgari yetki hijyeni).
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isBanned: true,
+      createdAt: true,
+    },
   });
 
   return (
