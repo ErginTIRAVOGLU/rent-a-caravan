@@ -4,15 +4,16 @@ import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 import { AMENITIES } from "../lib/amenities";
-import { MAX_PHOTOS, listingSchema } from "../lib/validators/listing";
+import { listingSchema } from "../lib/validators/listing";
 import {
   createListing,
   submitListing,
   updateListing,
 } from "../server/listings/actions";
+import { PhotoUploader } from "./PhotoUploader";
 
 // Çok adımlı ilan formu — adımlar bu bileşenin state'inde tutulur.
-// 1) bilgiler → 2) fotoğraflar (T7 yükleyici buraya bağlanacak) → 3) önizleme.
+// 1) bilgiler → 2) fotoğraflar (UploadThing, PhotoUploader) → 3) önizleme.
 // Gönderim: create (DRAFT) → submit (PENDING); service sunucu otoriter kararlar.
 
 const inputClassName =
@@ -190,8 +191,6 @@ export function ListingForm() {
   const [step, setStep] = useState<Step>(1);
   const [form, setForm] = useState<FormState>(initialForm);
   const [stepError, setStepError] = useState<string | null>(null);
-  const [photoInput, setPhotoInput] = useState("");
-  const [photoError, setPhotoError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   // Oluşturulmuş DRAFT id'si: gönderim hatasında yeniden create yerine
@@ -226,32 +225,6 @@ export function ListingForm() {
   function goToStep(next: Step) {
     setStepError(null);
     setStep(next);
-  }
-
-  function addPhoto() {
-    const url = photoInput.trim();
-    setPhotoError(null);
-    if (!url) {
-      return;
-    }
-    if (form.photoUrls.length >= MAX_PHOTOS) {
-      setPhotoError(`En fazla ${MAX_PHOTOS} fotoğraf ekleyebilirsiniz.`);
-      return;
-    }
-    if (form.photoUrls.includes(url)) {
-      setPhotoError("Bu fotoğraf zaten listede.");
-      return;
-    }
-    setField("photoUrls", [...form.photoUrls, url]);
-    setPhotoInput("");
-  }
-
-  function removePhoto(url: string) {
-    setPhotoError(null);
-    setField(
-      "photoUrls",
-      form.photoUrls.filter((p) => p !== url),
-    );
   }
 
   async function handleSubmit() {
@@ -568,74 +541,10 @@ export function ListingForm() {
       {/* 2 — FOTOĞRAFLAR */}
       {step === 2 ? (
         <div className="mt-5 space-y-4">
-          <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 sm:p-6">
-            <p className="text-sm font-semibold text-gray-800">
-              Fotoğraflar ({form.photoUrls.length}/{MAX_PHOTOS})
-            </p>
-            <p className="mt-1 text-xs text-gray-500">
-              Sürükle-bırak yükleme yakında (UploadThing) bu adıma bağlanacak.
-              Şimdilik fotoğraf adresini elle ekleyebilirsiniz. İlanı göndermek
-              için en az 1 fotoğraf gerekir.
-            </p>
-
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <input
-                type="url"
-                value={photoInput}
-                onChange={(e) => setPhotoInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addPhoto();
-                  }
-                }}
-                placeholder="https://cdn.example.com/karavan-1.jpg"
-                aria-label="Fotoğraf adresi"
-                className={`${inputClassName} mt-0`}
-              />
-              <button
-                type="button"
-                onClick={addPhoto}
-                className="min-h-11 shrink-0 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
-              >
-                Ekle
-              </button>
-            </div>
-
-            {photoError ? (
-              <p role="alert" className="mt-2 text-sm text-red-600">
-                {photoError}
-              </p>
-            ) : null}
-
-            <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {form.photoUrls.map((url, index) => (
-                <li
-                  key={url}
-                  className="relative overflow-hidden rounded-lg border border-gray-200 bg-white"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt={`İlan fotoğrafı ${index + 1}`}
-                    className="h-24 w-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(url)}
-                    className="absolute right-1 top-1 rounded bg-black/60 px-2 py-1 text-xs font-semibold text-white hover:bg-black/80"
-                  >
-                    Kaldır
-                  </button>
-                </li>
-              ))}
-              {form.photoUrls.length === 0 ? (
-                <li className="col-span-full py-2 text-sm text-gray-500">
-                  Henüz fotoğraf eklenmedi.
-                </li>
-              ) : null}
-            </ul>
-          </div>
+          <PhotoUploader
+            photoUrls={form.photoUrls}
+            onChange={(urls) => setField("photoUrls", urls)}
+          />
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <button

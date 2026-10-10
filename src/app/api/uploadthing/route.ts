@@ -1,0 +1,74 @@
+import {
+  createRouteHandler,
+  createUploadthing,
+  UploadThingError,
+  type FileRouter,
+} from "uploadthing/server";
+
+import { getSessionUser } from "../../../lib/auth";
+import { MAX_PHOTOS, validatePhotoFiles } from "../../../lib/upload";
+
+// UploadThing dosya yönlendiricisi (T7) — tek uç nokta: imageUploader.
+// - Tür filtresi: MIME anahtarlarıyla yalnız jpeg/png/webp kabul edilir.
+// - Adet: router config'te maxFileCount tür BAŞINA uygulanır; toplam sınır
+//   (mevcut fotoğraflarla birlikte) middleware'deki validatePhotoFiles ile
+//   korunur (tek seferde en fazla MAX_PHOTOS dosya).
+// - Boyut: UploadThing `FileSize` tipi yalnız 2'nin kuvveti çarpanı kabul
+//   eder ("4MB"/"8MB", "5MB" DEĞİL); bu yüzden router 8MB yazılır ve asıl
+//   5 MB sınırı middleware'de validatePhotoFiles ile uygulanır.
+// awaitServerData=false: istemci dosya adresini (ufsUrl) yanıtından alır,
+// sunucu verisi beklenmez.
+
+const f = createUploadthing();
+
+const ourFileRouter = {
+  imageUploader: f(
+    {
+      "image/jpeg": { maxFileSize: "8MB", maxFileCount: MAX_PHOTOS },
+      "image/png": { maxFileSize: "8MB", maxFileCount: MAX_PHOTOS },
+      "image/webp": { maxFileSize: "8MB", maxFileCount: MAX_PHOTOS },
+    },
+    { awaitServerData: false },
+  )
+    .middleware(async ({ files }) => {
+      // Sunucu otoriter: istemci doğrulaması atlatılsa bile adet/tür/boyut
+      // burada tekrar sınanır. Oturum kontrolü route.ts sarmalayıcısında (401).
+      const check = validatePhotoFiles(files, 0);
+      if (!check.ok) {
+        throw new UploadThingError({ code: "BAD_REQUEST", message: check.error });
+      }
+      return {};
+    })
+    .onUploadComplete(async () => {
+      // Kalıcılık istemciden: başarı durumunda ufsUrl photoUrls'e yazılır.
+    }),
+} satisfies FileRouter;
+
+export type OurFileRouter = typeof ourFileRouter;
+
+const handler = createRouteHandler({ router: ourFileRouter });
+
+/**
+ * Uç noktası istekleri:
+ * - Tarayıcının hazırlık isteği (uploadthing-hook başlığı OLMAYAN POST)
+ *   oturum ister; oturum yoksa 401 (Türkçe mesaj, UploadThing hata biçimi).
+ * - callback/error istekleri UploadThing sunucusundan imzalı gelir
+ *   (uploadthing-hook + x-uploadthing-signature); oturum sıkmaz.
+ * - GET yalnız herkese açık yönlendirici yapılandırmasını döner.
+ */
+async function uploadthingHandler(request: Request): Promise<Response> {
+  const isBrowserUploadRequest =
+    request.method === "POST" && !request.headers.has("uploadthing-hook");
+  if (isBrowserUploadRequest) {
+    const user = await getSessionUser();
+    if (!user) {
+      return Response.json(
+        { message: "Oturum bulunamadı. Lütfen yeniden giriş yapın." },
+        { status: 401 },
+      );
+    }
+  }
+  return handler(request);
+}
+
+export { uploadthingHandler as GET, uploadthingHandler as POST };
