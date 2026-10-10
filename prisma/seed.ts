@@ -40,9 +40,9 @@ function seedListings(ownerIds: Record<string, string>): Prisma.ListingCreateMan
       houseRules:
         "Sigara içilmez. Evcil hayvan kabul edilir. Gece 22.00'den sonra sesli müzik yoktur.",
       photoUrls: [
-        "https://placehold.co/800x600/4a90d9/ffffff?text=Antalya+Karavan+1",
-        "https://placehold.co/800x600/4a90d9/ffffff?text=Antalya+Karavan+2",
-        "https://placehold.co/800x600/4a90d9/ffffff?text=Antalya+Karavan+3",
+        "/images/home-card-1.jpg",
+        "/images/home-card-2.jpg",
+        "/images/detail-interior.jpg",
       ],
       status: "ACTIVE",
     },
@@ -71,8 +71,8 @@ function seedListings(ownerIds: Record<string, string>): Prisma.ListingCreateMan
       amenities: ["WC", "SHOWER", "FRIDGE", "HEATING", "GPS", "BIKE_RACK", "BEDDING"],
       houseRules: "Sigara yasaktır. Günlük kilometre sınırı 250 km'dir.",
       photoUrls: [
-        "https://placehold.co/800x600/7ed321/ffffff?text=İzmir+Panelvan+1",
-        "https://placehold.co/800x600/7ed321/ffffff?text=İzmir+Panelvan+2",
+        "/images/home-card-2.jpg",
+        "/images/detail-kitchen.jpg",
       ],
       status: "ACTIVE",
     },
@@ -111,8 +111,8 @@ function seedListings(ownerIds: Record<string, string>): Prisma.ListingCreateMan
       ],
       houseRules: "Sigara içilmez. Kış aylarında zincir zorunludur.",
       photoUrls: [
-        "https://placehold.co/800x600/f5a623/ffffff?text=Bolu+Motorhome+1",
-        "https://placehold.co/800x600/f5a623/ffffff?text=Bolu+Motorhome+2",
+        "/images/home-card-3.jpg",
+        "/images/detail-bed.jpg",
       ],
       status: "PENDING",
     },

@@ -51,23 +51,21 @@ export function UserBanActions({ userId, isBanned, isSelf }: Props) {
   return (
     <div>
       {isSelf ? (
-        <span className="text-xs text-gray-500">Kendi hesabınız</span>
+        <span className="badge badge-neutral text-body-sm">Kendi hesabınız</span>
       ) : (
         <button
           type="button"
           onClick={() => void handleToggle()}
           disabled={pending}
-          className={
-            isBanned
-              ? "min-h-10 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-              : "min-h-10 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
-          }
+          className={`btn py-2 ${
+            isBanned ? "btn-success" : "btn-outline text-error border-error/30 hover:bg-error-bg"
+          }`}
         >
           {pending ? "İşleniyor…" : isBanned ? "Banı Aç" : "Banla"}
         </button>
       )}
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="mt-2 text-body-md text-error">
           {error}
         </p>
       ) : null}

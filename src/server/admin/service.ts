@@ -305,3 +305,29 @@ export async function setUserBannedCore(
   });
   return updated;
 }
+
+/**
+ * Genel ayar güncelle — YALNIZ admin.
+ * `Setting` modeli: key (String @id), value (Json), updatedAt.
+ * Boşsa default true (reviewsEnabled için) — getter `?? true` uygular.
+ */
+export async function updateSettingCore(
+  admin: SessionUser,
+  key: string,
+  value: unknown,
+): Promise<ActionResult<{ key: string; value: unknown }>> {
+  if (admin.role !== "ADMIN") {
+    return fail(YETKI_YOK);
+  }
+  if (!key || typeof key !== "string") {
+    return fail("Geçersiz ayar anahtarı.", "key");
+  }
+
+  const updated = await prisma.setting.upsert({
+    where: { key },
+    create: { key, value: value as Prisma.InputJsonValue },
+    update: { value: value as Prisma.InputJsonValue },
+  });
+
+  return ok({ key: updated.key, value: updated.value });
+}

@@ -22,8 +22,7 @@ export function ListingActions({ listingId, status }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   /** Yalnız DRAFT/REJECTED/PAUSED incelemeye gönderilebilir (service ile aynı kural). */
-  const canSubmit =
-    status === "DRAFT" || status === "REJECTED" || status === "PAUSED";
+  const canSubmit = status === "DRAFT" || status === "REJECTED" || status === "PAUSED";
 
   // Server action reddi (ağ/serileştirme/sunucu throw) için ortak TR mesajı.
   const HATA = "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
@@ -69,33 +68,31 @@ export function ListingActions({ listingId, status }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex flex-wrap gap-2">
-        {canSubmit ? (
-          <button
-            type="button"
-            onClick={() => void handleSubmit()}
-            disabled={pending !== null}
-            className="min-h-10 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-          >
-            {pending === "submit"
-              ? "Gönderiliyor…"
-              : status === "REJECTED" || status === "PAUSED"
-                ? "Tekrar Gönder"
-                : "Gönder"}
-          </button>
-        ) : null}
+    <div className="flex flex-wrap gap-2">
+      {canSubmit ? (
         <button
           type="button"
-          onClick={() => void handleDelete()}
+          onClick={() => void handleSubmit()}
           disabled={pending !== null}
-          className="min-h-10 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+          className="btn btn-primary py-2"
         >
-          {pending === "delete" ? "Siliniyor…" : "Sil"}
+          {pending === "submit"
+            ? "Gönderiliyor…"
+            : status === "REJECTED" || status === "PAUSED"
+              ? "Tekrar Gönder"
+              : "Gönder"}
         </button>
-      </div>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => void handleDelete()}
+        disabled={pending !== null}
+        className="btn btn-outline text-error border-error/30 hover:bg-error-bg py-2"
+      >
+        {pending === "delete" ? "Siliniyor…" : "Sil"}
+      </button>
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="text-body-md text-error ml-auto">
           {error}
         </p>
       ) : null}

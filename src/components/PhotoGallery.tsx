@@ -17,8 +17,13 @@ export function PhotoGallery({
 
   if (photoUrls.length === 0) {
     return (
-      <div className="flex aspect-[16/9] items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
-        Fotoğraf yok
+      <div className="flex aspect-[16/9] items-center justify-center rounded-xl border border-outline-variant/60 bg-surface-mid">
+        {/* eslint-disable-next-line @next/next/no-img-element -- yerel fallback */}
+        <img
+          src="/images/photo-fallback.svg"
+          alt="Fotoğraf yok"
+          className="h-24 w-auto opacity-60"
+        />
       </div>
     );
   }
@@ -27,7 +32,7 @@ export function PhotoGallery({
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-2xl bg-gray-100">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-mid">
         {/* eslint-disable-next-line @next/next/no-img-element -- uzak URL; bkz. başlık yorumu */}
         <img
           src={current}
@@ -44,9 +49,9 @@ export function PhotoGallery({
               onClick={() => setActive(index)}
               aria-label={`Fotoğraf ${index + 1}`}
               aria-current={index === active}
-              className={`shrink-0 overflow-hidden rounded-lg border-2 ${
+              className={`shrink-0 overflow-hidden rounded-lg border-2 transition-opacity ${
                 index === active
-                  ? "border-emerald-500"
+                  ? "border-primary"
                   : "border-transparent opacity-75 hover:opacity-100"
               }`}
             >
@@ -54,7 +59,7 @@ export function PhotoGallery({
               <img
                 src={url}
                 alt=""
-                className="h-16 w-24 bg-gray-100 object-cover"
+                className="h-16 w-24 bg-surface-mid object-cover"
               />
             </button>
           ))}

@@ -9,6 +9,7 @@ import {
   pauseListingCore,
   rejectListingCore,
   setUserBannedCore,
+  updateSettingCore,
   type BannedUser,
 } from "./service";
 
@@ -67,4 +68,16 @@ export async function setUserBanned(
 ): Promise<ActionResult<BannedUser>> {
   const admin = await requireAdmin();
   return setUserBannedCore(admin, userId, banned);
+}
+
+/**
+ * Genel ayar güncelle — oturum kapısı requireAdmin.
+ * value: JSON serileştirilebilir herhangi bir değer (şimdilik boolean).
+ */
+export async function updateSetting(
+  key: string,
+  value: unknown,
+): Promise<ActionResult<{ key: string; value: unknown }>> {
+  const admin = await requireAdmin();
+  return updateSettingCore(admin, key, value);
 }
