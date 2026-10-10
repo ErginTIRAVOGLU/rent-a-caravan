@@ -8,11 +8,12 @@ export async function GET(
   const { id } = await params;
   const user = await getSessionUser();
   if (!user) {
-    return Response.json(
-      { ok: false, error: "Oturum bulunamadı. Lütfen yeniden giriş yapın." },
-      { status: 401 },
-    );
+    return Response.json({ error: "Oturum bulunamadı. Lütfen yeniden giriş yapın." }, { status: 401 });
   }
   const result = await getConversationCore(user, id);
-  return Response.json(result);
+  if (!result.ok) {
+    const status = result.error === "Sohbet bulunamadı." ? 404 : 403;
+    return Response.json({ error: result.error }, { status });
+  }
+  return Response.json(result.data);
 }
