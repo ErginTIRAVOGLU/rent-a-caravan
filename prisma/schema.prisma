@@ -147,6 +147,9 @@ model BookingRequest {
   reviews Review[]
 
   @@index([listingId, status, startDate, endDate])
+  // Mükerrer koruması (T9) partial unique index ile migration'da uygulanır:
+  //   bookingRequest_listingId_renterId_pending_key — yalnız PENDING.
+  // Prisma partial unique index desteklemediği için schema'ya alınmadı.
 }
 
 model Conversation {

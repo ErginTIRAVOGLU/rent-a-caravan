@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { BookingRequest } from "@prisma/client";
 
 import { findApprovedOverlap } from "../../lib/availability";
@@ -38,9 +39,25 @@ const ILAN_KAPALI = "Bu ilan için talep kabul edilmiyor.";
 const KENDI_ILANI = "Kendi ilanınıza talep oluşturamazsınız.";
 const BEKLEYEN_TALEP = "Bu ilan için zaten bekleyen bir talebiniz var.";
 const IPTAL_EDILEMEZ = "Bu talep şu anda iptal edilemez.";
+const ISLEM_BASARISIZ =
+  "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
 
 // Prisma @default(cuid()) id deseni — bozuk id Prisma'ya ulaşmadan reddedilir.
 const CUID_RE = /^c[a-z0-9]{24}$/;
+
+/**
+ * Transaction'ı güvenle yürütür: zaman aşımı / havuz yorgunluğu gibi istisnalar
+ * ActionResult'a düşer — server action asla throw etmez, istemci Türkçe hata görür.
+ */
+async function safeTx<T>(
+  fn: (tx: Prisma.TransactionClient) => Promise<ActionResult<T>>,
+): Promise<ActionResult<T>> {
+  try {
+    return await prisma.$transaction(fn);
+  } catch {
+    return fail(ISLEM_BASARISIZ);
+  }
+}
 
 /** YYYY-MM-DD → UTC gece yarısı Date (@db.Date kolonuyla birebir). */
 function isoToUtcDate(iso: string): Date {
@@ -127,20 +144,32 @@ export async function createBookingCore(
   if (pending) {
     return fail(BEKLEYEN_TALEP);
   }
-
   // Sunucu otoriter: fiyat DB.nightlyPrice × nights; durum her zaman PENDING.
-  const booking = await prisma.bookingRequest.create({
-    data: {
-      listingId: listing.id,
-      renterId: user.id,
-      startDate: isoToUtcDate(parsed.data.startDate),
-      endDate: isoToUtcDate(parsed.data.endDate),
-      guests: parsed.data.guests,
-      message: parsed.data.message ?? null,
-      totalPrice: stay.data.totalPrice,
-      status: "PENDING",
-    },
-  });
+  // DB unique constraint (listingId, renterId, status): check-then-act yarışını
+  // atomik kapatır — eşzamanlı ikinci yazım P2002 ile düşer.
+  let booking: BookingRequest;
+  try {
+    booking = await prisma.bookingRequest.create({
+      data: {
+        listingId: listing.id,
+        renterId: user.id,
+        startDate: isoToUtcDate(parsed.data.startDate),
+        endDate: isoToUtcDate(parsed.data.endDate),
+        guests: parsed.data.guests,
+        message: parsed.data.message ?? null,
+        totalPrice: stay.data.totalPrice,
+        status: "PENDING",
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return fail(BEKLEYEN_TALEP);
+    }
+    throw error;
+  }
 
   try {
     await sendBookingRequested(user.email, {
@@ -184,7 +213,7 @@ export async function approveBookingCore(
     return fail(YETKI_YOK); // yetkisiz: mutation yok
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await safeTx(async (tx) => {
     // 1) İlan bazlı advisory lock: kararlar ilan başına sıralanır (FOR UPDATE
     //    okunmamış satırı kilitleyemez; boş ilana da uygulanır).
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${initial.listingId}))`;
@@ -252,7 +281,7 @@ export async function rejectBookingCore(
     return fail(YETKI_YOK);
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await safeTx(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${initial.listingId}))`;
     const fresh = await tx.bookingRequest.findUnique({ where: { id } });
     if (!fresh) {
@@ -293,7 +322,7 @@ export async function cancelBookingCore(
     return fail(YETKI_YOK); // iptal yalnız kiracının hakkı
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await safeTx(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${initial.listingId}))`;
     const fresh = await tx.bookingRequest.findUnique({ where: { id } });
     if (!fresh) {

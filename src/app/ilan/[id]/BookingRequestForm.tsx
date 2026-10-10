@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { calculateNights } from "../../../lib/pricing";
+import { formatTRY } from "../../../lib/format";
 import { createBooking } from "../../../server/bookings/actions";
 
 // Rezervasyon talebi formu — istemci önizlemesi YALNIZCA tahminidir
@@ -233,11 +234,11 @@ export function BookingRequestForm({
             {hasPreview ? (
               <>
                 <p className="text-sm text-gray-600">
-                  {nightlyPrice} ₺ × {preview.nights} gece
+                  {formatTRY(nightlyPrice)} × {preview.nights} gece
                 </p>
                 <p className="text-sm text-gray-900">
                   <span className="text-lg font-bold">Tahmini toplam:{" "}
-                    {preview.total} ₺</span>
+                    {formatTRY(preview.total)}</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
                   Kesin tutar talebiniz sunucuda kaydedilirken hesaplanır.

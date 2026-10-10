@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { BookingRequestStatus } from "@prisma/client";
 
 import { requireUser } from "../../../lib/auth";
+import { formatTRY } from "../../../lib/format";
 import { prisma } from "../../../lib/prisma";
 import { BookingActions } from "./BookingActions";
 
@@ -102,7 +103,8 @@ export default async function TaleplerimPage() {
                           start={booking.startDate}
                           end={booking.endDate}
                         />{" "}
-                        · {booking.guests} kişi · {Number(booking.totalPrice)} ₺
+                        · {booking.guests} kişi ·{" "}
+                        {formatTRY(Number(booking.totalPrice))}
                       </p>
                       <p className="mt-1 text-sm text-gray-600">
                         Kiracı: {booking.renter.name}
@@ -169,7 +171,8 @@ export default async function TaleplerimPage() {
                           start={booking.startDate}
                           end={booking.endDate}
                         />{" "}
-                        · {booking.guests} kişi · {Number(booking.totalPrice)} ₺
+                        · {booking.guests} kişi ·{" "}
+                        {formatTRY(Number(booking.totalPrice))}
                       </p>
                     </div>
                     <span

@@ -34,25 +34,39 @@ export function BookingActions({ bookingId, mode }: Props) {
   async function handleApprove() {
     setPending("approve");
     setError(null);
-    const result = await approveBooking(bookingId);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error); // ör. "Bu tarihler artık dolu…" / "karara bağlanmış"
-      return;
+    try {
+      const result = await approveBooking(bookingId);
+      setPending(null);
+      if (!result.ok) {
+        setError(result.error); // ör. "Bu tarihler artık dolu…" / "karara bağlanmış"
+        router.refresh(); // karar başka sekmede verilmiş olabilir — satırı tazele
+        return;
+      }
+      router.refresh();
+    } catch {
+      setPending(null);
+      setError("Bağlantı hatası, lütfen tekrar deneyin.");
+      router.refresh();
     }
-    router.refresh();
   }
 
   async function handleReject() {
     setPending("reject");
     setError(null);
-    const result = await rejectBooking(bookingId, reason.trim() || undefined);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await rejectBooking(bookingId, reason.trim() || undefined);
+      setPending(null);
+      if (!result.ok) {
+        setError(result.error);
+        router.refresh();
+        return;
+      }
+      router.refresh();
+    } catch {
+      setPending(null);
+      setError("Bağlantı hatası, lütfen tekrar deneyin.");
+      router.refresh();
     }
-    router.refresh();
   }
 
   async function handleCancel() {
@@ -64,13 +78,20 @@ export function BookingActions({ bookingId, mode }: Props) {
     }
     setPending("cancel");
     setError(null);
-    const result = await cancelBooking(bookingId);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await cancelBooking(bookingId);
+      setPending(null);
+      if (!result.ok) {
+        setError(result.error);
+        router.refresh();
+        return;
+      }
+      router.refresh();
+    } catch {
+      setPending(null);
+      setError("Bağlantı hatası, lütfen tekrar deneyin.");
+      router.refresh();
     }
-    router.refresh();
   }
 
   return (
