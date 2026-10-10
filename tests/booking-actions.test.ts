@@ -321,6 +321,14 @@ it("dakikada 5. sonrası fail", async () => {
     expect(result.ok).toBe(true);
   }
 
+  // Determinizm: 5 oluşturma ile 6. deneme arasında gerçek dakika sınırı
+  // düşerse pencere sıfırlanır ve 6. beklenmedik şekilde geçerdi (~%1 flake).
+  // Pencere ucu sabitlenir — test yalnızca HIZ kuralını sınar, saati değil.
+  await prisma.rateLimitEntry.updateMany({
+    where: { key: renter.id, bucket: "booking" },
+    data: { expiresAt: new Date(Date.now() + 60_000) },
+  });
+
   const blocked = await createBookingCore(session(renter), input(listings[5].id));
 
   expect(blocked.ok).toBe(false);

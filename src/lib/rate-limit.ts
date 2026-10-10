@@ -33,6 +33,11 @@ export async function assertRateLimit(
   limit: number,
   windowSeconds: number,
 ): Promise<ActionResult<true>> {
+  // windowSeconds < 1 pratikte imkânsız (yalnız sabit pin'lerden çağrılır);
+  // yine de güvence: 0/negatif → Invalid Date → 500 yerine kontrollü fail.
+  if (!Number.isFinite(windowSeconds) || windowSeconds < 1) {
+    return fail(RATE_LIMIT_ERROR);
+  }
   const now = Date.now();
   const nowDate = new Date(now);
   // Sabit pencere: başlangıcı windowSeconds'e bölünür; expiresAt = pencere ucu.
