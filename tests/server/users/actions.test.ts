@@ -53,11 +53,11 @@ describe("verifyEmailAction", () => {
     const formData = new FormData();
     formData.append("token", token);
 
-    const result = await verifyEmailAction({ error: null, success: false, verified: false }, formData);
+    const result = await verifyEmailAction({ ok: false, error: "initial" }, formData);
 
-    expect(result.success).toBe(true);
-    expect(result.verified).toBe(true);
-    expect(result.error).toBeNull();
+    expect(result.ok).toBe(true);
+    expect(result.data?.verified).toBe(true);
+    expect(result.error).toBeUndefined();
 
     const updated = await prisma.user.findUniqueOrThrow({ where: { email } });
     expect(updated.emailVerified).not.toBeNull();
@@ -68,10 +68,10 @@ describe("verifyEmailAction", () => {
     const formData = new FormData();
     formData.append("token", "");
 
-    const result = await verifyEmailAction({ error: null, success: false, verified: false }, formData);
+    const result = await verifyEmailAction({ ok: false, error: "initial" }, formData);
 
-    expect(result.success).toBe(false);
-    expect(result.verified).toBe(false);
+    expect(result.ok).toBe(false);
+    expect(result.data).toBeUndefined();
     expect(result.error).toBe("Geçersiz doğrulama bağlantısı.");
   });
 
@@ -79,10 +79,10 @@ describe("verifyEmailAction", () => {
     const formData = new FormData();
     formData.append("token", "invalid.token.signature");
 
-    const result = await verifyEmailAction({ error: null, success: false, verified: false }, formData);
+    const result = await verifyEmailAction({ ok: false, error: "initial" }, formData);
 
-    expect(result.success).toBe(false);
-    expect(result.verified).toBe(false);
+    expect(result.ok).toBe(false);
+    expect(result.data).toBeUndefined();
     expect(result.error).toBe("Doğrulama bağlantısı geçersiz veya süresi dolmuş.");
   });
 
@@ -99,10 +99,10 @@ describe("verifyEmailAction", () => {
     const formData = new FormData();
     formData.append("token", token);
 
-    const result = await verifyEmailAction({ error: null, success: false, verified: false }, formData);
+    const result = await verifyEmailAction({ ok: false, error: "initial" }, formData);
 
-    expect(result.success).toBe(false);
-    expect(result.verified).toBe(false);
+    expect(result.ok).toBe(false);
+    expect(result.data).toBeUndefined();
     expect(result.error).toBe("Doğrulama bağlantısı geçersiz veya süresi dolmuş.");
   });
 
@@ -111,10 +111,10 @@ describe("verifyEmailAction", () => {
     const formData = new FormData();
     formData.append("token", token);
 
-    const result = await verifyEmailAction({ error: null, success: false, verified: false }, formData);
+    const result = await verifyEmailAction({ ok: false, error: "initial" }, formData);
 
-    expect(result.success).toBe(false);
-    expect(result.verified).toBe(false);
+    expect(result.ok).toBe(false);
+    expect(result.data).toBeUndefined();
     expect(result.error).toBe("Kullanıcı bulunamadı.");
   });
 
@@ -127,11 +127,11 @@ describe("verifyEmailAction", () => {
     const formData = new FormData();
     formData.append("token", token);
 
-    const result = await verifyEmailAction({ error: null, success: false, verified: false }, formData);
+    const result = await verifyEmailAction({ ok: false, error: "initial" }, formData);
 
-    expect(result.success).toBe(true);
-    expect(result.verified).toBe(true);
-    expect(result.error).toBeNull();
+    expect(result.ok).toBe(true);
+    expect(result.data?.verified).toBe(true);
+    expect(result.error).toBeUndefined();
 
     // emailVerified değişmemeli
     const updated = await prisma.user.findUniqueOrThrow({ where: { email } });

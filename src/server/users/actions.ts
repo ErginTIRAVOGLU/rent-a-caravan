@@ -3,6 +3,7 @@
 import { CredentialsSignin } from "next-auth";
 
 import { requireUser, signIn } from "../../lib/auth";
+import { fail, ok, type ActionResult } from "../../lib/result";
 import { firstIssue } from "../../lib/result";
 import { loginSchema } from "../../lib/validators/auth";
 import { registerUser, updateProfileCore, EmailNotVerifiedError } from "./service";
@@ -18,11 +19,7 @@ export type ProfileState = {
   field?: string;
   done: boolean;
 };
-export type VerifyEmailState = {
-  error: string | null;
-  success: boolean;
-  verified: boolean;
-};
+export type VerifyEmailResult = ActionResult<{ verified: boolean }>;
 
 function formDataValue(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -134,30 +131,30 @@ export async function updateProfileAction(
  * günceller. Başarı/başarısızlık durumunu UI'ya döndürür.
  */
 export async function verifyEmailAction(
-  _prevState: VerifyEmailState,
+  _prevState: VerifyEmailResult,
   formData: FormData,
-): Promise<VerifyEmailState> {
+): Promise<VerifyEmailResult> {
   const token = formData.get("token");
   if (typeof token !== "string" || token.length === 0) {
-    return { error: "Geçersiz doğrulama bağlantısı.", success: false, verified: false };
+    return fail("Geçersiz doğrulama bağlantısı.");
   }
 
   const { verifyEmail } = await import("./service");
   const payload = await verifyEmail(token);
   if (!payload) {
-    return { error: "Doğrulama bağlantısı geçersiz veya süresi dolmuş.", success: false, verified: false };
+    return fail("Doğrulama bağlantısı geçersiz veya süresi dolmuş.");
   }
 
   // Kullanıcıyı bul ve emailVerified'ı güncelle.
   const { prisma } = await import("../../lib/prisma");
   const user = await prisma.user.findUnique({ where: { email: payload.email } });
   if (!user) {
-    return { error: "Kullanıcı bulunamadı.", success: false, verified: false };
+    return fail("Kullanıcı bulunamadı.");
   }
 
   if (user.emailVerified !== null) {
     // Zaten doğrulanmış → yine de başarı say (idempotent).
-    return { error: null, success: true, verified: true };
+    return ok({ verified: true });
   }
 
   await prisma.user.update({
@@ -165,30 +162,30 @@ export async function verifyEmailAction(
     data: { emailVerified: new Date() },
   });
 
-  return { error: null, success: true, verified: true };
+  return ok({ verified: true });
 }
 
 /**
  * Doğrulama e-postasını yeniden gönderir.
  */
 export async function resendVerifyEmailAction(
-  _prevState: VerifyEmailState,
+  _prevState: VerifyEmailResult,
   formData: FormData,
-): Promise<VerifyEmailState> {
+): Promise<VerifyEmailResult> {
   const email = formData.get("email");
   if (typeof email !== "string" || email.length === 0) {
-    return { error: "E-posta adresi gerekli.", success: false, verified: false };
+    return fail("E-posta adresi gerekli.");
   }
 
   const { prisma } = await import("../../lib/prisma");
   const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
   if (!user) {
     // Güvenlik: kullanıcı yoksa da başarılıymiş gibi davran (enumaration engeli).
-    return { error: null, success: true, verified: false };
+    return ok({ verified: false });
   }
 
   if (user.emailVerified !== null) {
-    return { error: "E-posta zaten doğrulanmış.", success: false, verified: true };
+    return fail("E-posta zaten doğrulanmış.");
   }
 
   const { createVerifyToken } = await import("../../lib/auth/tokens");
@@ -196,5 +193,5 @@ export async function resendVerifyEmailAction(
   const token = createVerifyToken(user.email);
   sendRegisterVerify(user.email, token);
 
-  return { error: null, success: true, verified: false };
+  return ok({ verified: false });
 }

@@ -7,14 +7,10 @@ import { useSearchParams } from "next/navigation";
 import {
   verifyEmailAction,
   resendVerifyEmailAction,
-  type VerifyEmailState,
+  type VerifyEmailResult,
 } from "../../server/users/actions";
 
-const initialState: VerifyEmailState = {
-  error: null,
-  success: false,
-  verified: false,
-};
+const initialState: VerifyEmailResult = { ok: false, error: undefined, field: undefined };
 
 export default function DogrulaPage() {
   const searchParams = useSearchParams();
@@ -30,24 +26,27 @@ export default function DogrulaPage() {
     initialState,
   );
 
+  const verified = state.ok && state.data?.verified === true;
+  const resendVerified = resendState.ok && resendState.data?.verified === true;
+
   // Token varsa sayfa yüklendiğinde otomatik doğrula.
   useEffect(() => {
-    if (token && !state.verified && !pending) {
+    if (token && !verified && !pending) {
       const formData = new FormData();
       formData.append("token", token);
       formAction(formData);
     }
-  }, [token, formAction, state.verified, pending]);
+  }, [token, formAction, verified, pending]);
 
   // resend query param varsa resend formunu göster
   useEffect(() => {
-    if (resendEmail && !state.verified) {
+    if (resendEmail && !verified) {
       // Otomatik yeniden gönder
       const formData = new FormData();
       formData.append("email", resendEmail);
       resendFormAction(formData);
     }
-  }, [resendEmail, resendFormAction, state.verified]);
+  }, [resendEmail, resendFormAction, verified]);
 
   if (!token && !resendEmail) {
     return (
@@ -86,7 +85,7 @@ export default function DogrulaPage() {
             Hesabınızı aktif etmek için doğrulama bağlantısını kullanın.
           </p>
 
-          {state.verified && state.success ? (
+          {verified ? (
             <div className="mt-6 space-y-4">
               <p
                 role="status"
@@ -122,7 +121,7 @@ export default function DogrulaPage() {
                   {resendPending ? "Gönderiliyor…" : "Doğrulama e-postasını yeniden gönder"}
                 </button>
               </form>
-              {resendState.success && !resendState.verified && !resendState.error && (
+              {resendState.ok && !resendVerified && !resendState.error && (
                 <p
                   role="status"
                   className="rounded-lg bg-success-bg px-4 py-2 text-body-sm text-success text-center"
