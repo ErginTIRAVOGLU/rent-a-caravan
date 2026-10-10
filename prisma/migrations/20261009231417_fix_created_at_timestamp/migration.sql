@@ -1,0 +1,20 @@
+-- AlterTable
+ALTER TABLE "BookingRequest" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "Conversation" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "Listing" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "Message" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "Report" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "Review" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "createdAt" SET DATA TYPE TIMESTAMP(3);

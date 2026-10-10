@@ -1,6 +1,9 @@
 # İzole çalışma alanları
 .worktrees/
 
+# SDD çalışma alanı (scratch)
+.superpowers/
+
 # Bağımlılıklar
 node_modules/
 
@@ -19,3 +22,7 @@ coverage/
 # IDE
 .vscode/
 .idea/
+
+# OpenChamber ekran goruntuleri (oturum kaniti)
+.openchamber/
+next-env.d.ts

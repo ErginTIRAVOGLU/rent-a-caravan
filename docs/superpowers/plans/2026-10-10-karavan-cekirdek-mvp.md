@@ -483,7 +483,7 @@ it("ban aç: kullanıcı tekrar giriş yapabilir", ...)
 
 - [ ] **Step 2: FAIL doğrula** → `npx vitest run tests/admin.test.ts`
 
-- [ ] **Step 3: Implemente et** — service (durum geçiş matrisi: yalnız `PENDING→ACTIVE|REJECTED`, `ACTIVE→PAUSED`, `REJECTED→PENDING` submit ile), actions, admin layout (`requireAdmin()`), sayfalar (TR).
+- [ ] **Step 3: Implemente et** — service (durum geçiş matrisi: yalnız `PENDING→ACTIVE|REJECTED`, `ACTIVE→PAUSED`, `REJECTED|PAUSED→PENDING` submit ile [geniş inceleme düzeltmesi: PAUSED için tek çıkış sahip submit'i — bkz. progress.md]), actions, admin layout (`requireAdmin()`), sayfalar (TR).
 
 - [ ] **Step 4: PASS doğrula** → `npx vitest run tests/admin.test.ts`
 
