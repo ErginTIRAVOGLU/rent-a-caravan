@@ -12,7 +12,7 @@ import { makeUser, resetDb } from "./helpers/db";
 
 it("geçerli e-posta + doğru şifre ile kullanıcı döner", async () => {
   await resetDb();
-  const created = await prisma.user.create({ data: makeUser() });
+  const created = await prisma.user.create({ data: makeUser({ emailVerified: new Date() }) });
 
   const user = await verifyCredentials(created.email, "demo1234");
 
@@ -28,7 +28,7 @@ it("geçerli e-posta + doğru şifre ile kullanıcı döner", async () => {
 
 it("yanlış şifre null döner", async () => {
   await resetDb();
-  const created = await prisma.user.create({ data: makeUser() });
+  const created = await prisma.user.create({ data: makeUser({ emailVerified: new Date() }) });
 
   expect(await verifyCredentials(created.email, "yanlis-sifre")).toBeNull();
 });
@@ -36,7 +36,7 @@ it("yanlış şifre null döner", async () => {
 it("isBanned=true kullanıcı null döner (giriş engeli)", async () => {
   await resetDb();
   const created = await prisma.user.create({
-    data: makeUser({ isBanned: true }),
+    data: makeUser({ isBanned: true, emailVerified: new Date() }),
   });
 
   expect(await verifyCredentials(created.email, "demo1234")).toBeNull();

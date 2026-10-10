@@ -121,3 +121,28 @@ export function listingStatusChangedTemplate(
   }
   return { to, subject: heading, html: layout(heading, lines) };
 }
+
+export interface RegisterVerifyData {
+  verifyUrl: string;
+  expiryHours: number;
+}
+
+/** Yeni üye: e-posta doğrulama bağlantısı. */
+export function registerVerifyTemplate(
+  to: string,
+  data: RegisterVerifyData,
+): EmailMessage {
+  const heading = "E-posta adresinizi doğrulayın";
+  return {
+    to,
+    subject: heading,
+    html: layout(heading, [
+      "Sayın kullanıcımız,",
+      "Karavan Kiralama platformuna kaydınız alındı. Hesabınızı aktif etmek için aşağıdaki bağlantıya tıklayın:",
+      `<p style="font-size: 15px;"><a href="${escapeHtml(data.verifyUrl)}" style="color: #2563eb;">${escapeHtml(data.verifyUrl)}</a></p>`,
+      `Bu bağlantı ${data.expiryHours} saat boyunca geçerlidir.`,
+      "Bağlantı çalışmıyorsa, tarayıcınıza kopyalayıp yapıştırın.",
+      "Bu işlemi siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.",
+    ]),
+  };
+}

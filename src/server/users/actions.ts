@@ -5,9 +5,9 @@ import { CredentialsSignin } from "next-auth";
 import { requireUser, signIn } from "../../lib/auth";
 import { firstIssue } from "../../lib/result";
 import { loginSchema } from "../../lib/validators/auth";
-import { registerUser, updateProfileCore } from "./service";
+import { registerUser, updateProfileCore, EmailNotVerifiedError } from "./service";
 
-export type LoginState = { error: string | null; field?: string };
+export type LoginState = { error: string | null; field?: string; resendEmail?: string };
 export type RegisterState = {
   error: string | null;
   field?: string;
@@ -17,6 +17,11 @@ export type ProfileState = {
   error: string | null;
   field?: string;
   done: boolean;
+};
+export type VerifyEmailState = {
+  error: string | null;
+  success: boolean;
+  verified: boolean;
 };
 
 function formDataValue(formData: FormData, key: string): string {
@@ -40,6 +45,7 @@ function safeCallbackUrl(value: unknown): string {
  * Giriş formu eylemi: Zod (Türkçe hatalar) → Auth.js credentials sign-in.
  * Başarıda `signIn()` redirect fırlatır ve hiç dönmez; geçersiz kimlikte
  * `CredentialsSignin` yakalanıp Türkçe mesajla döner.
+ * E-posta doğrulanmamışsa özel hata + resend e-postası döner.
  */
 export async function loginAction(
   _prevState: LoginState,
@@ -63,6 +69,14 @@ export async function loginAction(
     });
   } catch (error) {
     if (error instanceof CredentialsSignin) {
+      // EmailNotVerifiedError cause olarak geliyor.
+      if (error.cause instanceof EmailNotVerifiedError) {
+        return {
+          error: "E-postanız doğrulanmamış.",
+          field: undefined,
+          resendEmail: error.cause.email,
+        };
+      }
       // Yanlış şifre, bilinmeyen e-posta ve banlı hesap aynı genel mesajda
       // birleşir (hesap varlığı sızdırılmaz).
       return { error: "E-posta veya şifre hatalı." };
@@ -113,4 +127,72 @@ export async function updateProfileAction(
     return { error: null, done: true };
   }
   return { error: result.error, field: result.field, done: false };
+}
+
+/**
+ * E-posta doğrulama eylemi: token'ı doğrular, kullanıcının emailVerified alanını
+ * günceller. Başarı/başarısızlık durumunu UI'ya döndürür.
+ */
+export async function verifyEmailAction(
+  _prevState: VerifyEmailState,
+  formData: FormData,
+): Promise<VerifyEmailState> {
+  const token = formData.get("token");
+  if (typeof token !== "string" || token.length === 0) {
+    return { error: "Geçersiz doğrulama bağlantısı.", success: false, verified: false };
+  }
+
+  const { verifyEmail } = await import("./service");
+  const payload = await verifyEmail(token);
+  if (!payload) {
+    return { error: "Doğrulama bağlantısı geçersiz veya süresi dolmuş.", success: false, verified: false };
+  }
+
+  // Kullanıcıyı bul ve emailVerified'ı güncelle.
+  const { prisma } = await import("../../lib/prisma");
+  const user = await prisma.user.findUnique({ where: { email: payload.email } });
+  if (!user) {
+    return { error: "Kullanıcı bulunamadı.", success: false, verified: false };
+  }
+
+  if (user.emailVerified !== null) {
+    // Zaten doğrulanmış → yine de başarı say (idempotent).
+    return { error: null, success: true, verified: true };
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerified: new Date() },
+  });
+
+  return { error: null, success: true, verified: true };
+}
+
+/**
+ * Doğrulama e-postasını yeniden gönderir.
+ */
+export async function resendVerifyEmailAction(
+  _prevState: VerifyEmailState,
+  formData: FormData,
+): Promise<VerifyEmailState> {
+  const email = formData.get("email");
+  if (typeof email !== "string" || email.length === 0) {
+    return { error: "E-posta adresi gerekli.", success: false, verified: false };
+  }
+
+  const { prisma } = await import("../../lib/prisma");
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+  if (!user) {
+    // Güvenlik: kullanıcı yoksa da başarılıymiş gibi davran (enumaration engeli).
+    return { error: null, success: true, verified: false };
+  }
+
+  if (user.emailVerified !== null) {
+    return { error: "E-posta zaten doğrulanmış.", success: false, verified: true };
+  }
+
+  const { sendRegisterVerify } = await import("../../lib/email/events");
+  sendRegisterVerify(user.email);
+
+  return { error: null, success: true, verified: false };
 }

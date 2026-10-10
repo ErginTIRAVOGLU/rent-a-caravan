@@ -390,7 +390,7 @@ it("ban: isBanned=true → verifyCredentials null döner; ban açınca tekrar gi
   const admin = await prisma.user.create({
     data: makeUser({ role: "ADMIN" }),
   });
-  const member = await prisma.user.create({ data: makeUser() });
+  const member = await prisma.user.create({ data: makeUser({ emailVerified: new Date() }) });
 
   // Ban öncesi giriş açık (demo şifresi: demo1234)
   expect(await verifyCredentials(member.email, "demo1234")).not.toBeNull();

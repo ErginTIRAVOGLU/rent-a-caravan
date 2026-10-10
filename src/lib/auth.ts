@@ -6,6 +6,7 @@ import {
   linkGoogleUser,
   verifyCredentials,
   type SessionUser,
+  EmailNotVerifiedError,
 } from "../server/users/service";
 import { applyUserClaims, authConfig } from "./auth.config";
 import { loginSchema } from "../lib/validators/auth";
@@ -32,7 +33,16 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         if (!parsed.success) {
           return null; // geçersiz format → hatalı giriş (Türkçe mesaj UI'da)
         }
-        return verifyCredentials(parsed.data.email, parsed.data.password);
+        try {
+          return await verifyCredentials(parsed.data.email, parsed.data.password);
+        } catch (error) {
+          if (error instanceof EmailNotVerifiedError) {
+            // Auth.js v5: hata fırlatılırsa error sayfasına yönlendirir.
+            // loginAction bunu yakalayıp özel mesaj gösterecek.
+            throw error;
+          }
+          throw error;
+        }
       },
     }),
   ],

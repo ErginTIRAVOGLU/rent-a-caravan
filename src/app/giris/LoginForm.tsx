@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 
 import { loginAction, type LoginState } from "../../server/users/actions";
@@ -41,6 +42,8 @@ export function LoginForm({ callbackUrl, serverError }: Props) {
     loginAction,
     initialState,
   );
+
+  const isEmailNotVerified = state.error === "E-postanız doğrulanmamış.";
 
   return (
     <div className="space-y-5">
@@ -105,12 +108,27 @@ export function LoginForm({ callbackUrl, serverError }: Props) {
         </div>
 
         {state.error && !state.field ? (
-          <p
-            role="alert"
-            className="rounded-lg bg-error-bg px-3 py-2 text-body-md text-error"
-          >
-            {state.error}
-          </p>
+          <div className="space-y-2">
+            <p
+              role="alert"
+              className="rounded-lg bg-error-bg px-3 py-2 text-body-md text-error"
+            >
+              {state.error}
+            </p>
+            {isEmailNotVerified && state.resendEmail ? (
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-body-sm text-on-surface-variant">
+                  Doğrulama e-postasını yeniden gönder:
+                </p>
+                <Link
+                  href={`/dogrula?resend=${encodeURIComponent(state.resendEmail)}`}
+                  className="btn btn-outline btn-sm"
+                >
+                  Yeniden gönder
+                </Link>
+              </div>
+            ) : null}
+          </div>
         ) : null}
 
         <button
