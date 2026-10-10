@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "check": "tsc --noEmit && eslint . && vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "next typegen && tsc --noEmit && eslint . && vitest run",
     "seed": "prisma db seed"
   },
   "prisma": {

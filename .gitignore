@@ -25,3 +25,4 @@ coverage/
 
 # OpenChamber ekran goruntuleri (oturum kaniti)
 .openchamber/
+next-env.d.ts
