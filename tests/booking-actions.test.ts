@@ -299,6 +299,37 @@ it("create: çakışan APPROVED tarihlerle bile talep oluşur (kilitlenme ONAY a
   expect(result.ok).toBe(true);
 });
 
+it("dakikada 5. sonrası fail", async () => {
+  await resetDb();
+  const owner = await prisma.user.create({ data: makeUser() });
+  const renter = await prisma.user.create({ data: makeUser() });
+  // Her talep farklı ilana gider ki mükerrer-talep kuralı devreye girmesin:
+  // sınır yalnızca HIZDAN düşmeli.
+  const listings = [];
+  for (let i = 0; i < 6; i++) {
+    listings.push(await prisma.listing.create({ data: makeListing(owner.id) }));
+  }
+  const input = (listingId: string) => ({
+    listingId,
+    startDate: "2030-06-10",
+    endDate: "2030-06-14",
+    guests: 2,
+  });
+
+  for (const listing of listings.slice(0, 5)) {
+    const result = await createBookingCore(session(renter), input(listing.id));
+    expect(result.ok).toBe(true);
+  }
+
+  const blocked = await createBookingCore(session(renter), input(listings[5].id));
+
+  expect(blocked.ok).toBe(false);
+  if (!blocked.ok) {
+    expect(blocked.error).toBe("Çok fazla istek gönderdiniz, biraz bekleyin");
+  }
+  expect(await prisma.bookingRequest.count()).toBe(5); // 6. yazılmadı
+});
+
 // ---------------------------------------------------------------------------
 // approveBookingCore — KRİTİK YARIŞ
 // ---------------------------------------------------------------------------

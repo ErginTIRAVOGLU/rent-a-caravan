@@ -7,6 +7,7 @@ import {
   sendBookingStatusChanged,
 } from "../../lib/email/events";
 import { prisma } from "../../lib/prisma";
+import { assertRateLimit, BOOKING_LIMIT } from "../../lib/rate-limit";
 import { fail, firstIssue, ok, type ActionResult } from "../../lib/result";
 import { validateStay } from "../../lib/stay";
 import { staySchema } from "../../lib/validators/booking";
@@ -134,6 +135,19 @@ export async function createBookingCore(
   );
   if (!stay.ok) {
     return fail(stay.error, stay.field);
+  }
+
+  // T11 hız sınırı: geçerli girdiden SONRA, yazmadan ÖNCE — başarısız
+  // doğrulamalar bütçeyi harcamaz; çift tıklama/kalabalık baskını (5/60sn)
+  // yakalanır. Aşım durumunda kayıt oluşmaz.
+  const rate = await assertRateLimit(
+    "booking",
+    user.id,
+    BOOKING_LIMIT.limit,
+    BOOKING_LIMIT.windowSeconds,
+  );
+  if (!rate.ok) {
+    return rate;
   }
 
   // Mükerrer koruması: aynı kiracı + aynı ilanda BEKLEYEN tek talep hakkı var.
@@ -339,4 +353,45 @@ export async function cancelBookingCore(
   });
   // İptal e-postası yok: şablon yalnız ONAY/RET kararlarını kapsar (T5).
   return result;
+}
+
+/**
+ * Günlük tamamlama cron'u (T11, Vercel `0 3 * * *`): bitiş tarihi geçmiş
+ * APPROVED kayıtları COMPLETED'a taşır.
+ *
+ * Tarih semantiği: `endDate` @db.Date = UTC gece yarısı; konaklama, bitiş
+ * tarihi bugünden (now'ın UTC tarihi) ÖNCEYSE bitmiştir — bitiş = bugün
+ * henüz bitmez (çıkış günü kiracı hâlâ tesistedir).
+ *
+ * Yarış dayanıklılığı: koşullu tek-satır `updateMany({ id, status: "APPROVED" })`
+ * — eşzamanlı ikinci çalıştırma aynı kaydı iki kez tamamlamaz/epostalamaz
+ * (count 0 → atlanır). Dönen değer: durumu gerçekten değişen kayıt sayısı.
+ * E-posta commit SONRASI gönderilir; hata çalıştırmayı düşürmez (T5).
+ */
+export async function completeDueBookings(now: Date = new Date()): Promise<number> {
+  const today = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+  const due = await prisma.bookingRequest.findMany({
+    where: { status: "APPROVED", endDate: { lt: today } },
+    include: {
+      listing: { select: { title: true } },
+      renter: { select: { email: true } },
+    },
+  });
+
+  let completed = 0;
+  for (const booking of due) {
+    const updated = await prisma.bookingRequest.updateMany({
+      where: { id: booking.id, status: "APPROVED" },
+      data: { status: "COMPLETED" },
+    });
+    if (updated.count === 0) {
+      continue; // diğer çalıştırma kazandı: tekrar tamamlanmaz/postalanmaz
+    }
+    completed += 1;
+    // T5 şablonu yalnız ONAY/RET bilir; konaklama ONAYLIydı ve tamamlandı.
+    await notifyStatusChanged(booking, "APPROVED");
+  }
+  return completed;
 }
