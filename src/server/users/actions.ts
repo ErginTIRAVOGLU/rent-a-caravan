@@ -191,8 +191,10 @@ export async function resendVerifyEmailAction(
     return { error: "E-posta zaten doğrulanmış.", success: false, verified: true };
   }
 
+  const { createVerifyToken } = await import("../../lib/auth/tokens");
   const { sendRegisterVerify } = await import("../../lib/email/events");
-  sendRegisterVerify(user.email);
+  const token = createVerifyToken(user.email);
+  sendRegisterVerify(user.email, token);
 
   return { error: null, success: true, verified: false };
 }

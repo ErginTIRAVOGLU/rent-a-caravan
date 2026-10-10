@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHmac } from "crypto";
 
 import { prisma } from "../../../src/lib/prisma";
-import { createVerifyToken, verifyEmail, verifyCredentials, registerUser, linkGoogleUser } from "../../../src/server/users/service";
+import { verifyEmail, verifyCredentials, registerUser, linkGoogleUser } from "../../../src/server/users/service";
+import { createVerifyToken } from "../../../src/lib/auth/tokens";
 import { makeUser, resetDb } from "../../helpers/db";
 
 // sendRegisterVerify mock'lanır ki testler gerçek e-posta göndermez.
@@ -116,7 +117,7 @@ describe("registerUser + sendRegisterVerify", () => {
 
     expect(result.ok).toBe(true);
     expect(mockSendRegisterVerify).toHaveBeenCalledTimes(1);
-    expect(mockSendRegisterVerify).toHaveBeenCalledWith("yeni@karavan.test");
+    expect(mockSendRegisterVerify).toHaveBeenCalledWith("yeni@karavan.test", expect.any(String));
   });
 });
 

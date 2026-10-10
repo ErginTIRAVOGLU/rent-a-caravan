@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import DogrulaPage from "../../src/app/dogrula/page";
 import { prisma } from "../../src/lib/prisma";
-import { createVerifyToken } from "../../src/server/users/service";
+import { createVerifyToken } from "../../src/lib/auth/tokens";
 import { makeUser, resetDb } from "../helpers/db";
 
 // Next.js navigation mock

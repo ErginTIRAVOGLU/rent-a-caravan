@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { prisma } from "../../../src/lib/prisma";
-import { createVerifyToken } from "../../../src/server/users/service";
+import { createVerifyToken } from "../../../src/lib/auth/tokens";
 import { makeUser, resetDb } from "../../helpers/db";
 
 // Mock next-auth before it's imported by auth.ts

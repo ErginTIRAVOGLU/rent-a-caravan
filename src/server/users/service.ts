@@ -10,6 +10,7 @@ import {
   type RegisterInput,
 } from "../../lib/validators/auth";
 import { updateProfileSchema } from "../../lib/validators/profile";
+import { createVerifyToken } from "../../lib/auth/tokens";
 
 /**
  * E-posta doğrulanmamış hatası — loginAction tarafından yakalanır
@@ -35,7 +36,7 @@ export type SessionUser = {
   isBanned: boolean;
 };
 
-function normalizeEmail(email: string): string {
+export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
@@ -121,7 +122,8 @@ export async function registerUser(
     });
     // Doğrulama e-postasını arka planda gönder (hata ana akışı düşürmez).
     const { sendRegisterVerify } = await import("../../lib/email/events");
-    sendRegisterVerify(user.email);
+    const token = createVerifyToken(user.email);
+    sendRegisterVerify(user.email, token);
     return ok(toSessionUser(user));
   } catch (error) {
     // Yarış durumunda da aynı Türkçe/alan hatası (unique index P2002).
@@ -175,24 +177,6 @@ export async function verifyEmail(token: string): Promise<{ email: string } | nu
   } catch {
     return null;
   }
-}
-
-/**
- * Doğrulama linki üretir: `email` + 24 saat sonrası `exp` → HMAC imzalı token.
- * Kullanım: `const link = \`${baseUrl}/dogrula?token=${createVerifyToken(email)}\``
- */
-export function createVerifyToken(email: string): string {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    throw new Error("AUTH_SECRET tanımlı değil");
-  }
-  const exp = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // 24 saat
-  const payload = { email: normalizeEmail(email), exp };
-  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = createHmac("sha256", secret)
-    .update(payloadB64)
-    .digest("base64url");
-  return `${payloadB64}.${signature}`;
 }
 
 export type GoogleProfile = {

@@ -58,12 +58,11 @@ export async function sendListingStatusChanged(
  */
 export async function sendRegisterVerify(
   to: string,
+  token: string,
   client: EmailClient = resendClient,
 ): Promise<void> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    const { createVerifyToken } = await import("../../server/users/service");
-    const token = createVerifyToken(to);
     const verifyUrl = `${baseUrl}/dogrula?token=${token}`;
     await client.send(registerVerifyTemplate(to, { verifyUrl, expiryHours: 24 }));
   } catch (error) {
