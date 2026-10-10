@@ -23,6 +23,16 @@ import type { SessionUser } from "../users/service";
 const YETKI_YOK = "Bu işlem için yetkiniz yok.";
 const ILAN_BULUNAMADI = "İlan bulunamadı.";
 const GECERSIZ_DURUM = "Bu ilan şu anda gönderilemez.";
+const GECERSIZ_ILAN_ID = "Geçersiz ilan kimliği.";
+
+// Prisma @default(cuid()) ile üretilen id deseni: `c` + 24 alfanümerik.
+// Bozuk/çöp bir id Prisma'ya ulaşmadan reddedilir (Türkçe ActionResult).
+const CUID_RE = /^c[a-z0-9]{24}$/;
+
+/** İlan id'sini doğrular; geçersizse fail, geçerliyse null döner. */
+function invalidId(id: string): ActionResult<never> | null {
+  return CUID_RE.test(id) ? null : fail(GECERSIZ_ILAN_ID);
+}
 
 /** İlk Zod hatasını Türkçe mesaj + alan adı ile ActionResult'a çevirir. */
 function validationFail<T>(error: ZodError): ActionResult<T> {
@@ -86,6 +96,10 @@ export async function updateListingCore(
   id: string,
   data: unknown,
 ): Promise<ActionResult<Listing>> {
+  const badId = invalidId(id);
+  if (badId) {
+    return badId;
+  }
   const existing = await prisma.listing.findUnique({ where: { id } });
   if (!existing) {
     return fail(ILAN_BULUNAMADI);
@@ -99,6 +113,11 @@ export async function updateListingCore(
     return validationFail(parsed.error);
   }
   const input = parsed.data; // input.status bilinçli olarak OKUNMAZ
+  // Boş/no-op güncelleme (payload yalnız strip edilen alanlar içeriyorsa):
+  // Prisma'nın boş update davranışına bırakma, mevcut kaydı olduğu gibi döndür.
+  if (Object.values(input).every((v) => v === undefined)) {
+    return ok(existing);
+  }
 
   const listing = await prisma.listing.update({
     where: { id },
@@ -137,6 +156,10 @@ export async function deleteListingCore(
   user: SessionUser,
   id: string,
 ): Promise<ActionResult<Listing>> {
+  const badId = invalidId(id);
+  if (badId) {
+    return badId;
+  }
   const existing = await prisma.listing.findUnique({ where: { id } });
   if (!existing) {
     return fail(ILAN_BULUNAMADI);
@@ -157,6 +180,10 @@ export async function submitListingCore(
   user: SessionUser,
   id: string,
 ): Promise<ActionResult<Listing>> {
+  const badId = invalidId(id);
+  if (badId) {
+    return badId;
+  }
   const existing = await prisma.listing.findUnique({ where: { id } });
   if (!existing) {
     return fail(ILAN_BULUNAMADI);

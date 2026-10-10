@@ -26,10 +26,6 @@ const licenseRequiredField = z.enum(
   ["B", "BE", "C1", "C"],
   "Geçerli bir ehliyet sınıfı seçin.",
 );
-const statusField = z.enum(
-  ["DRAFT", "PENDING", "ACTIVE", "REJECTED", "PAUSED"],
-  "Geçerli bir ilan durumu seçin.",
-);
 
 export const listingSchema = z.object({
   title: z
@@ -113,8 +109,11 @@ export const listingSchema = z.object({
       "Fotoğraflar bir liste olmalıdır.",
     )
     .max(MAX_PHOTOS, `En fazla ${MAX_PHOTOS} fotoğraf ekleyebilirsiniz.`),
-  // İstemciden okunur ama HİÇBİR servis bunu DB'ye yazmaz (sunucu otoriter).
-  status: statusField.optional(),
+  // NOT: `status`/`ownerId` BİLEREK şemada yok. Zod v4 object bilinmeyen
+  // anahtarları default olarak yok sayar (strip) — payload'da status:"ACTIVE"
+  // gelse bile parse edilir ve hiçbir servis onu DB'ye YAZMAZ (sunucu otoriter:
+  // createListingCore sabit DRAFT + ownerId=user.id yazar). Şemaya almak
+  // gereksiz `ListingInput.status` alanı davet ederdi.
 });
 
 export type ListingInput = z.infer<typeof listingSchema>;

@@ -102,6 +102,20 @@ it("bilinmeyen amenities anahtarı → hata (yalnızca katalog anahtarları)", (
   }
 });
 
+it("status/ownerId istemciden strip edilir — şemada alan yok (sunucu otoriter)", () => {
+  // Zod v4 object bilinmeyen anahtarları default olarak yok sayar; payload'da
+  // status:"ACTIVE" + ownerId yabancı id gelse bile parse OK ve bu alanlar
+  // parse edilen veriye İŞLENMEZ (servis zaten sabit DRAFT + user.id yazar).
+  const parsed = listingSchema.safeParse(
+    validListing({ status: "ACTIVE", ownerId: "yabanci-id" }),
+  );
+  expect(parsed.success).toBe(true);
+  if (parsed.success) {
+    expect("status" in parsed.data).toBe(false);
+    expect("ownerId" in parsed.data).toBe(false);
+  }
+});
+
 it("AMENITIES kataloğu 17 kayıt ve Türkçe etiketli (spec §3.1)", () => {
   expect(AMENITIES).toHaveLength(17);
   expect(AMENITIES.map((a) => a.key)).toEqual([

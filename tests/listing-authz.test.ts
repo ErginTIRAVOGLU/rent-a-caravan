@@ -187,6 +187,25 @@ it("fotoğrafsız submit fail döner, ilan DRAFT kalır", async () => {
   ).toBe("DRAFT");
 });
 
+it("geçersiz ilan id'si (çöp/metin) Prisma'ya ulaşmadan fail döner", async () => {
+  await resetDb();
+  const owner = await prisma.user.create({ data: makeUser() });
+
+  for (const badId of ["not-a-cuid", "", "DROP TABLE listings;--", "c"]) {
+    const update = await updateListingCore(session(owner), badId, { title: "X" });
+    expect(update.ok).toBe(false);
+    if (!update.ok) expect(update.error).toContain("Geçersiz ilan kimliği");
+
+    const del = await deleteListingCore(session(owner), badId);
+    expect(del.ok).toBe(false);
+    if (!del.ok) expect(del.error).toContain("Geçersiz ilan kimliği");
+
+    const submit = await submitListingCore(session(owner), badId);
+    expect(submit.ok).toBe(false);
+    if (!submit.ok) expect(submit.error).toContain("Geçersiz ilan kimliği");
+  }
+});
+
 it("submitListing yalnız DRAFT/REJECTED ilanı gönderir (ACTIVE yeniden gönderilemez)", async () => {
   await resetDb();
   const owner = await prisma.user.create({ data: makeUser() });
