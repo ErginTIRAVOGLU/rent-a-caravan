@@ -93,13 +93,13 @@ export default async function AramaPage({
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
           <Link
             href="/"
-            className="text-lg font-bold text-emerald-700 hover:text-emerald-800"
+            className="inline-flex min-h-10 items-center text-lg font-bold text-emerald-700 hover:text-emerald-800"
           >
             Karavan Kiralama
           </Link>
           <Link
             href="/giris"
-            className="text-sm font-semibold text-gray-700 hover:text-emerald-700"
+            className="inline-flex min-h-10 items-center text-sm font-semibold text-gray-700 hover:text-emerald-700"
           >
             Giriş Yap
           </Link>

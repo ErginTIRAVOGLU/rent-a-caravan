@@ -82,13 +82,13 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <Link
             href="/"
-            className="text-lg font-bold text-emerald-700 hover:text-emerald-800"
+            className="inline-flex min-h-10 items-center text-lg font-bold text-emerald-700 hover:text-emerald-800"
           >
             Karavan Kiralama
           </Link>
           <Link
             href="/arama"
-            className="text-sm font-semibold text-gray-700 hover:text-emerald-700"
+            className="inline-flex min-h-10 items-center text-sm font-semibold text-gray-700 hover:text-emerald-700"
           >
             ← Aramaya dön
           </Link>
@@ -160,7 +160,7 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
 
             <section className={cardClassName}>
               <h2 className={sectionTitleClassName}>Açıklama</h2>
-              <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700">
+              <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-gray-700">
                 {listing.description}
               </p>
             </section>
@@ -188,7 +188,7 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
             {listing.houseRules ? (
               <section className={cardClassName}>
                 <h2 className={sectionTitleClassName}>Ev kuralları</h2>
-                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700">
+                <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-gray-700">
                   {listing.houseRules}
                 </p>
               </section>

@@ -5,6 +5,7 @@ import type { BookingRequestStatus } from "@prisma/client";
 import { requireUser } from "../../../lib/auth";
 import { formatTRY } from "../../../lib/format";
 import { prisma } from "../../../lib/prisma";
+import { AccountNav } from "../../../components/AccountNav";
 import { BookingActions } from "./BookingActions";
 
 export const metadata: Metadata = {
@@ -79,6 +80,8 @@ export default async function TaleplerimPage() {
           </p>
         </header>
 
+        <AccountNav current="taleplerim" />
+
         {/* GELEN */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-gray-900">Gelen Talepler</h2>
@@ -118,7 +121,7 @@ export default async function TaleplerimPage() {
                   </div>
 
                   {booking.message ? (
-                    <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                    <p className="mt-3 break-words rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
                       “{booking.message}”
                     </p>
                   ) : null}
@@ -183,7 +186,7 @@ export default async function TaleplerimPage() {
                   </div>
 
                   {booking.status === "REJECTED" && booking.rejectionReason ? (
-                    <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <p className="mt-3 break-words rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
                       Red gerekçesi: {booking.rejectionReason}
                     </p>
                   ) : null}

@@ -11,9 +11,20 @@ if (!testDatabaseUrl) {
     "TEST_DATABASE_URL tanımlı değil. .env dosyasını .env.example'dan oluşturun.",
   );
 }
+// Güvenlik: hata metnine URL'nin TAMAMI (kullanıcı/şifre/host) asla yazılmaz;
+// yalnız veritabanı ADI gösterilir.
+function databaseName(url: string): string {
+  try {
+    const name = new URL(url).pathname.replace(/^\//, "");
+    return name || "bilinmiyor";
+  } catch {
+    return "bilinmiyor";
+  }
+}
+
 if (process.env.DATABASE_URL !== testDatabaseUrl) {
   throw new Error(
-    `DATABASE_URL test veritabanına (${testDatabaseUrl}) bağlanmıyor; mevcut değer: ${process.env.DATABASE_URL}. vitest.config.mts içindeki test.env yapılandırmasını kontrol edin.`,
+    `DATABASE_URL test veritabanına bağlanmıyor (beklenen veritabanı: ${databaseName(testDatabaseUrl)}). vitest.config.mts içindeki test.env yapılandırmasını kontrol edin.`,
   );
 }
 

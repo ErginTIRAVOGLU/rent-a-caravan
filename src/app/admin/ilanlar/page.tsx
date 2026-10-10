@@ -174,7 +174,7 @@ export default async function AdminListingsPage() {
                   </span>
                 </div>
                 {listing.rejectionReason ? (
-                  <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                  <p className="mt-3 break-words rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
                     Red gerekçesi: {listing.rejectionReason}
                   </p>
                 ) : null}

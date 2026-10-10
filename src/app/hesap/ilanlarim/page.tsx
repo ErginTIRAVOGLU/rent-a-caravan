@@ -4,6 +4,7 @@ import type { ListingStatus } from "@prisma/client";
 
 import { requireUser } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
+import { AccountNav } from "../../../components/AccountNav";
 import { ListingActions } from "./ListingActions";
 
 export const metadata: Metadata = {
@@ -56,6 +57,8 @@ export default async function IlanlarimPage() {
           </Link>
         </header>
 
+        <AccountNav current="ilanlarim" />
+
         {listings.length === 0 ? (
           <div className="mt-8 rounded-2xl bg-white p-8 text-center shadow-sm">
             <p className="text-gray-600">Henüz hiç ilanınız yok.</p>
@@ -91,7 +94,7 @@ export default async function IlanlarimPage() {
                 </div>
 
                 {listing.status === "REJECTED" && listing.rejectionReason ? (
-                  <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                  <p className="mt-3 break-words rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
                     Red gerekçesi: {listing.rejectionReason}
                   </p>
                 ) : null}

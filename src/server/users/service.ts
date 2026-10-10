@@ -8,6 +8,7 @@ import {
   registerSchema,
   type RegisterInput,
 } from "../../lib/validators/auth";
+import { updateProfileSchema } from "../../lib/validators/profile";
 
 /**
  * Oturumdaki kimlik. Sözleşme (plan §Task 3):
@@ -191,4 +192,63 @@ export async function linkGoogleUser(
     }
     throw error;
   }
+}
+
+/**
+ * Profil güncelleme (test edilen çekirdek). Sözleşmeler:
+ * - Hedef satır YALNIZ `user.id`'den gelir; payload'daki `id`/`role` gibi
+ *   alanlar Zod v4 strip ile yok sayılır (ledger Ruling-3).
+ * - Şifre değişimi mevcut şifrenin bcrypt doğrulamasını şart koşar; düz
+ *   metin asla DB'ye yazılmaz (yalnız bcrypt hash yazılır).
+ * - `phone: ""` (boş) telefonu temizler (null); `undefined` alanı değiştirmez.
+ */
+export async function updateProfileCore(
+  user: SessionUser,
+  input: unknown,
+): Promise<ActionResult<true>> {
+  const parsed = updateProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    const issue = firstIssue(parsed.error);
+    return fail(issue.message, issue.field);
+  }
+  const { name, newPassword, currentPassword } = parsed.data;
+  // Boş telefon = temizle (null); dolu telefon aynen yazılır.
+  const phone =
+    parsed.data.phone === "" ? null : parsed.data.phone;
+
+  const current = await prisma.user.findUnique({ where: { id: user.id } });
+  if (!current) {
+    return fail("Hesabınız bulunamadı.");
+  }
+
+  const data: Prisma.UserUpdateInput = {};
+  if (name !== undefined) {
+    data.name = name;
+  }
+  if (phone !== undefined) {
+    data.phone = phone;
+  }
+
+  if (newPassword !== undefined) {
+    // Eski şifre zorunlu: yalnız mevcut hash üzerinden doğrulanır.
+    if (!current.passwordHash) {
+      // Google-özel hesapta doğrulanacak şifre yoktur (şifre belirlenemez).
+      return fail(
+        "Bu hesapta mevcut bir şifre yok; şifre belirleyemezsiniz.",
+        "currentPassword",
+      );
+    }
+    const validCurrent = await compare(
+      currentPassword ?? "",
+      current.passwordHash,
+    );
+    if (!validCurrent) {
+      return fail("Mevcut şifreniz hatalı.", "currentPassword");
+    }
+    // Düz metin asla DB'ye gitmez; yalnız bcrypt hash yazılır.
+    data.passwordHash = await hash(newPassword, 10);
+  }
+
+  await prisma.user.update({ where: { id: user.id }, data });
+  return ok(true);
 }

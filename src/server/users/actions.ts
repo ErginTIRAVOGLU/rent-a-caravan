@@ -2,13 +2,18 @@
 
 import { CredentialsSignin } from "next-auth";
 
-import { signIn } from "../../lib/auth";
+import { requireUser, signIn } from "../../lib/auth";
 import { firstIssue } from "../../lib/result";
 import { loginSchema } from "../../lib/validators/auth";
-import { registerUser } from "./service";
+import { registerUser, updateProfileCore } from "./service";
 
 export type LoginState = { error: string | null; field?: string };
 export type RegisterState = {
+  error: string | null;
+  field?: string;
+  done: boolean;
+};
+export type ProfileState = {
   error: string | null;
   field?: string;
   done: boolean;
@@ -81,6 +86,28 @@ export async function registerAction(
     name: formDataValue(formData, "name"),
     email: formDataValue(formData, "email"),
     password: formDataValue(formData, "password"),
+  });
+  if (result.ok) {
+    return { error: null, done: true };
+  }
+  return { error: result.error, field: result.field, done: false };
+}
+
+/**
+ * Profil güncelleme eylemi: ince sarmalayıcı — oturum kapısı `requireUser()`
+ * (hedef id yalnız oturumdan gelir), doğrulama/şifre hash'i `updateProfileCore`
+ * (service) içindedir. Boş şifre alanları "değiştirilmedi" anlamına gelir.
+ */
+export async function updateProfileAction(
+  _prevState: ProfileState,
+  formData: FormData,
+): Promise<ProfileState> {
+  const user = await requireUser();
+  const result = await updateProfileCore(user, {
+    name: formDataValue(formData, "name"),
+    phone: formDataValue(formData, "phone"),
+    newPassword: formDataValue(formData, "newPassword") || undefined,
+    currentPassword: formDataValue(formData, "currentPassword") || undefined,
   });
   if (result.ok) {
     return { error: null, done: true };
