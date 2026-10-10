@@ -33,16 +33,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         if (!parsed.success) {
           return null; // geçersiz format → hatalı giriş (Türkçe mesaj UI'da)
         }
-        try {
-          return await verifyCredentials(parsed.data.email, parsed.data.password);
-        } catch (error) {
-          if (error instanceof EmailNotVerifiedError) {
-            // Auth.js v5: hata fırlatılırsa error sayfasına yönlendirir.
-            // loginAction bunu yakalayıp özel mesaj gösterecek.
-            throw error;
-          }
-          throw error;
-        }
+        return await verifyCredentials(parsed.data.email, parsed.data.password);
       },
     }),
   ],
