@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { EmailClient } from "../src/lib/email/client";
+import { resendClient } from "../src/lib/email/client";
 import {
   sendBookingRequested,
   sendBookingStatusChanged,
@@ -21,6 +22,12 @@ function captureClient(): { client: EmailClient; sent: Array<{ to: string; subje
 // Prisma `DateTime @db.Date` → UTC gece yarısı Date.
 const START = new Date("2026-10-11T00:00:00.000Z");
 const END = new Date("2026-10-14T00:00:00.000Z");
+
+// console.error mock'ları her testten sonra temizlenir; aksi halde assertion
+// patlarsa mock sonraki testlere sızar ve hata çıktısını susturur.
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("sendBookingRequested", () => {
   it("talep olayı: kiracıya 'Karavan talebiniz alındı' konulu mail atar", async () => {
@@ -130,8 +137,20 @@ describe("gönderim hatası asla ana akışı düşürmez", () => {
     await expect(
       sendListingStatusChanged("sahip@example.com", { listingTitle: "Karavan", status: "PAUSED" }, throwing),
     ).resolves.toBeUndefined();
+  });
+});
 
-    vi.restoreAllMocks();
+describe("RESEND_API_KEY yoksa", () => {
+  it("resendClient.send loglayıp çözülür (throw etmez)", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubEnv("RESEND_API_KEY", "");
+
+    await expect(
+      resendClient.send({ to: "a@b.com", subject: "Konu", html: "<p>x</p>" }),
+    ).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalled();
+
+    vi.unstubAllEnvs();
   });
 });
 
