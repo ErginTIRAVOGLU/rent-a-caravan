@@ -12,11 +12,9 @@ import { makeUser, makeListing, resetDb } from "../../helpers/db";
 
 beforeEach(async () => {
   await resetDb();
-  vi.useFakeTimers();
 });
 
 afterEach(() => {
-  vi.useRealTimers();
   vi.clearAllMocks();
 });
 
@@ -166,14 +164,22 @@ describe("sendMessageCore", () => {
   });
 
   it("rate limit aşılırsa hata döner (MESSAGE_LIMIT=20/60s)", async () => {
-    // 20 mesaj gönder - hepsi başarılı olmalı
+    // 20 mesaj gönder - hepsi başarılı olmalı (aynı 60sn penceresinde)
     for (let i = 0; i < 20; i++) {
-      const result = await sendMessageCore(mockUser(renter.id, renter.email), conversationId, `Mesaj ${i}`);
+      const result = await sendMessageCore(
+        mockUser(renter.id, renter.email),
+        conversationId,
+        `Mesaj ${i}`,
+      );
       expect(result.ok).toBe(true);
     }
 
     // 21. mesaj rate limit hatası almalı
-    const result = await sendMessageCore(mockUser(renter.id, renter.email), conversationId, "Fazla mesaj");
+    const result = await sendMessageCore(
+      mockUser(renter.id, renter.email),
+      conversationId,
+      "Fazla mesaj",
+    );
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBe("Çok fazla istek gönderdiniz, biraz bekleyin");

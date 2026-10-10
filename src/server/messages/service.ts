@@ -11,11 +11,16 @@ const YETKI_YOK = "Bu sohbete mesaj gönderme yetkiniz yok.";
 const SOHBET_BULUNAMADI = "Sohbet bulunamadı.";
 const KENDI_ILANINIZ = "Kendi ilanınıza mesaj gönderemezsiniz.";
 const GECERSIZ_ILAN_ID = "Geçersiz ilan kimliği.";
+const GECERSIZ_SOHBET_ID = "Geçersiz sohbet kimliği.";
 
 const CUID_RE = /^c[a-z0-9]{24}$/;
 
-function invalidId(id: string): ActionResult<never> | null {
+function invalidListingId(id: string): ActionResult<never> | null {
   return CUID_RE.test(id) ? null : fail(GECERSIZ_ILAN_ID);
+}
+
+function invalidConversationId(id: string): ActionResult<never> | null {
+  return CUID_RE.test(id) ? null : fail(GECERSIZ_SOHBET_ID);
 }
 
 function validationFail<T>(error: ZodError): ActionResult<T> {
@@ -47,7 +52,7 @@ export async function startConversationCore(
   user: SessionUser,
   listingId: string,
 ): Promise<ActionResult<ConversationWithDetails>> {
-  const badId = invalidId(listingId);
+  const badId = invalidListingId(listingId);
   if (badId) {
     return badId;
   }
@@ -119,7 +124,7 @@ export async function sendMessageCore(
   conversationId: string,
   content: string,
 ): Promise<ActionResult<Message>> {
-  const badId = invalidId(conversationId);
+  const badId = invalidConversationId(conversationId);
   if (badId) {
     return badId;
   }
@@ -182,7 +187,7 @@ export async function markMessagesReadCore(
   user: SessionUser,
   conversationId: string,
 ): Promise<ActionResult<number>> {
-  const badId = invalidId(conversationId);
+  const badId = invalidConversationId(conversationId);
   if (badId) {
     return badId;
   }
@@ -262,7 +267,7 @@ export async function getConversationCore(
   user: SessionUser,
   conversationId: string,
 ): Promise<ActionResult<ConversationThread>> {
-  const badId = invalidId(conversationId);
+  const badId = invalidConversationId(conversationId);
   if (badId) {
     return badId;
   }
