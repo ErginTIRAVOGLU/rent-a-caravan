@@ -6,6 +6,7 @@ import Link from "next/link";
 const LINKS = [
   { href: "/hesap/ilanlarim", label: "İlanlarım", key: "ilanlarim", icon: "caravan" },
   { href: "/hesap/taleplerim", label: "Taleplerim", key: "taleplerim", icon: "inbox" },
+  { href: "/hesap/mesajlar", label: "Mesajlar", key: "mesajlar", icon: "chat_bubble" },
   { href: "/hesap/profil", label: "Profil", key: "profil", icon: "person" },
 ] as const;
 

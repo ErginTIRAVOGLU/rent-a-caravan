@@ -15,6 +15,7 @@ import { validateStay } from "../../../lib/stay";
 import { parseSearchParams } from "../../../server/listings/search";
 import { PhotoGallery } from "../../../components/PhotoGallery";
 import { BookingRequestForm } from "./BookingRequestForm";
+import { AskButton } from "./AskButton";
 
 // İlan detayı — genel okuma yüzeyi: yalnız ACTIVE ilanlar görünür
 // (sahip/admin bypass bu görevde YOK; sahipleri kendi ilanını hesabından görür).
@@ -321,12 +322,15 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
                     <p>Bu sizin ilanınız; kendi ilanınıza talep oluşturamazsınız.</p>
                   </div>
                 ) : (
-                  <BookingRequestForm
-                    listingId={listing.id}
-                    minRentalDays={listing.minRentalDays}
-                    capacity={listing.capacity}
-                    nightlyPrice={nightlyPrice}
-                  />
+                  <>
+                    <BookingRequestForm
+                      listingId={listing.id}
+                      minRentalDays={listing.minRentalDays}
+                      capacity={listing.capacity}
+                      nightlyPrice={nightlyPrice}
+                    />
+                    <AskButton listingId={listing.id} />
+                  </>
                 )
               ) : (
                 <div className="mt-4 rounded-lg bg-surface-low p-4 text-body-md text-on-surface-variant">
