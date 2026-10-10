@@ -193,6 +193,9 @@ export function ListingForm() {
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Fotoğraf yüklenirken adım butonları kilitli kalır (adım değişirse
+  // PhotoUploader unmount olur ve yükleme hatası forma işlenmez).
+  const [uploading, setUploading] = useState(false);
   // Oluşturulmuş DRAFT id'si: gönderim hatasında yeniden create yerine
   // update + submit yapılır (aynı taslak ikiye katlanmaz).
   const [createdId, setCreatedId] = useState<string | null>(null);
@@ -544,20 +547,23 @@ export function ListingForm() {
           <PhotoUploader
             photoUrls={form.photoUrls}
             onChange={(urls) => setField("photoUrls", urls)}
+            onUploadingChange={setUploading}
           />
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
               onClick={() => goToStep(1)}
-              className="min-h-11 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              disabled={uploading}
+              className="min-h-11 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
             >
               ← Geri
             </button>
             <button
               type="button"
               onClick={() => goToStep(3)}
-              className="min-h-11 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
+              disabled={uploading}
+              className="min-h-11 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               Önizleme →
             </button>

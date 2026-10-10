@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { generateReactHelpers } from "@uploadthing/react";
 
 import type { OurFileRouter } from "../app/api/uploadthing/route";
@@ -25,9 +25,12 @@ const MAX_MB = MAX_FILE_BYTES / (1024 * 1024);
 export function PhotoUploader({
   photoUrls,
   onChange,
+  onUploadingChange,
 }: {
   photoUrls: string[];
   onChange: (urls: string[]) => void;
+  /** Yükleme durumunu forma bildirir (adım butonlarını kilitlemek için). */
+  onUploadingChange?: (busy: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +39,18 @@ export function PhotoUploader({
   urlsRef.current = photoUrls;
 
   const { startUpload, isUploading } = useUploadThing("imageUploader", {
-    onUploadError: (uploadError) =>
-      setError(`Yükleme başarısız: ${uploadError.message}`),
+    onUploadError: (uploadError) => {
+      // UploadThing hataları kaynaktan İngilizce gelebilir ("Invalid token" vb.);
+      // arayüz yalnız Türkçe olduğu için detay konsola yazılır, kullanıcıya
+      // Türkçe yedek mesaj gösterilir.
+      console.error("UploadThing yükleme hatası:", uploadError);
+      setError("Fotoğraf yüklenemedi. Lütfen tekrar deneyin.");
+    },
   });
+
+  useEffect(() => {
+    onUploadingChange?.(isUploading);
+  }, [isUploading, onUploadingChange]);
 
   const atLimit = photoUrls.length >= MAX_PHOTOS;
   const disabled = isUploading || atLimit;
@@ -57,9 +69,15 @@ export function PhotoUploader({
       setError(check.error);
       return;
     }
-    const uploaded = await startUpload(picked);
-    if (uploaded && uploaded.length > 0) {
-      onChange([...urlsRef.current, ...uploaded.map((file) => file.ufsUrl)]);
+    try {
+      const uploaded = await startUpload(picked);
+      if (uploaded && uploaded.length > 0) {
+        onChange([...urlsRef.current, ...uploaded.map((file) => file.ufsUrl)]);
+      }
+    } catch {
+      // SDK bazı hataları (ör. UploadAbortedError) yeniden fırlatır; normal
+      // yükleme hataları onUploadError'a düşer. Unhandled rejection bırakma.
+      setError("Yükleme tamamlanamadı. Lütfen tekrar deneyin.");
     }
     // Hata durumunda startUpload yanıt vermez; mesaj onUploadError'ta ayarlanır.
   }
