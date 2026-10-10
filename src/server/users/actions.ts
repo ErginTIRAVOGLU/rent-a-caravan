@@ -6,7 +6,10 @@ import { requireUser, signIn } from "../../lib/auth";
 import { fail, ok, type ActionResult } from "../../lib/result";
 import { firstIssue } from "../../lib/result";
 import { loginSchema } from "../../lib/validators/auth";
-import { registerUser, updateProfileCore, EmailNotVerifiedError } from "./service";
+import { registerUser, updateProfileCore, EmailNotVerifiedError, verifyEmail } from "./service";
+import { prisma } from "../../lib/prisma";
+import { createVerifyToken } from "../../lib/auth/tokens";
+import { sendRegisterVerify } from "../../lib/email/events";
 
 export type LoginState = { error: string | null; field?: string; resendEmail?: string };
 export type RegisterState = {
@@ -139,14 +142,12 @@ export async function verifyEmailAction(
     return fail("Geçersiz doğrulama bağlantısı.");
   }
 
-  const { verifyEmail } = await import("./service");
   const payload = await verifyEmail(token);
   if (!payload) {
     return fail("Doğrulama bağlantısı geçersiz veya süresi dolmuş.");
   }
 
   // Kullanıcıyı bul ve emailVerified'ı güncelle.
-  const { prisma } = await import("../../lib/prisma");
   const user = await prisma.user.findUnique({ where: { email: payload.email } });
   if (!user) {
     return fail("Kullanıcı bulunamadı.");
@@ -177,7 +178,6 @@ export async function resendVerifyEmailAction(
     return fail("E-posta adresi gerekli.");
   }
 
-  const { prisma } = await import("../../lib/prisma");
   const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
   if (!user) {
     // Güvenlik: kullanıcı yoksa da başarılıymiş gibi davran (enumaration engeli).
@@ -188,8 +188,6 @@ export async function resendVerifyEmailAction(
     return fail("E-posta zaten doğrulanmış.");
   }
 
-  const { createVerifyToken } = await import("../../lib/auth/tokens");
-  const { sendRegisterVerify } = await import("../../lib/email/events");
   const token = createVerifyToken(user.email);
   sendRegisterVerify(user.email, token);
 
