@@ -33,16 +33,9 @@ export default function DogrulaPage() {
   // Token varsa sayfa yüklendiğinde otomatik doğrula.
   useEffect(() => {
     if (token && !state.verified && !pending) {
-      const form = document.createElement("form");
-      form.action = formAction as unknown as string;
-      form.method = "POST";
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "token";
-      input.value = token;
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
+      const formData = new FormData();
+      formData.append("token", token);
+      formAction(formData);
     }
   }, [token, formAction, state.verified, pending]);
 
@@ -50,16 +43,9 @@ export default function DogrulaPage() {
   useEffect(() => {
     if (resendEmail && !state.verified) {
       // Otomatik yeniden gönder
-      const form = document.createElement("form");
-      form.action = resendFormAction as unknown as string;
-      form.method = "POST";
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "email";
-      input.value = resendEmail;
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
+      const formData = new FormData();
+      formData.append("email", resendEmail);
+      resendFormAction(formData);
     }
   }, [resendEmail, resendFormAction, state.verified]);
 
