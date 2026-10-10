@@ -33,13 +33,19 @@ export function UserBanActions({ userId, isBanned, isSelf }: Props) {
     }
     setPending(true);
     setError(null);
-    const result = await setUserBanned(userId, !isBanned);
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await setUserBanned(userId, !isBanned);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      // Server action reddi: buton kilitli kalmaz, kullanıcı Türkçe uyarı görür.
+      setError("Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.");
+    } finally {
+      setPending(false);
     }
-    router.refresh();
   }
 
   return (

@@ -1,6 +1,6 @@
 "use server";
 
-import type { Listing, User } from "@prisma/client";
+import type { Listing } from "@prisma/client";
 
 import { requireAdmin } from "../../lib/auth";
 import { ok, type ActionResult } from "../../lib/result";
@@ -9,6 +9,7 @@ import {
   pauseListingCore,
   rejectListingCore,
   setUserBannedCore,
+  type BannedUser,
 } from "./service";
 
 /**
@@ -56,11 +57,14 @@ export async function pauseListing(
   return toClientResult(await pauseListingCore(admin, id));
 }
 
-/** Kullanıcı banı — oturum kapısı requireAdmin; self-ban/son-yönetici koruması service'te. */
+/**
+ * Kullanıcı banı — oturum kapısı requireAdmin; self-ban/son-yönetici koruması
+ * service'te. Yanıt `BannedUser` (passwordHash/googleId asla istemciye gitmez).
+ */
 export async function setUserBanned(
   userId: string,
   banned: boolean,
-): Promise<ActionResult<User>> {
+): Promise<ActionResult<BannedUser>> {
   const admin = await requireAdmin();
   return setUserBannedCore(admin, userId, banned);
 }

@@ -17,7 +17,7 @@ import type { SessionUser } from "../users/service";
 //    admin yetkisi BU görevde yok (T10 moderasyonu ele alır) — sıkı sahip-sadece.
 // 2. Sunucu otoriter: create her zaman `status: "DRAFT"` + `ownerId: user.id` yazar;
 //    istemciden gelen status/ownerId asla okunmaz. Durum geçişi yalnız
-//    submitListingCore (DRAFT|REJECTED → PENDING, en az 1 foto).
+//    submitListingCore (DRAFT|REJECTED|PAUSED → PENDING, en az 1 foto).
 
 const YETKI_YOK = "Bu işlem için yetkiniz yok.";
 const ILAN_BULUNAMADI = "İlan bulunamadı.";
@@ -150,7 +150,7 @@ export async function updateListingCore(
   return ok(listing);
 }
 
-/** İlan silme — yalnız sahibi. */
+/** İlan silme — yalnız sahibi. Cascade koruması: booking silinemez. */
 export async function deleteListingCore(
   user: SessionUser,
   id: string,
@@ -167,13 +167,31 @@ export async function deleteListingCore(
     return fail(YETKI_YOK); // yetkisiz girişim: mutation yok
   }
 
+  // BookingRequest.listing üzerinde ON DELETE CASCADE: düz silme, kiracının
+  // beklemede/onaylı/tamamlanmış kayıtlarını da yok eder. Bu nedenle yalnız
+  // REJECTED/CANCELLED (rezervasyonun hiç gerçekleşmediği terminal durumlar)
+  // varken silmeye izin ver; PENDING/APPROVED/COMPLETED varsa engelle.
+  const blockingBookings = await prisma.bookingRequest.count({
+    where: {
+      listingId: id,
+      status: { in: ["PENDING", "APPROVED", "COMPLETED"] },
+    },
+  });
+  if (blockingBookings > 0) {
+    return fail(
+      "İlana bağlı beklemede, onaylı veya tamamlanmış rezervasyonlar var; ilan silinemez.",
+    );
+  }
+
   const deleted = await prisma.listing.delete({ where: { id } });
   return ok(deleted);
 }
 
 /**
- * İlanı incelemeye gönderme — DRAFT|REJECTED → PENDING, en az 1 fotoğraf zorunlu.
- * Başka hiçbir durumdan bu duruma geçiş yok (ACTIVE/PAUSED/PENDING reddedilir).
+ * İlanı incelemeye gönderme — DRAFT|REJECTED|PAUSED → PENDING, en az 1 fotoğraf zorunlu.
+ * Başka hiçbir durumdan bu duruma geçiş yok (ACTIVE/PENDING reddedilir).
+ * PAUSED → PENDING, duraklatılmış ilan için TEK çıkış yoludur (admin onayıyla
+ * yeniden ACTIVE olur); e-posta kopyası "incelemeye yeniden gönderebilirsiniz" der.
  */
 export async function submitListingCore(
   user: SessionUser,
@@ -190,7 +208,14 @@ export async function submitListingCore(
   if (existing.ownerId !== user.id) {
     return fail(YETKI_YOK); // yetkisiz girişim: mutation yok
   }
-  if (existing.status !== "DRAFT" && existing.status !== "REJECTED") {
+  // PAUSED da gönderilebilir: admin duraklatan ilan sahibi yeniden incelemeye
+  // gönderebilir (PAUSED → PENDING → admin onayı → ACTIVE). Bu, PAUSED için
+  // tek çıkış yoludur; mail kopyası da buna atıf yapar.
+  if (
+    existing.status !== "DRAFT" &&
+    existing.status !== "REJECTED" &&
+    existing.status !== "PAUSED"
+  ) {
     return fail(GECERSIZ_DURUM);
   }
   if (existing.photoUrls.length < 1) {

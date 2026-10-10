@@ -137,7 +137,74 @@ it("kendi ilanını silebilir", async () => {
   expect(await prisma.listing.findUnique({ where: { id: listing.id } })).toBeNull();
 });
 
-it("submitListing DRAFT ilanı PENDING yapar; REJECTED ilan tekrar gönderilebilir", async () => {
+it("delete: beklemede/onaylı/tamamlanmış rezervasyonu olan ilan silinemez (cascade koruması)", async () => {
+  await resetDb();
+  const owner = await prisma.user.create({ data: makeUser() });
+  const renter = await prisma.user.create({ data: makeUser() });
+
+  // Her durum için ayrı ilan: PENDING, APPROVED, COMPLETED silmeyi engeller.
+  for (const [index, status] of (
+    ["PENDING", "APPROVED", "COMPLETED"] as const
+  ).entries()) {
+    const listing = await prisma.listing.create({
+      data: makeListing(owner.id, { title: `Rezervasyonlu İlan ${index}` }),
+    });
+    await prisma.bookingRequest.create({
+      data: {
+        listingId: listing.id,
+        renterId: renter.id,
+        startDate: new Date(`2030-0${index + 6}-10T00:00:00.000Z`),
+        endDate: new Date(`2030-0${index + 6}-14T00:00:00.000Z`),
+        guests: 2,
+        totalPrice: 6000,
+        status,
+      },
+    });
+
+    const result = await deleteListingCore(session(owner), listing.id);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("rezervasyon");
+    }
+    // İlan ve rezervasyon kaydı yerinde durur (mutation yok)
+    expect(
+      await prisma.listing.findUnique({ where: { id: listing.id } }),
+    ).not.toBeNull();
+    expect(
+      await prisma.bookingRequest.count({ where: { listingId: listing.id } }),
+    ).toBe(1);
+  }
+});
+
+it("delete: yalnız reddedilmiş/iptal edilmiş talepleri olan ilan silinebilir", async () => {
+  await resetDb();
+  const owner = await prisma.user.create({ data: makeUser() });
+  const renter = await prisma.user.create({ data: makeUser() });
+  const listing = await prisma.listing.create({ data: makeListing(owner.id) });
+  for (const [index, status] of (
+    ["REJECTED", "CANCELLED"] as const
+  ).entries()) {
+    await prisma.bookingRequest.create({
+      data: {
+        listingId: listing.id,
+        renterId: renter.id,
+        startDate: new Date(`2030-0${index + 6}-10T00:00:00.000Z`),
+        endDate: new Date(`2030-0${index + 6}-14T00:00:00.000Z`),
+        guests: 2,
+        totalPrice: 6000,
+        status,
+      },
+    });
+  }
+
+  const result = await deleteListingCore(session(owner), listing.id);
+
+  expect(result.ok).toBe(true);
+  expect(await prisma.listing.findUnique({ where: { id: listing.id } })).toBeNull();
+});
+
+it("submitListing DRAFT ilanı PENDING yapar; REJECTED ve PAUSED ilan tekrar gönderilebilir", async () => {
   await resetDb();
   const owner = await prisma.user.create({ data: makeUser() });
   const draft = await prisma.listing.create({
@@ -151,6 +218,14 @@ it("submitListing DRAFT ilanı PENDING yapar; REJECTED ilan tekrar gönderilebil
       status: "REJECTED",
       rejectionReason: "Fotoğraf kalitesi düşük",
       photoUrls: ["https://cdn.karavan.test/ilan/2.jpg"],
+    }),
+  });
+  // PAUSED → PENDING: duraklatılmış ilanın TEK çıkış yolu sahip submit'idir
+  // (geniş inceleme düzeltmesi — e-posta kopyası bu akışa atıf yapar).
+  const paused = await prisma.listing.create({
+    data: makeListing(owner.id, {
+      status: "PAUSED",
+      photoUrls: ["https://cdn.karavan.test/ilan/3.jpg"],
     }),
   });
 
@@ -167,6 +242,12 @@ it("submitListing DRAFT ilanı PENDING yapar; REJECTED ilan tekrar gönderilebil
   });
   expect(rejectedSaved.status).toBe("PENDING");
   expect(rejectedSaved.rejectionReason).toBeNull(); // eski gerekçe temizlenir
+
+  const pausedResult = await submitListingCore(session(owner), paused.id);
+  expect(pausedResult.ok).toBe(true);
+  expect(
+    (await prisma.listing.findUniqueOrThrow({ where: { id: paused.id } })).status,
+  ).toBe("PENDING");
 });
 
 it("fotoğrafsız submit fail döner, ilan DRAFT kalır", async () => {
@@ -206,7 +287,7 @@ it("geçersiz ilan id'si (çöp/metin) Prisma'ya ulaşmadan fail döner", async 
   }
 });
 
-it("submitListing yalnız DRAFT/REJECTED ilanı gönderir (ACTIVE yeniden gönderilemez)", async () => {
+it("submitListing yalnız DRAFT/REJECTED/PAUSED ilanı gönderir (ACTIVE yeniden gönderilemez)", async () => {
   await resetDb();
   const owner = await prisma.user.create({ data: makeUser() });
   const active = await prisma.listing.create({

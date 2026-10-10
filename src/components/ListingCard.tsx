@@ -2,6 +2,7 @@ import type { Listing } from "@prisma/client";
 import Link from "next/link";
 
 import { VEHICLE_TYPE_LABELS } from "../lib/labels";
+import { formatTRY } from "../lib/format";
 
 // İlan kartı — sunucu bileşeni (state yok). `nightlyPrice` Prisma Decimal'dir;
 // Number() ile SAYI olarak render edilir (Decimal objesi asla DOM'a gitmez).
@@ -58,7 +59,7 @@ export function ListingCard({ listing, stay }: ListingCardProps) {
             {location} · {subtitle}
           </p>
           <p className="mt-2 text-sm">
-            <span className="font-bold text-gray-900">{price} ₺</span>
+            <span className="font-bold text-gray-900">{formatTRY(price)}</span>
             <span className="text-gray-500"> / gece</span>
           </p>
         </div>

@@ -15,10 +15,12 @@ import type { SessionUser } from "../users/service";
 //   ACTIVE   → PAUSED    (pauseListingCore)
 //   REJECTED → PENDING   (yalnız ilan sahibinin T6 submitListingCore akışı)
 //   DRAFT    → PENDING   (yalnız ilan sahibinin T6 submitListingCore akışı)
+//   PAUSED   → PENDING   (yalnız ilan sahibinin T6 submitListingCore akışı —
+//                          PAUSED'ın TEK çıkış yolu; geniş inceleme düzeltmesi)
 // Matriste olmayan her geçiş (ör. DRAFT → ACTIVE, ACTIVE → ACTIVE,
-// PAUSED → REJECTED) fail döner ve HİÇ mutation olmaz. "Duraklatmayı
-// kaldır"/yeniden yayına alma bilinçli olarak YOK — sahibinin yeniden
-// gönderim akışına bırakıldı.
+// PAUSED → ACTIVE) fail döner ve HİÇ mutation olmaz. "Duraklatmayı
+// kaldır" admin yetkisi YOK — yeniden yayına alma, sahibinin yeniden
+// gönderimi + admin onayı üzerinden yürür.
 //
 // Yetki matrisi: dört işlem de YALNIZ admin (action katmanı requireAdmin ile
 // oturum kapısı uygular; service'te role ayrıca doğrulanır — savunma derinliği).
@@ -43,6 +45,17 @@ const GEREKCE_UZUN = "Gerekçe en fazla 1000 karakter olabilir.";
 const KENDI_HESABI = "Kendi hesabınızı engelleyemezsiniz.";
 const SON_AKTIF_YONETICI = "Sistemdeki son aktif yöneticiyi engelleyemezsiniz.";
 const ISLEM_BASARISIZ = "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
+
+/**
+ * Ban eyleminin istemciye döndüğü azaltılmış görünüm — `passwordHash`
+ * (offline kaba-kuvvet malzemesi) ve `googleId` ASLA action yanıtına girmez.
+ * İstemci (UserBanActions) yalnız `ok/error` kullanır; alanlar gelecek
+ * admin UI'ı içindir.
+ */
+export type BannedUser = Pick<
+  User,
+  "id" | "name" | "email" | "role" | "isBanned"
+>;
 
 // Prisma @default(cuid()) id deseni — bozuk id Prisma'ya ulaşmadan reddedilir.
 const CUID_RE = /^c[a-z0-9]{24}$/;
@@ -239,7 +252,7 @@ export async function setUserBannedCore(
   admin: SessionUser,
   userId: string,
   banned: boolean,
-): Promise<ActionResult<User>> {
+): Promise<ActionResult<BannedUser>> {
   if (admin.role !== "ADMIN") {
     return fail(YETKI_YOK);
   }
@@ -256,14 +269,14 @@ export async function setUserBannedCore(
   const updated = await prisma.$transaction(async (tx) => {
     const fresh = await tx.user.findUnique({ where: { id: userId } });
     if (!fresh) {
-      return fail<User>(KULLANICI_BULUNAMADI);
+      return fail<BannedUser>(KULLANICI_BULUNAMADI);
     }
     if (banned && fresh.role === "ADMIN" && !fresh.isBanned) {
       const activeAdmins = await tx.user.count({
         where: { role: "ADMIN", isBanned: false },
       });
       if (activeAdmins <= 1) {
-        return fail<User>(SON_AKTIF_YONETICI); // mutation yok
+        return fail<BannedUser>(SON_AKTIF_YONETICI); // mutation yok
       }
     }
     // updateMany + id filtresi: satır bu arada silinmişse P2025 fırlatmak yerine
@@ -273,9 +286,22 @@ export async function setUserBannedCore(
       data: { isBanned: banned },
     });
     if (res.count === 0) {
-      return fail<User>(KULLANICI_BULUNAMADI);
+      return fail<BannedUser>(KULLANICI_BULUNAMADI);
     }
-    return ok(await tx.user.findUniqueOrThrow({ where: { id: userId } }));
+    // İstemciye GİDEN tek okuma: passwordHash/googleId ASLA seçilmez —
+    // bcrypt hash'i (offline kaba-kuvvet malzemesi) action yanıtına sızmaz.
+    return ok(
+      await tx.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isBanned: true,
+        },
+      }),
+    );
   });
   return updated;
 }

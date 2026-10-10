@@ -10,7 +10,8 @@ import {
   VEHICLE_TYPE_LABELS,
 } from "../../../lib/labels";
 import { prisma } from "../../../lib/prisma";
-import { calculateNights, calculateTotalPrice } from "../../../lib/pricing";
+import { formatTRY } from "../../../lib/format";
+import { validateStay } from "../../../lib/stay";
 import { parseSearchParams } from "../../../server/listings/search";
 import { PhotoGallery } from "../../../components/PhotoGallery";
 import { BookingRequestForm } from "./BookingRequestForm";
@@ -58,17 +59,28 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
   const user = await getSessionUser();
   const nightlyPrice = Number(listing.nightlyPrice);
 
-  // Konaklama tarihleri URL'den (search.ts ile AYNI doğrulama — ikisi birlikte
-  // ve baslangic < bitis geçerliyse fiyat özeti gösterilir).
+  // Konaklama tarihleri URL'den. Fiyat özeti formun AYNI kurallarını kullanır
+  // (validateStay): URL'yle 30 geceden uzun, geçmiş veya minimum-altı tarih
+  // verilirse kitaplanamayacak toplam ASLA gösterilmez — özet ile talep formu
+  // asla çelişmez (geniş inceleme düzeltmesi).
+  // guests: 1 — banner misafir sayısına bağlı değil; misafir kuralı yalnız
+  // talep formunda uygulanır (1 her zaman capacity'nin altındadır).
   const parsed = parseSearchParams(query);
-  const stayNights =
+  const stayCheck =
     parsed.baslangic && parsed.bitis
-      ? calculateNights(parsed.baslangic, parsed.bitis)
+      ? validateStay(
+          {
+            minRentalDays: listing.minRentalDays,
+            capacity: listing.capacity,
+          },
+          { startDate: parsed.baslangic, endDate: parsed.bitis, guests: 1 },
+          listing.nightlyPrice,
+        )
       : null;
+  const stayNights =
+    stayCheck && stayCheck.ok ? stayCheck.data.nights : null;
   const stayTotal =
-    stayNights !== null
-      ? Number(calculateTotalPrice(stayNights, listing.nightlyPrice))
-      : null;
+    stayCheck && stayCheck.ok ? Number(stayCheck.data.totalPrice) : null;
 
   const location = [listing.city, listing.district].filter(Boolean).join(" · ");
   const brandModel = [listing.brand, listing.model].filter(Boolean).join(" ");
@@ -210,11 +222,11 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
                       {parsed.baslangic} → {parsed.bitis}
                     </p>
                     <p className="mt-2 text-sm text-gray-700">
-                      {nightlyPrice} ₺ × {stayNights} gece
+                      {formatTRY(nightlyPrice)} × {stayNights} gece
                     </p>
                     <p className="mt-1">
                       <span className="text-xl font-bold text-gray-900">
-                        {stayTotal} ₺
+                        {formatTRY(stayTotal)}
                       </span>
                       <span className="text-sm text-gray-500"> toplam</span>
                     </p>
@@ -223,7 +235,7 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
                   <div>
                     <p>
                       <span className="text-2xl font-bold text-gray-900">
-                        {nightlyPrice} ₺
+                        {formatTRY(nightlyPrice)}
                       </span>
                       <span className="text-sm text-gray-500"> / gece</span>
                     </p>

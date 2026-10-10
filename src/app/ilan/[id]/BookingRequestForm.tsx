@@ -112,19 +112,26 @@ export function BookingRequestForm({
     setPending(true);
     setError(null);
     setSuccess(false);
-    const result = await createBooking({
-      listingId,
-      startDate,
-      endDate,
-      guests: Number(guests),
-      message: message.trim() ? message.trim() : undefined,
-    });
-    setPending(false);
-    if (!result.ok) {
-      setError({ message: result.error, field: result.field });
-      return;
+    try {
+      const result = await createBooking({
+        listingId,
+        startDate,
+        endDate,
+        guests: Number(guests),
+        message: message.trim() ? message.trim() : undefined,
+      });
+      if (!result.ok) {
+        setError({ message: result.error, field: result.field });
+        return;
+      }
+      setSuccess(true);
+    } catch {
+      // Server action'ın reddedilmesi (ağ hatası/serileştirme/sunucu throw):
+      // buton kilitli kalmaz, kullanıcı Türkçe uyarı görür.
+      setError({ message: "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin." });
+    } finally {
+      setPending(false);
     }
-    setSuccess(true);
   }
 
   return (

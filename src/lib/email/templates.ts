@@ -105,7 +105,7 @@ const LISTING_STATUS_TEXT: Record<
   },
   PAUSED: {
     heading: "İlanınız duraklatıldı",
-    body: "ilanınız duraklatıldı; dilediğinizde tekrar yayına alabilirsiniz.",
+    body: "ilanınız duraklatıldı; ilanlarım sayfasından incelemeye yeniden gönderebilirsiniz.",
   },
 };
 

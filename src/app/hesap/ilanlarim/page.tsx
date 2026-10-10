@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ListingStatus } from "@prisma/client";
 
 import { requireUser } from "../../../lib/auth";
+import { formatTRY } from "../../../lib/format";
 import { prisma } from "../../../lib/prisma";
 import { AccountNav } from "../../../components/AccountNav";
 import { ListingActions } from "./ListingActions";
@@ -82,8 +83,8 @@ export default async function IlanlarimPage() {
                       {listing.title}
                     </h2>
                     <p className="mt-1 text-sm text-gray-600">
-                      {listing.city} · {Number(listing.nightlyPrice)} ₺/gece ·{" "}
-                      {listing.capacity} kişi
+                      {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
+                      /gece · {listing.capacity} kişi
                     </p>
                   </div>
                   <span

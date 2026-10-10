@@ -21,19 +21,28 @@ export function ListingActions({ listingId, status }: Props) {
   const [pending, setPending] = useState<"submit" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Yalnız DRAFT/REJECTED incelemeye gönderilebilir (service ile aynı kural).
-  const canSubmit = status === "DRAFT" || status === "REJECTED";
+  /** Yalnız DRAFT/REJECTED/PAUSED incelemeye gönderilebilir (service ile aynı kural). */
+  const canSubmit =
+    status === "DRAFT" || status === "REJECTED" || status === "PAUSED";
+
+  // Server action reddi (ağ/serileştirme/sunucu throw) için ortak TR mesajı.
+  const HATA = "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
 
   async function handleSubmit() {
     setPending("submit");
     setError(null);
-    const result = await submitListing(listingId);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await submitListing(listingId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(HATA);
+    } finally {
+      setPending(null);
     }
-    router.refresh();
   }
 
   async function handleDelete() {
@@ -45,13 +54,18 @@ export function ListingActions({ listingId, status }: Props) {
     }
     setPending("delete");
     setError(null);
-    const result = await deleteListing(listingId);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await deleteListing(listingId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(HATA);
+    } finally {
+      setPending(null);
     }
-    router.refresh();
   }
 
   return (
@@ -66,7 +80,7 @@ export function ListingActions({ listingId, status }: Props) {
           >
             {pending === "submit"
               ? "Gönderiliyor…"
-              : status === "REJECTED"
+              : status === "REJECTED" || status === "PAUSED"
                 ? "Tekrar Gönder"
                 : "Gönder"}
           </button>

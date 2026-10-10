@@ -179,9 +179,9 @@ it("approve: matriste olmayan geçişler fail, mutation yok, email yok", async (
     data: makeListing(owner.id, { status: "REJECTED" }),
   });
 
-  // DRAFT → ACTIVE yok; ACTIVE → ACTIVE yok; PAUSED → ACTIVE yok (yeniden
-  // yayına alma ilan sahibinin submit akışında); REJECTED → ACTIVE yok
-  // (düzeltme + yeniden gönderim zorunlu).
+  // DRAFT → ACTIVE yok; ACTIVE → ACTIVE yok; PAUSED → ACTIVE yok (sahip
+  // submit ile PAUSED → PENDING olur, yeniden yayına ALIM admin onayındadır);
+  // REJECTED → ACTIVE yok (düzeltme + yeniden gönderim zorunlu).
   for (const listing of [draft, active, paused, rejected]) {
     const result = await approveListingCore(adminSession(admin), listing.id);
     expect(result.ok).toBe(false);
@@ -397,6 +397,20 @@ it("ban: isBanned=true → verifyCredentials null döner; ban açınca tekrar gi
 
   const ban = await setUserBannedCore(adminSession(admin), member.id, true);
   expect(ban.ok).toBe(true);
+  // Geniş inceleme düzeltmesi: yanıt azaltılmış DTO — passwordHash/googleId
+  // action yanıtına asla sızmaz (bcrypt hash'i offline kaba kuvvet malzemesi).
+  if (ban.ok) {
+    expect(ban.data.isBanned).toBe(true);
+    expect(ban.data).not.toHaveProperty("passwordHash");
+    expect(ban.data).not.toHaveProperty("googleId");
+    expect(Object.keys(ban.data).sort()).toEqual([
+      "email",
+      "id",
+      "isBanned",
+      "name",
+      "role",
+    ]);
+  }
   expect(
     (await prisma.user.findUniqueOrThrow({ where: { id: member.id } })).isBanned,
   ).toBe(true);

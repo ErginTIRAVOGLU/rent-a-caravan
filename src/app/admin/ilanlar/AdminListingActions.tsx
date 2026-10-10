@@ -29,16 +29,24 @@ export function AdminListingActions({ listingId, status }: Props) {
   );
   const [error, setError] = useState<string | null>(null);
 
+  // Server action reddi (ağ/serileştirme/sunucu throw) için ortak TR mesajı.
+  const HATA = "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
+
   async function handleApprove() {
     setPending("approve");
     setError(null);
-    const result = await approveListing(listingId);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await approveListing(listingId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(HATA);
+    } finally {
+      setPending(null);
     }
-    router.refresh();
   }
 
   async function handleReject() {
@@ -48,13 +56,18 @@ export function AdminListingActions({ listingId, status }: Props) {
     }
     setPending("reject");
     setError(null);
-    const result = await rejectListing(listingId, reason);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await rejectListing(listingId, reason);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(HATA);
+    } finally {
+      setPending(null);
     }
-    router.refresh();
   }
 
   async function handlePause() {
@@ -66,13 +79,18 @@ export function AdminListingActions({ listingId, status }: Props) {
     }
     setPending("pause");
     setError(null);
-    const result = await pauseListing(listingId);
-    setPending(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await pauseListing(listingId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(HATA);
+    } finally {
+      setPending(null);
     }
-    router.refresh();
   }
 
   return (
