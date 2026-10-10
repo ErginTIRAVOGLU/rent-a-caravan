@@ -169,7 +169,24 @@ export async function linkGoogleUser(
     });
     return ok(toSessionUser(user));
   } catch (error) {
+    // Yarış durumunda da aynı Türkçe/alan hatası (unique index P2002).
+    // Ayrıştır: e-posta mı googleId mi çakıştı? googleId çakışması, kullanıcının
+    // Google e-postası değişmiş demektir → o satırı güncelle (aksi halde kalıcı
+    // giriş engeli olurdu). E-posta çakışması gerçek "zaten kayıtlı"dır.
     if (isDuplicateEmailError(error)) {
+      const conflict = await prisma.user.findUnique({
+        where: { googleId: profile.googleId },
+      });
+      if (conflict) {
+        if (conflict.isBanned) {
+          return fail("Bu hesap askıya alınmış.");
+        }
+        const updated = await prisma.user.update({
+          where: { id: conflict.id },
+          data: { email, name: profile.name.trim() || conflict.name, avatarUrl: profile.avatarUrl ?? conflict.avatarUrl },
+        });
+        return ok(toSessionUser(updated));
+      }
       return fail("Bu e-posta adresi zaten kayıtlı.", "email");
     }
     throw error;

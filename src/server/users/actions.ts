@@ -52,12 +52,12 @@ export async function loginAction(
   }
 
   try {
+    // Başarıda `signIn` NEXT_REDIRECT fırlatır ve hiç dönmez.
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
       redirectTo: safeCallbackUrl(formDataValue(formData, "callbackUrl")),
     });
-    return { error: null };
   } catch (error) {
     if (error instanceof CredentialsSignin) {
       // Yanlış şifre, bilinmeyen e-posta ve banlı hesap aynı genel mesajda
@@ -66,6 +66,9 @@ export async function loginAction(
     }
     throw error;
   }
+  // signIn başarıda asla dönmez (NEXT_REDIRECT fırlatır); ulaşılamaz ama
+  // tip sözleşmesini (Promise<LoginState>) korumak için savunma fırlatırız.
+  throw new Error("Beklenmedik durum: signIn dönüşü tamamlanamadı.");
 }
 
 /**
