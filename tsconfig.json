@@ -20,5 +20,8 @@
     ]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  // designs/ bağımsız mockup projeleri: kendi package.json + tsconfig'leri var,
+  // root bağımlılıklarıyla derlenemezler (lucide-react vb. root'ta yok).
+  // Include deseni (`**/*.tsx`) bunları yutmasın diye burada dışlanır.
+  "exclude": ["node_modules", "designs"]
 }

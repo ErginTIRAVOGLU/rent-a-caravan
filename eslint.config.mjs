@@ -19,6 +19,8 @@ const eslintConfig = [
       "coverage/**",
       ".worktrees/**",
       ".superpowers/**",
+      // Bağımsız mockup projeleri (kendi eslint/tsconfig'leriyle) — bkz. tsconfig.json.
+      "designs/**",
       // next build/dev bu dosyayı her seferinde yeniden üretir; triple-slash
       // referansları eslint kuralını tetikler → kalıcı olarak yok say.
       "next-env.d.ts",
