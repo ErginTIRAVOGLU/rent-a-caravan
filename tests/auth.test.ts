@@ -2,6 +2,7 @@ import { compare } from "bcryptjs";
 import { expect, it } from "vitest";
 
 import { prisma } from "../src/lib/prisma";
+import { refreshUserClaims } from "../src/server/auth/claims";
 import {
   linkGoogleUser,
   registerUser,
@@ -143,4 +144,79 @@ it("linkGoogleUser: banlı hesap fail döner (oturum kurulmaz)", async () => {
   if (!result.ok) {
     expect(result.error).toBe("Bu hesap askıya alınmış.");
   }
+});
+
+it("refreshUserClaims: banlı kullanıcı için null döner (oturum geçersiz)", async () => {
+  await resetDb();
+  const created = await prisma.user.create({ data: makeUser() });
+
+  // Token'ın sub'ı kullanıcı ID'si ile
+  const token = { sub: created.id, role: "USER" as const, isBanned: false };
+
+  // İlk çağrı - kullanıcı banlı değil
+  const result1 = await refreshUserClaims(token);
+  expect(result1).not.toBeNull();
+  expect(result1?.isBanned).toBe(false);
+
+  // Kullanıcıyı banla
+  await prisma.user.update({
+    where: { id: created.id },
+    data: { isBanned: true },
+  });
+
+  // Sonraki çağrı - token yenilenmeli ve null dönmeli (banlı kullanıcı için)
+  const result2 = await refreshUserClaims(token);
+  expect(result2).toBeNull();
+});
+
+it("refreshUserClaims: admin yetkisi alındığında USER rolü döner", async () => {
+  await resetDb();
+  const created = await prisma.user.create({
+    data: makeUser({ role: "ADMIN" }),
+  });
+
+  // Token'ın sub'ı kullanıcı ID'si ile
+  const token = { sub: created.id, role: "ADMIN" as const, isBanned: false };
+
+  // İlk çağrı - kullanıcı ADMIN
+  const result1 = await refreshUserClaims(token);
+  expect(result1).not.toBeNull();
+  expect(result1?.role).toBe("ADMIN");
+
+  // Kullanıcının yetkisini düşür
+  await prisma.user.update({
+    where: { id: created.id },
+    data: { role: "USER" },
+  });
+
+  // Sonraki çağrı - token yenilenmeli ve USER rolü dönmeli
+  const result2 = await refreshUserClaims(token);
+  expect(result2).not.toBeNull();
+  expect(result2?.role).toBe("USER");
+});
+
+it("refreshUserClaims: silinmiş kullanıcı için null döner", async () => {
+  await resetDb();
+  const created = await prisma.user.create({ data: makeUser() });
+
+  const token = { sub: created.id, role: "USER" as const, isBanned: false };
+
+  // Kullanıcıyı sil
+  await prisma.user.delete({ where: { id: created.id } });
+
+  // Sonraki çağrı - token yenilenmeli ve null dönmeli (kullanıcı yok)
+  const result = await refreshUserClaims(token);
+  expect(result).toBeNull();
+});
+
+it("refreshUserClaims: sub olmayan token aynen döner", async () => {
+  const token = { role: "USER" as const, isBanned: false };
+
+  const result = await refreshUserClaims(token);
+  expect(result).toBe(token);
+});
+
+it("refreshUserClaims: null token null döner", async () => {
+  const result = await refreshUserClaims(null);
+  expect(result).toBeNull();
 });

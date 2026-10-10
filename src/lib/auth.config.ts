@@ -26,6 +26,7 @@ declare module "@auth/core/jwt" {
     id?: string;
     role?: "USER" | "ADMIN";
     isBanned?: boolean;
+    emailVerified?: Date | null;
   }
 }
 
@@ -68,7 +69,7 @@ function withSessionUser(session: Session, token: JWT): Session {
  */
 export const authConfig = {
   trustHost: true,
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
   pages: { signIn: "/giris", error: "/giris" },
   // Google: fonksiyon referansı olarak — clientId/secret AUTH_GOOGLE_ID/
   // AUTH_GOOGLE_SECRET ortam değişkenlerinden Auth.js tarafından doldurulur.

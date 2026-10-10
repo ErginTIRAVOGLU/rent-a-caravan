@@ -8,7 +8,8 @@ import {
   type SessionUser,
 } from "../server/users/service";
 import { applyUserClaims, authConfig } from "./auth.config";
-import { loginSchema } from "./validators/auth";
+import { loginSchema } from "../lib/validators/auth";
+import { refreshUserClaims } from "../server/auth/claims";
 
 export type { SessionUser };
 
@@ -37,7 +38,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       // Google ile giriş: profil DB'ye bağlanır ki `SessionUser.id` her zaman
       // gerçek User.id (cuid) olsun; banlı/çakışan hesapta oturum kurulmaz.
       if (user && account?.provider === "google") {
@@ -58,7 +59,16 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.isBanned = linked.data.isBanned;
         return token;
       }
-      // Credentials (ve oturum yenilemeleri): id/role/isBanned iddiaları.
+      // Her sunucu tarafı auth() çağrısında (trigger === undefined veya 'update')
+      // kullanıcı iddialarını DB'den yenile.
+      if (trigger !== "signIn") {
+        const refreshed = await refreshUserClaims(token);
+        if (refreshed === null) {
+          return null;
+        }
+        return refreshed;
+      }
+      // Credentials ilk giriş: id/role/isBanded iddiaları.
       return applyUserClaims(token, user);
     },
   },
