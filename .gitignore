@@ -22,3 +22,6 @@ coverage/
 # IDE
 .vscode/
 .idea/
+
+# OpenChamber ekran goruntuleri (oturum kaniti)
+.openchamber/
