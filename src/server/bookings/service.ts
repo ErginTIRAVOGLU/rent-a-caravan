@@ -3,6 +3,7 @@ import type { BookingRequest } from "@prisma/client";
 
 import { findApprovedOverlap } from "../../lib/availability";
 import {
+  sendBookingCompleted,
   sendBookingRequested,
   sendBookingStatusChanged,
 } from "../../lib/email/events";
@@ -87,6 +88,22 @@ async function notifyStatusChanged(
     });
   } catch {
     // E-posta hatası action'ı düşürmez; karar zaten commit edildi.
+  }
+}
+
+/**
+ * Tamamlanma e-postası (T11): kiracıya ilan bağlantısıyla değerlendirme daveti.
+ * sendBookingCompleted kendi try/catch'inde asla reject olmaz — yine de
+ * sözleşme burada da korunur: gönderim hatası tamamlamayı düşüremez.
+ */
+async function notifyCompleted(booking: {
+  listingId: string;
+  renter: { email: string };
+}): Promise<void> {
+  try {
+    await sendBookingCompleted(booking.renter.email, booking.listingId);
+  } catch {
+    // E-posta hatası çalıştırmayı düşürmez; kayıt zaten COMPLETED yazıldı.
   }
 }
 
@@ -375,7 +392,6 @@ export async function completeDueBookings(now: Date = new Date()): Promise<numbe
   const due = await prisma.bookingRequest.findMany({
     where: { status: "APPROVED", endDate: { lt: today } },
     include: {
-      listing: { select: { title: true } },
       renter: { select: { email: true } },
     },
   });
@@ -390,8 +406,9 @@ export async function completeDueBookings(now: Date = new Date()): Promise<numbe
       continue; // diğer çalıştırma kazandı: tekrar tamamlanmaz/postalanmaz
     }
     completed += 1;
-    // T5 şablonu yalnız ONAY/RET bilir; konaklama ONAYLIydı ve tamamlandı.
-    await notifyStatusChanged(booking, "APPROVED");
+    // Konaklama bitti: kiracıya ilan bağlantısıyla değerlendirme daveti.
+    // T5 şablonları yalnız ONAY/RET bilir; tamamlanma için ayrı şablon var.
+    await notifyCompleted(booking);
   }
   return completed;
 }

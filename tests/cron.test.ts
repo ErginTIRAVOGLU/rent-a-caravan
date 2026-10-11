@@ -12,12 +12,16 @@ const digestSpy = vi.hoisted(() => vi.fn());
 vi.mock("../src/lib/email/events", () => ({
   sendBookingRequested: vi.fn(),
   sendBookingStatusChanged: vi.fn(),
+  sendBookingCompleted: vi.fn(),
   sendDailyDigest: digestSpy,
 }));
 
 import { GET } from "../src/app/api/cron/complete-bookings/route";
 import { GET as GET_DIGEST } from "../src/app/api/cron/digest/route";
-import { sendBookingStatusChanged } from "../src/lib/email/events";
+import {
+  sendBookingCompleted,
+  sendBookingStatusChanged,
+} from "../src/lib/email/events";
 import { prisma } from "../src/lib/prisma";
 import { completeDueBookings } from "../src/server/bookings/service";
 import { makeListing, makeUser, resetDb } from "./helpers/db";
@@ -128,17 +132,16 @@ it("bitiş tarihi geçen APPROVED kayıtları COMPLETED yapar, sayıyı döner",
   });
   expect(statuses.map((r) => r.status)).toEqual(["COMPLETED", "COMPLETED"]);
 
-  // Kiracı başına birer e-posta, doğru alıcı ve veriyle.
-  expect(sendBookingStatusChanged).toHaveBeenCalledTimes(2);
-  const calls = vi.mocked(sendBookingStatusChanged).mock.calls;
+  // Tamamlanan HER kayıt için kiracıya birer e-posta: doğru alıcı ve ilan.
+  expect(sendBookingCompleted).toHaveBeenCalledTimes(2);
+  expect(sendBookingStatusChanged).not.toHaveBeenCalled(); // ONAY/RET şablonu tamamlamada kullanılmaz
+  const calls = vi.mocked(sendBookingCompleted).mock.calls;
   expect(calls.map(([to]) => to).sort()).toEqual(
     [a.renter.email, b.renter.email].sort(),
   );
-  const [, data] = calls[0];
-  expect(data.status).toBe("APPROVED"); // T5 şablonu yalnız ONAY/RET bilir
-  expect(data.startDate).toBeInstanceOf(Date); // @db.Date UTC gece yarısı
-  expect(data.endDate).toBeInstanceOf(Date);
-  expect(data.listingTitle).toBe("Test İlanı");
+  expect(calls.map(([, listingId]) => listingId).sort()).toEqual(
+    [a.listing.id, b.listing.id].sort(),
+  );
 });
 
 it("endDate'i bugün/ileri olan APPROVED kayıtlarına dokunmaz", async () => {
@@ -163,6 +166,7 @@ it("endDate'i bugün/ileri olan APPROVED kayıtlarına dokunmaz", async () => {
     });
     expect(saved.status).toBe("APPROVED");
   }
+  expect(sendBookingCompleted).not.toHaveBeenCalled();
   expect(sendBookingStatusChanged).not.toHaveBeenCalled();
 });
 
@@ -198,6 +202,7 @@ it("geçmiş tarihli PENDING/CANCELLED/REJECTED kayıtlara dokunmaz", async () =
     });
     expect(saved.status).toBe(status);
   }
+  expect(sendBookingCompleted).not.toHaveBeenCalled();
   expect(sendBookingStatusChanged).not.toHaveBeenCalled();
 });
 
@@ -216,11 +221,11 @@ it("COMPLETED kayıt ikinci çalıştırmada tekrar sayılmaz", async () => {
 
   const first = await completeDueBookings(NOW);
   expect(first).toBe(1);
-  expect(sendBookingStatusChanged).toHaveBeenCalledTimes(1);
+  expect(sendBookingCompleted).toHaveBeenCalledTimes(1);
 
   const second = await completeDueBookings(NOW);
   expect(second).toBe(0);
-  expect(sendBookingStatusChanged).toHaveBeenCalledTimes(1); // e-posta tekrarı yok
+  expect(sendBookingCompleted).toHaveBeenCalledTimes(1); // e-posta tekrarı yok
   const saved = await prisma.bookingRequest.findUniqueOrThrow({
     where: { id: due.booking.id },
   });
@@ -234,17 +239,27 @@ it("e-posta hatası çalıştırmayı düşürmez — kayıt COMPLETED kalır", 
     startDate: "2026-05-01",
     endDate: "2026-05-05",
   });
-  vi.mocked(sendBookingStatusChanged).mockImplementationOnce(() => {
+  const other = await seedBooking({
+    status: "APPROVED",
+    startDate: "2026-05-01",
+    endDate: "2026-05-05",
+  });
+  vi.mocked(sendBookingCompleted).mockImplementationOnce(() => {
     throw new Error("SMTP kapalı");
   });
 
   const count = await completeDueBookings(NOW);
 
-  expect(count).toBe(1);
+  expect(count).toBe(2); // ilk gönderim hatası diğerlerini engellemez
   const saved = await prisma.bookingRequest.findUniqueOrThrow({
     where: { id: due.booking.id },
   });
   expect(saved.status).toBe("COMPLETED");
+  const otherSaved = await prisma.bookingRequest.findUniqueOrThrow({
+    where: { id: other.booking.id },
+  });
+  expect(otherSaved.status).toBe("COMPLETED");
+  expect(sendBookingCompleted).toHaveBeenCalledTimes(2);
 });
 
 // ---------------------------------------------------------------------------
@@ -274,6 +289,7 @@ it("yanlış/eksik CRON_SECRET → 401", async () => {
   expect(bareToken.status).toBe(401);
 
   // Doğrulama reddedilmeden hiçbir iş yapılmaz.
+  expect(sendBookingCompleted).not.toHaveBeenCalled();
   expect(sendBookingStatusChanged).not.toHaveBeenCalled();
 });
 
@@ -295,7 +311,8 @@ it("doğru Bearer → 200 ve { completed } döner, bitmiş kaydı kapatır", asy
 
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual({ completed: 1 });
-  expect(sendBookingStatusChanged).toHaveBeenCalledTimes(1);
+  expect(sendBookingCompleted).toHaveBeenCalledTimes(1);
+  expect(sendBookingStatusChanged).not.toHaveBeenCalled();
 });
 
 // ---------------------------------------------------------------------------

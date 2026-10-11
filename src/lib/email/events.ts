@@ -1,6 +1,7 @@
 import { resendClient } from "./client";
 import type { EmailClient } from "./client";
 import {
+  bookingCompletedTemplate,
   bookingRequestedTemplate,
   bookingStatusChangedTemplate,
   DIGEST_MAX_CONVERSATIONS,
@@ -72,6 +73,40 @@ export async function sendRegisterVerify(
     await client.send(registerVerifyTemplate(to, { verifyUrl, expiryHours: 24 }));
   } catch (error) {
     console.error("[email] sendRegisterVerify gönderimi başarısız:", error);
+  }
+}
+
+/**
+ * Konaklama tamamlandı bildirimi (T11 cron'u): kiracıya ilan sayfası
+ * bağlantısıyla birlikte değerlendirme daveti gönderir. İlan başlığı
+ * DB'den okunur. Hata ana akışı düşürmez (try/catch ile sarılır).
+ */
+export async function sendBookingCompleted(
+  to: string,
+  listingId: string,
+  client: EmailClient = resendClient,
+): Promise<void> {
+  try {
+    const listing = await prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing) {
+      console.error(
+        "[email] sendBookingCompleted: ilan bulunamadı:",
+        listingId,
+      );
+      return;
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    await client.send(
+      bookingCompletedTemplate(to, {
+        listingTitle: listing.title,
+        listingUrl: `${baseUrl}/ilan/${listingId}`,
+      }),
+    );
+  } catch (error) {
+    console.error("[email] sendBookingCompleted gönderimi başarısız:", error);
   }
 }
 

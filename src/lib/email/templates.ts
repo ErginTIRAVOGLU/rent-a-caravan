@@ -25,6 +25,13 @@ export interface ListingStatusChangedData {
   reason?: string;
 }
 
+/** Tamamlanan konaklamada (T11 cron'u) kiracıya gönderilen değerlendirme daveti. */
+export interface BookingCompletedData {
+  listingTitle: string;
+  /** İlan sayfası: `${NEXT_PUBLIC_APP_URL}/ilan/${listingId}`. */
+  listingUrl: string;
+}
+
 // Prisma `DateTime @db.Date` → UTC gece yarısı; tr-TR gösterimi DD.MM.YYYY.
 function formatDate(value: Date): string {
   const dd = String(value.getUTCDate()).padStart(2, "0");
@@ -89,6 +96,28 @@ export function bookingStatusChangedTemplate(
     lines.push(`Gerekçe: ${escapeHtml(data.reason)}`);
   }
   return { to, subject: heading, html: layout(heading, lines) };
+}
+
+/**
+ * Kiracıya: konaklama tamamlandı + değerlendirme daveti (T5 şablonları yalnız
+ * ONAY/RET bilir; tamamlanma için ayrı şablon gerekir). İlan başlığı kullanıcı
+ * verisidir — escapeHtml ile kaçırılır; bağlantı ilan sayfasına gider.
+ */
+export function bookingCompletedTemplate(
+  to: string,
+  data: BookingCompletedData,
+): EmailMessage {
+  const heading = "Konaklama tamamlandı — deneyiminizi değerlendirin";
+  return {
+    to,
+    subject: heading,
+    html: layout(heading, [
+      "Sayın kullanıcımız,",
+      `${escapeHtml(data.listingTitle)} karavanındaki konaklamanız tamamlandı. Umarız güzel zaman geçirmişsinizdir.`,
+      "Deneyiminizi paylaşarak diğer kullanıcıların doğru seçim yapmasına yardımcı olabilirsiniz:",
+      `<p style="font-size: 15px;"><a href="${escapeHtml(data.listingUrl)}" style="color: #2563eb;">İlanı görüntüle ve değerlendir</a></p>`,
+    ]),
+  };
 }
 
 const LISTING_STATUS_TEXT: Record<
