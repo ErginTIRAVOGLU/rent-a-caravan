@@ -1,31 +1,17 @@
 import type { Metadata } from "next";
-import type { ListingStatus } from "@prisma/client";
+import Link from "next/link";
 
 import { formatTRY } from "../../../lib/format";
 import { prisma } from "../../../lib/prisma";
 import { AdminListingActions } from "./AdminListingActions";
+import { STATUS_BADGES, STATUS_LABELS } from "./listing-status";
 
 export const metadata: Metadata = {
   title: "İlanlar",
 };
 
-// Durum rozetleri — arayüz metni Türkçe, DB değeri İngilizce
-// (hesap/ilanlarim sayfası ile aynı kalıp).
-const STATUS_LABELS: Record<ListingStatus, string> = {
-  DRAFT: "Taslak",
-  PENDING: "İncelemede",
-  ACTIVE: "Yayında",
-  REJECTED: "Reddedildi",
-  PAUSED: "Duraklatıldı",
-};
-
-const STATUS_BADGES: Record<ListingStatus, string> = {
-  DRAFT: "badge badge-neutral",
-  PENDING: "badge badge-warning",
-  ACTIVE: "badge badge-success",
-  REJECTED: "badge badge-error",
-  PAUSED: "badge badge-info",
-};
+// Durum rozetleri `listing-status.ts` paylaşım modülündedir (kuyruk + detay
+// önizleme aynı haritaları kullanır).
 
 /**
  * İlan moderasyonu: İNCELEME KUYRUĞU (PENDING — onayla/reddet), YAYINDAKİLER
@@ -85,7 +71,14 @@ export default async function AdminListingsPage() {
               <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <h3 className="truncate font-bold text-on-surface">
+                      <Link
+                        href={`/admin/ilanlar/${listing.id}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {listing.title}
+                      </Link>
+                    </h3>
                     <p className="mt-1 text-body-md text-on-surface-variant">
                       {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
                       /gece · {listing.capacity} kişi · {listing.owner.name} (
@@ -96,7 +89,13 @@ export default async function AdminListingsPage() {
                     {STATUS_LABELS[listing.status]}
                   </span>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 space-y-3">
+                  <Link
+                    href={`/admin/ilanlar/${listing.id}`}
+                    className="btn btn-outline py-2"
+                  >
+                    İncele
+                  </Link>
                   <AdminListingActions
                     listingId={listing.id}
                     status={listing.status}
@@ -122,7 +121,14 @@ export default async function AdminListingsPage() {
               <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <h3 className="truncate font-bold text-on-surface">
+                      <Link
+                        href={`/admin/ilanlar/${listing.id}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {listing.title}
+                      </Link>
+                    </h3>
                     <p className="mt-1 text-body-md text-on-surface-variant">
                       {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
                       /gece · {listing.owner.name}
@@ -132,7 +138,13 @@ export default async function AdminListingsPage() {
                     {STATUS_LABELS[listing.status]}
                   </span>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 space-y-3">
+                  <Link
+                    href={`/admin/ilanlar/${listing.id}`}
+                    className="btn btn-outline py-2"
+                  >
+                    İncele
+                  </Link>
                   <AdminListingActions
                     listingId={listing.id}
                     status={listing.status}
@@ -158,7 +170,14 @@ export default async function AdminListingsPage() {
               <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <h3 className="truncate font-bold text-on-surface">
+                      <Link
+                        href={`/admin/ilanlar/${listing.id}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {listing.title}
+                      </Link>
+                    </h3>
                     <p className="mt-1 text-body-md text-on-surface-variant">
                       {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
                       /gece · {listing.owner.name}
@@ -168,7 +187,13 @@ export default async function AdminListingsPage() {
                     {STATUS_LABELS[listing.status]}
                   </span>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 space-y-3">
+                  <Link
+                    href={`/admin/ilanlar/${listing.id}`}
+                    className="btn btn-outline py-2"
+                  >
+                    İncele
+                  </Link>
                   <AdminListingActions
                     listingId={listing.id}
                     status={listing.status}
@@ -194,7 +219,14 @@ export default async function AdminListingsPage() {
               <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <h3 className="truncate font-bold text-on-surface">
+                      <Link
+                        href={`/admin/ilanlar/${listing.id}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {listing.title}
+                      </Link>
+                    </h3>
                     <p className="mt-1 text-body-md text-on-surface-variant">
                       {listing.city} · {listing.owner.name} (
                       {listing.owner.email})
@@ -209,6 +241,14 @@ export default async function AdminListingsPage() {
                     Red gerekçesi: {listing.rejectionReason}
                   </p>
                 ) : null}
+                <div className="mt-4">
+                  <Link
+                    href={`/admin/ilanlar/${listing.id}`}
+                    className="btn btn-outline py-2"
+                  >
+                    İncele
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>

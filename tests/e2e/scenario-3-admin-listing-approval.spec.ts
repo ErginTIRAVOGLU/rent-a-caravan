@@ -50,6 +50,23 @@ test("senaryo 3: admin onay bekleyen ilanı onaylar ve ilan aramada görünür",
     ).toBeVisible();
   });
 
+  await test.step("admin ilan detay önizlemesini açar", async () => {
+    await page.goto("/admin/ilanlar");
+    await settle(page);
+    const active = sectionByHeading(page, "Yayındaki ilanlar");
+    const row = active.getByRole("listitem").filter({ hasText: LISTINGS.bolu });
+    await expect(row).toHaveCount(1);
+    await row.getByRole("link", { name: "İncele" }).click();
+    await settle(page);
+    await expect(
+      page.getByRole("heading", { level: 1, name: LISTINGS.bolu }),
+    ).toBeVisible();
+    await expect(page.getByText("Yayında")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "İlan sahibi" }),
+    ).toBeVisible();
+  });
+
   await test.step("ilan arama sonucunda ve detayda görünür", async () => {
     await page.goto(`/arama?sehir=${encodeURIComponent(CITIES.bolu)}`);
     await settle(page);
