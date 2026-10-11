@@ -91,7 +91,7 @@ export default async function AdminDashboardPage() {
               {card.href ? (
                 <Link
                   href={card.href}
-                  className="card p-5 hover:shadow-raised transition-shadow"
+                  className="card block p-5 hover:shadow-raised transition-shadow"
                 >
                   {body}
                   <div className="mt-4 flex items-center justify-between">

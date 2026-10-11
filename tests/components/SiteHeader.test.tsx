@@ -139,6 +139,14 @@ describe("SiteHeader", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
+  it("okunmamış rozeti neyin sayısı olduğunu açıklar (title + aria-label)", () => {
+    renderHeader(testUser, 2);
+
+    const badge = screen.getByText("2");
+    expect(badge).toHaveAttribute("title", "Okunmamış mesajlar");
+    expect(badge).toHaveAttribute("aria-label", "2 okunmamış mesaj");
+  });
+
   it("does not show unread message badge when count is 0", () => {
     renderHeader(testUser, 0);
 

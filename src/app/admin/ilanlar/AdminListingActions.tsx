@@ -9,6 +9,7 @@ import {
   approveListing,
   pauseListing,
   rejectListing,
+  unpauseListing,
 } from "../../../server/admin/actions";
 
 type Props = {
@@ -17,17 +18,17 @@ type Props = {
 };
 
 /**
- * Moderasyon satırı eylemleri (istemci bileşeni): Onayla/Reddet/Duraklat
- * düğmeleri sunucu eylemlerini çağırır. Yalnız service durum matrisindeki
- * geçişler sunulur (PENDING: onayla+reddet, ACTIVE: duraklat); yetki ve
- * geçiş doğrulaması service'te yapılır, burada yalnız Türkçe sonuç gösterilir
- * ve liste tazelenir.
+ * Moderasyon satırı eylemleri (istemci bileşeni): Onayla/Reddet/Duraklat/
+ * Yayına Al düğmeleri sunucu eylemlerini çağırır. Yalnız service durum
+ * matrisindeki geçişler sunulur (PENDING: onayla+reddet, ACTIVE: duraklat,
+ * PAUSED: yayına al); yetki ve geçiş doğrulaması service'te yapılır, burada
+ * yalnız Türkçe sonuç gösterilir ve liste tazelenir.
  */
 export function AdminListingActions({ listingId, status }: Props) {
   const router = useRouter();
-  const [pending, setPending] = useState<"approve" | "reject" | "pause" | null>(
-    null,
-  );
+  const [pending, setPending] = useState<
+    "approve" | "reject" | "pause" | "unpause" | null
+  >(null);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +78,22 @@ export function AdminListingActions({ listingId, status }: Props) {
     }
   }
 
+  async function handleUnpause() {
+    setPending("unpause");
+    setError(null);
+    try {
+      const result = await unpauseListing(listingId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(HATA);
+    } finally {
+      setPending(null);
+    }
+  }
   async function handlePause() {
     setConfirmOpen(false);
     setPending("pause");
@@ -188,6 +205,17 @@ export function AdminListingActions({ listingId, status }: Props) {
             onCancel={() => setConfirmOpen(false)}
           />
         </>
+      ) : null}
+
+      {status === "PAUSED" ? (
+        <button
+          type="button"
+          onClick={() => void handleUnpause()}
+          disabled={pending !== null}
+          className="btn btn-success py-2"
+        >
+          {pending === "unpause" ? "Yayına alınıyor…" : "Yayına Al"}
+        </button>
       ) : null}
 
       {error ? (

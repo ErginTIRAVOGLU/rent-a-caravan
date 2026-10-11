@@ -234,12 +234,21 @@ export async function seed(): Promise<void> {
     });
   }
 
-  // Sample reports
+  // Sample reports — id'ler Prisma cuid deseninde OLMALIDIR
+  // (/^c[a-z0-9]{24}$/): updateReportStatusCore kapısı (isCuid) desen dışı
+  // id'yi "Geçersiz şikayet kimliği." ile reddeder; sabit "seed-report-*"
+  // id'ler bu yüzden kuyudaki "İncele" düğmesini kırmıştı.
+  const SEED_REPORT_1_ID = "cseed00000000000000000001";
+  const SEED_REPORT_2_ID = "cseed00000000000000000002";
+  // Eski desen-dışı seed satırları yeniden seed'de temizlenir.
+  await prisma.report.deleteMany({
+    where: { id: { in: ["seed-report-1", "seed-report-2"] } },
+  });
   await prisma.report.upsert({
-    where: { id: "seed-report-1" },
+    where: { id: SEED_REPORT_1_ID },
     update: {},
     create: {
-      id: "seed-report-1",
+      id: SEED_REPORT_1_ID,
       reporterId: renterId,
       targetType: "LISTING",
       targetId: createdListings[0].id,
@@ -249,10 +258,10 @@ export async function seed(): Promise<void> {
   });
 
   await prisma.report.upsert({
-    where: { id: "seed-report-2" },
+    where: { id: SEED_REPORT_2_ID },
     update: {},
     create: {
-      id: "seed-report-2",
+      id: SEED_REPORT_2_ID,
       reporterId: ownerId,
       targetType: "USER",
       targetId: renterId,
