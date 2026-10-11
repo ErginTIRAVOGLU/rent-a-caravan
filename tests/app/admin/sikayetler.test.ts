@@ -12,8 +12,9 @@ import { makeUser, makeListing, resetDb } from "../../helpers/db";
 // CLOSED terminal).
 
 // Hoisted auth mock
-const { authMock } = vi.hoisted(() => ({
+const { authMock, getReportsCoreMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
+  getReportsCoreMock: vi.fn(),
 }));
 
 // Mock next-auth
@@ -45,6 +46,17 @@ vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) =>
     React.createElement("a", { href, ...props }, children),
 }));
+
+// Kuyruk çekirdeği: varsayılan olarak GERÇEK implementasyon (diğer testler
+// DB'den okur); yalnız "kuyruk yüklenemez" senaryosunda mock üzerinden fail
+// döndürülür — hata yolunu kırmak için DB'yi kırmak gerekmez.
+vi.mock("../../../src/server/reports/service", async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import("../../../src/server/reports/service")
+  >();
+  getReportsCoreMock.mockImplementation(actual.getReportsCore);
+  return { ...actual, getReportsCore: getReportsCoreMock };
+});
 
 // jsdom setup: `@vitest-environment jsdom` (dosya başı) gerçek jsdom
 // ortamını kurar — RTL render + rol sorguları için yeterlidir.
@@ -204,6 +216,22 @@ describe("/admin/sikayetler page", () => {
     expect(getByText("Kullanıcı")).toBeInTheDocument();
     const link = getByText("Test Kullanıcısı").closest("a");
     expect(link?.getAttribute("href")).toBe("/admin/kullanicilar");
+  });
+
+  it("kuyruk yüklenemezse 'Henüz şikayet yok' DEMEZ — hata sınırına düşer", async () => {
+    vi.mocked(getReportsCoreMock).mockResolvedValueOnce({
+      ok: false,
+      error: "Şikayet kuyruğu yüklenemedi.",
+    });
+
+    const { default: SikayetlerPage } = await import(
+      "../../../src/app/admin/sikayetler/page"
+    );
+
+    // Boş durum KARTI değil, hata fırlatılır (app/error.tsx devralır).
+    await expect(SikayetlerPage()).rejects.toThrow(
+      /Şikayet kuyruğu yüklenemedi/,
+    );
   });
 
   it("admin oturumu kullanılır (requireAdmin)", async () => {

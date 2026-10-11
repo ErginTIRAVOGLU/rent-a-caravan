@@ -4,7 +4,11 @@ import type { ZodError } from "zod";
 import { REPORT_TARGET_DELETED_LABELS } from "../../lib/labels";
 import { prisma } from "../../lib/prisma";
 import { fail, firstIssue, ok, type ActionResult } from "../../lib/result";
-import { reportInputSchema } from "../../lib/validators/report";
+import {
+  REPORT_STATUS_TRANSITIONS,
+  reportInputSchema,
+  reportStatusInputSchema,
+} from "../../lib/validators/report";
 import type { SessionUser } from "../users/service";
 
 // Şikayet çekirdeği — spec §8. HTTP/oturum yok: `user`/`admin` açık parametre;
@@ -18,6 +22,8 @@ import type { SessionUser } from "../users/service";
 //   3) gerekçe 5–500 karakter (trim),
 //   4) durum matrisi SUNUCU otoriterdir — istemciden status okunmaz:
 //        OPEN → REVIEWING → CLOSED, CLOSED terminal (geri açılmaz).
+//      Matris kaynağı `lib/validators/report.ts` (REPORT_STATUS_TRANSITIONS):
+//      admin kuyruğu satır düğmeleri (NEXT_REPORT_STATUS) aynı nesneyi okur.
 //      Matris dışı HER geçiş fail döner ve HİÇ mutation olmaz
 //      (`updateMany` + from-status koşulu kalıbı — admin/service.ts ile aynı),
 //   5) durum geçişi YALNIZ admin (action katmanı requireAdmin + service'te rol
@@ -38,24 +44,21 @@ const ZATEN_BILDIRMISSINIZ = "Bu hedef için zaten açık bir şikayetiniz var."
 /** Prisma @default(cuid()) id deseni — bozuk id Prisma'ya ulaşmadan reddedilir. */
 const CUID_RE = /^c[a-z0-9]{24}$/;
 
-/** Bilinen durum değerleri (istemci verisi — matris kapısından önce reddedilir). */
-const REPORT_STATUSES: readonly ReportStatus[] = ["OPEN", "REVIEWING", "CLOSED"];
+/**
+ * Id gerçekten mi string, yoksa yalnız "stringify edince uyuyor" mu?
+ * `CUID_RE.test(value)` tek argüman alır ve değeri metne çevirir: `{toString}`
+ * gibi bir nesne regex'i geçip Prisma'ya ulaşır ve 500'e düşerdi. Kapı bu
+ * yüzden TİP kontrolüdür, regex yalnız ikinci adımdır.
+ */
+function isCuid(value: unknown): value is string {
+  return typeof value === "string" && CUID_RE.test(value);
+}
 
 /** Zod hatasını Türkçe mesaj + alan adı taşıyan ActionResult'a çevirir. */
 function validationFail<T>(error: ZodError): ActionResult<T> {
   const issue = firstIssue(error);
   return fail(issue.message, issue.field);
 }
-
-/**
- * Durum geçiş matrisi — listede olmayan her geçiş reddedilir.
- * OPEN → REVIEWING → CLOSED; CLOSED terminal (geri açılmaz).
- */
-const STATUS_TRANSITIONS: Record<ReportStatus, readonly ReportStatus[]> = {
-  OPEN: ["REVIEWING"],
-  REVIEWING: ["CLOSED"],
-  CLOSED: [],
-};
 
 /**
  * Şikayet oluştur — oturumlu kullanıcı. Sıra: hedef tipi → id biçimi →
@@ -75,7 +78,7 @@ export async function createReportCore(
   const type = parsed.data.targetType;
 
   // Hedef tipine göre id biçimi — bozuk id DB okumasından önce reddedilir.
-  if (!CUID_RE.test(targetId)) {
+  if (!isCuid(targetId)) {
     return fail(
       type === "LISTING" ? GECERSIZ_ILAN_ID : GECERSIZ_KULLANICI_ID,
       "targetId",
@@ -136,12 +139,15 @@ export async function updateReportStatusCore(
   if (admin.role !== "ADMIN") {
     return fail(YETKI_YOK); // yetkisiz: mutation yok
   }
-  if (!CUID_RE.test(reportId)) {
+  if (!isCuid(reportId)) {
     return fail(GECERSIZ_SIKAYET_ID, "reportId");
   }
-  if (!REPORT_STATUSES.includes(status)) {
-    return fail(GECERSIZ_DURUM, "status");
+  // Bilinmeyen durum değeri (istemci verisi) — matris kapısından önce reddedilir.
+  const parsedStatus = reportStatusInputSchema.safeParse({ status });
+  if (!parsedStatus.success) {
+    return validationFail(parsedStatus.error);
   }
+  const nextStatus = parsedStatus.data.status;
 
   const report = await prisma.report.findUnique({
     where: { id: reportId },
@@ -150,7 +156,7 @@ export async function updateReportStatusCore(
   if (!report) {
     return fail(SIKAYET_BULUNAMADI);
   }
-  if (!STATUS_TRANSITIONS[report.status].includes(status)) {
+  if (!REPORT_STATUS_TRANSITIONS[report.status].includes(nextStatus)) {
     return fail(GECERSIZ_DURUM, "status");
   }
 
@@ -159,7 +165,7 @@ export async function updateReportStatusCore(
   // görür, last-write-wins olmaz.
   const res = await prisma.report.updateMany({
     where: { id: reportId, status: report.status },
-    data: { status, updatedAt: new Date() },
+    data: { status: nextStatus, updatedAt: new Date() },
   });
   if (res.count === 0) {
     return fail(GECERSIZ_DURUM, "status");

@@ -43,7 +43,13 @@ export default async function AdminReportsPage() {
   await requireAdmin();
 
   const result = await getReportsCore();
-  const reports = result.ok ? result.data : [];
+  // Kuyruk yüklenemezse BOŞ DURUM GÖSTERİLMEZ: "Henüz şikayet yok" demek
+  // admin'e DB hatasını "şikayet gelmiyor" diye saklardı. Hata sınırına
+  // (app/error.tsx) düşer; kullanıcı dürüst bir hata ekranı görür.
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  const reports = result.data;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-12">

@@ -4,16 +4,12 @@ import type { Report, ReportStatus, ReportTargetType } from "@prisma/client";
 
 import { requireAdmin, requireUser } from "../../lib/auth";
 import type { ActionResult } from "../../lib/result";
-import {
-  createReportCore,
-  getReportsCore,
-  updateReportStatusCore,
-  type AdminReport,
-} from "./service";
+import { createReportCore, updateReportStatusCore } from "./service";
 
 // Şikayet eylemleri — ince sarmalayıcılar; tüm doğrulama/yetki/iş mantığı
 // service çekirdeğindedir. Aksiyonlar yalnız oturum kapısı uygular ve sonucu
-// ActionResult olarak döner.
+// ActionResult olarak döner. Kuyruk OKUMASI eylem değil sunucu bileşenidir
+// (`getReportsCore` — admin sayfası doğrudan okur).
 
 /** Bildirim oluştur — oturum kapısı; hedef/mükerrer/gerekçe kuralları service'te. */
 export async function createReport(
@@ -32,14 +28,4 @@ export async function updateReportStatus(
 ): Promise<ActionResult<Report>> {
   const admin = await requireAdmin();
   return updateReportStatusCore(admin, reportId, status);
-}
-
-/**
- * Şikayet kuyruğu — ADMIN kapısı. Admin sayfası sunucu bileşeni olarak
- * `getReportsCore()` ile okur; bu eylem istemci tarafı yenileme gereksinimleri
- * (ör. durum geçişi sonrası liste) için aynı kuyruğu döner.
- */
-export async function getReports(): Promise<ActionResult<AdminReport[]>> {
-  await requireAdmin();
-  return getReportsCore();
 }

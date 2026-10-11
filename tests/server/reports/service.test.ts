@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ReportTargetType } from "@prisma/client";
+import type { ReportStatus, ReportTargetType } from "@prisma/client";
 
 import { prisma } from "../../../src/lib/prisma";
+import { NEXT_REPORT_STATUS } from "../../../src/lib/validators/report";
 import {
   createReportCore,
   getReportsCore,
@@ -459,6 +460,148 @@ describe("updateReportStatusCore", () => {
     if (!result.ok) {
       expect(result.error).toContain("şikayet kimliği");
     }
+  });
+
+  it("bilinmeyen durum değeri → fail, mutation yok", async () => {
+    const result = await updateReportStatusCore(
+      mockUser(admin.id, admin.email, "ADMIN"),
+      reportId,
+      "DELETED" as ReportStatus,
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("Geçersiz şikayet durumu");
+      expect(result.field).toBe("status");
+    }
+    expect(
+      (await prisma.report.findUniqueOrThrow({ where: { id: reportId } })).status,
+    ).toBe("OPEN");
+  });
+});
+
+/**
+ * `NEXT_REPORT_STATUS` — admin kuyruğu satır düğmelerinin kaynağı. Bu test,
+ * istemcinin teklif ettiği her geçişin sunucu matrisince gerçekten GEÇERLİ
+ * olduğunu (ve terminal durumda hiçbir düğme olmadığını) doğrular: iki taraf
+ * sessizce diverge ederse bu test kırılır.
+ */
+describe("NEXT_REPORT_STATUS — istemci düğme matrisi", () => {
+  let admin: Awaited<ReturnType<typeof makeUser>>;
+  let reporter: Awaited<ReturnType<typeof makeUser>>;
+  let listing: Awaited<ReturnType<typeof makeListing>>;
+
+  beforeEach(async () => {
+    admin = await prisma.user.create({
+      data: makeUser({ email: "admin@test.com", role: "ADMIN" }),
+    });
+    reporter = await prisma.user.create({
+      data: makeUser({ email: "reporter@test.com" }),
+    });
+    listing = await prisma.listing.create({
+      data: makeListing(admin.id, { status: "ACTIVE" }),
+    });
+  });
+
+  async function seedReport(status: ReportStatus) {
+    return prisma.report.create({
+      data: {
+        reporterId: reporter.id,
+        targetType: "LISTING",
+        targetId: listing.id,
+        reason: GEREKCE,
+        status,
+      },
+    });
+  }
+
+  it("her durum için teklif edilen geçiş service matrisince geçerlidir", async () => {
+    for (const current of ["OPEN", "REVIEWING", "CLOSED"] as ReportStatus[]) {
+      const next = NEXT_REPORT_STATUS[current];
+      const report = await seedReport(current);
+
+      if (next === null) {
+        // Terminal durum: hiçbir geçiş kabul edilmez (düğme gösterilmez).
+        expect(
+          (await updateReportStatusCore(
+            mockUser(admin.id, admin.email, "ADMIN"),
+            report.id,
+            "OPEN",
+          )).ok,
+        ).toBe(false);
+        expect(
+          (await updateReportStatusCore(
+            mockUser(admin.id, admin.email, "ADMIN"),
+            report.id,
+            "REVIEWING",
+          )).ok,
+        ).toBe(false);
+        continue;
+      }
+
+      const result = await updateReportStatusCore(
+        mockUser(admin.id, admin.email, "ADMIN"),
+        report.id,
+        next,
+      );
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.status).toBe(next);
+      }
+    }
+  });
+});
+
+describe("kimlik doğrulama — tip kontrolü", () => {
+  let admin: Awaited<ReturnType<typeof makeUser>>;
+  let owner: Awaited<ReturnType<typeof makeUser>>;
+
+  beforeEach(async () => {
+    admin = await prisma.user.create({
+      data: makeUser({ email: "admin@test.com", role: "ADMIN" }),
+    });
+    owner = await prisma.user.create({
+      data: makeUser({ email: "owner@test.com" }),
+    });
+  });
+
+  /**
+   * `CUID_RE.test(value)` değeri METNE çevirir: regex'i geçen bir `toString`'e
+   * sahip nesne kontrolü aşabilir ve Prisma 500'e düşerdi. Kapı bu yüzden
+   * TİP kontrolüdür (regex ikinci adım) — aşağıdaki nesne ikisi arasındaki
+   * farkı gösterir.
+   */
+  const craftedId = { toString: () => `c${"a".repeat(24)}` } as unknown as string;
+
+  it("hedef kimliği string olmayan bir değerse → temiz fail, kayıt yazılmaz", async () => {
+    const result = await createReportCore(
+      mockUser(owner.id, owner.email),
+      "LISTING",
+      craftedId,
+      GEREKCE,
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("ilan kimliği");
+      expect(result.field).toBe("targetId");
+    }
+    expect(await prisma.report.count()).toBe(0);
+  });
+
+  it("şikayet kimliği string olmayan bir değerse → temiz fail", async () => {
+    const result = await updateReportStatusCore(
+      mockUser(admin.id, admin.email, "ADMIN"),
+      craftedId,
+      "REVIEWING",
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("şikayet kimliği");
+      expect(result.field).toBe("reportId");
+    }
+    expect(await prisma.report.count()).toBe(0);
   });
 });
 
