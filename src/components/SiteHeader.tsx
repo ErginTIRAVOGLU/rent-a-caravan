@@ -17,8 +17,26 @@ function initials(name: string, email: string) {
   return source.slice(0, 1).toUpperCase();
 }
 
+function buildValidatedUrl(baseUrl: string): string {
+  try {
+    if (baseUrl.includes("/../") || /\/%2e%2e\//i.test(baseUrl)) {
+      throw new Error("Invalid path");
+    }
+    const url = new URL(baseUrl, window.location.origin);
+    if (!["http:", "https:"].includes(url.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+    if (url.origin !== window.location.origin) {
+      throw new Error("Invalid host");
+    }
+    return url.href;
+  } catch {
+    throw new Error("Invalid URL");
+  }
+}
+
 function fetcher(url: string): Promise<number> {
-  return fetch(url).then((res) => {
+  return fetch(buildValidatedUrl(url)).then((res) => {
     if (!res.ok) return 0;
     return res.json().then((j: { count?: unknown }) =>
       typeof j.count === "number" ? j.count : 0,
