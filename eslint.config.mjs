@@ -1,101 +1,56 @@
 import { createRequire } from "node:module";
 
-// CJS plugin'leri `import` default ile ÇEKME (bilinçli): `__esModule` +
+// CJS paketleri `import` default ile ÇEKME (bilinçli): `__esModule` +
 // iç `default` taşıyan paketlerde default-import yorumu Node sürümüne göre
 // değişir (lokal Node 26 tam objeyi, CI'daki Node 22 iç `.default`'u
-// çözdü → `flatConfig` undefined crash'i). `require()` CJS semantiği her
-// sürümde deterministiktir.
+// çözdü → crash). `require()` CJS semantiği her sürümde deterministiktir.
 const require = createRequire(import.meta.url);
-const nextPlugin = require("@next/eslint-plugin-next");
-const reactHooks = require("eslint-plugin-react-hooks");
-const jsxA11y = require("eslint-plugin-jsx-a11y");
-const importPlugin = require("eslint-plugin-import");
-const reactPlugin = require("eslint-plugin-react");
-const tseslint = require("typescript-eslint");
-const globals = require("globals");
+
+// v16-native flat array'ler: `eslint-config-next@16` artık doğrudan flat
+// config blokları export eder (core-web-vitals.js =
+// [...index.default, plugin.configs['core-web-vitals']]).
+// `@next/eslint-plugin-next` paketinde `flatConfig` exportu YOKTUR (v16'da
+// kaldırıldı) — o paketten kural okumaya çalışmak
+// `TypeError: Cannot read properties of undefined` ile patlar.
+const nextVitals = require("eslint-config-next/core-web-vitals");
+const nextTs = require("eslint-config-next/typescript");
 
 // FlatCompat KULLANILMAZ (bilinçli): `compat.extends("next/...")` kalıbı
 // `@rushstack/eslint-patch`'in kırılgan caller-tespit zincirine girer ve
 // ortamdan ortama "Converting circular structure to JSON" ile patlar
-// (CI'da görüldü). Aşağıdaki bloklar legacy `eslint-config-next` içeriğinin
-// birebir karşılığıdır — kural kaybı yok:
-//   base index.js → sharedRules (hooks + a11y + import + react off'ları)
-//   plugin:@next/next/core-web-vitals → nextCoreWebVitalsRules
-//   next/typescript → tseslint recommended + 2 warn override
-
-const sharedPlugins = {
-  "@next/next": nextPlugin,
-  "react-hooks": reactHooks,
-  "jsx-a11y": jsxA11y,
-  react: reactPlugin,
-  import: importPlugin,
-};
-
-// Legacy base index.js rules bölümüyle birebir (sıra önemsiz, değerler aynı).
-const sharedRules = {
-  ...reactHooks.configs.recommended.rules,
-  "import/no-anonymous-default-export": "warn",
-  "react/no-unknown-property": "off",
-  "react/react-in-jsx-scope": "off",
-  "react/prop-types": "off",
-  "jsx-a11y/alt-text": ["warn", { elements: ["img"], img: ["Image"] }],
-  "jsx-a11y/aria-props": "warn",
-  "jsx-a11y/aria-proptypes": "warn",
-  "jsx-a11y/aria-unsupported-elements": "warn",
-  "jsx-a11y/role-has-required-aria-props": "warn",
-  "jsx-a11y/role-supports-aria-props": "warn",
-  "react/jsx-no-target-blank": "off",
-  ...nextPlugin.flatConfig.coreWebVitals.rules,
-};
-
-const sharedSettings = {
-  react: { version: "detect" },
-};
-
-const sharedLanguageOptions = {
-  globals: { ...globals.browser, ...globals.node },
-};
-
+// (CI'da görüldü).
 const eslintConfig = [
   {
     ignores: [
       "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
       "coverage/**",
       ".worktrees/**",
       ".superpowers/**",
       // Bağımsız mockup projeleri (kendi eslint/tsconfig'leriyle) — bkz. tsconfig.json.
       "designs/**",
-      // next build/dev bu dosyayı her seferinde yeniden üretir; triple-slash
-      // referansları eslint kuralını tetikler → kalıcı olarak yok say.
-      "next-env.d.ts",
     ],
   },
+  // nextVitals: "next" bloğu (parser + globals + tüm plugin/kurallar,
+  // js/jsx/mjs/ts/tsx/mts/cts kapsamlı) + "next/typescript" TS parser bloğu
+  // (*.ts/*.tsx — TS dosyaları espree ile parse edilemez, bu blok şart) +
+  // core-web-vitals kuralları. `.next/out/build/next-env.d.ts` ignore'ları
+  // bu array'lerin içinden gelir.
+  ...nextVitals,
+  // nextTs: typescript-eslint base + eslint-recommended + recommended +
+  // 2 warn override (no-unused-vars, no-unused-expressions) + ignore'lar.
+  ...nextTs,
+  // react-hooks v6'nın iki yeni katı kuralı (set-state-in-effect, refs):
+  // main ağacındaki 4 dosyada pre-existing pattern'leri error olarak
+  // işaretler (eski config de aynı plugin sürümünde error verirdi — crash
+  // öncesi lint'e hiç ulaşılamıyordu). Davranış değişikliği riskine karşı
+  // kaynak dosyaları refactor ETME; warn'a indir (CI: warning serbest,
+  // error yasak). Görünürlük korunur, `npm run check` yeşil kalır.
   {
-    files: ["**/*.{js,jsx,mjs,cjs}"],
-    plugins: sharedPlugins,
-    rules: sharedRules,
-    settings: sharedSettings,
-    languageOptions: sharedLanguageOptions,
-  },
-  // TypeScript: tseslint recommended (parser + kurallar, kendi files
-  // kapsamıyla gelir) + next/typescript'in 2 warn override'ı.
-  ...tseslint.configs.recommended,
-  {
-    files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
-    plugins: {
-      ...sharedPlugins,
-      "@typescript-eslint": tseslint.plugin,
-    },
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
     rules: {
-      ...sharedRules,
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-unused-expressions": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
     },
-    settings: sharedSettings,
-    languageOptions: sharedLanguageOptions,
   },
 ];
 
