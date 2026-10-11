@@ -15,6 +15,7 @@ import { validateStay } from "../../../lib/stay";
 import { parseSearchParams } from "../../../server/listings/search";
 import { getReviewsForListing } from "../../../server/reviews/service";
 import { PhotoGallery } from "../../../components/PhotoGallery";
+import { ReportDialog } from "../../../components/ReportDialog";
 import { StarRating } from "../../../components/StarRating";
 import { BookingRequestForm } from "./BookingRequestForm";
 import { AskButton } from "./AskButton";
@@ -372,6 +373,7 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
                       nightlyPrice={nightlyPrice}
                     />
                     <AskButton listingId={listing.id} />
+                    <ReportDialog targetType="LISTING" targetId={listing.id} />
                   </>
                 )
               ) : (

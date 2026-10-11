@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { requireUser } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
 import { AccountNav } from "../../../components/AccountNav";
+import { ReportDialog } from "../../../components/ReportDialog";
 import { ProfileForm } from "./ProfileForm";
 import { ReviewsVisibleToggle } from "./ReviewsVisibleToggle";
 
@@ -49,6 +50,17 @@ export default async function ProfilPage() {
             current={user?.reviewsVisible ?? true}
           />
         </div>
+      </section>
+
+      {/* Hesap bildirimi (spec §8): hedef USER = oturumdaki hesap. Yönetim
+          ekibi bildirimi şikayet kuyruğunda inceler; otomasyon yok. */}
+      <section className="card mt-6 p-5">
+        <h2 className="section-title">Hesap Bildirimi</h2>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          Hesabınızla ilgili bir sorunu (ör. ele geçirilme, sahte içerik) yönetim
+          ekibine iletin. Bildiriminiz incelenene kadar açık kalır.
+        </p>
+        <ReportDialog targetType="USER" targetId={sessionUser.id} />
       </section>
     </div>
   );
