@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import useSWR from "swr";
 import { signOutAction } from "../lib/auth-actions";
 
@@ -45,8 +47,49 @@ function fetcher(url: string): Promise<number> {
 }
 
 export function SiteHeader() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const user = session?.user ?? null;
+  const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // `update` kimliği render'lar arası değişebilir; effect bağımlılığına
+  // alınırsa her çağrı yeniden tetiklenir. Ref üzerinden günceli çağırırız.
+  const updateRef = useRef(update);
+  updateRef.current = update;
+
+  // Giriş sonrası stale header: credentials girişi sunucu redirect'iyle
+  // biter, layout remount olmaz ve `useSession` cache'i tazelenmez. Route
+  // değişiminde session'ı yenile, header hemen girişli hale gelsin.
+  useEffect(() => {
+    void updateRef.current();
+  }, [pathname]);
+
+  // Route değişiminde menüyü kapat.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Menü açıkken: dışarı tıklama ve Escape ile kapat.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handlePointerDown(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
 
   // Unread message count with SWR polling (15s)
   const { data: unreadCount = 0 } = useSWR("/api/messages/unread-count", fetcher, {
@@ -100,8 +143,15 @@ export function SiteHeader() {
                   <span className="hidden sm:inline">Admin</span>
                 </Link>
               )}
-              <details className="group relative">
-                <summary className="flex list-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-label-lg text-primary transition-colors hover:bg-surface-low [&::-webkit-details-marker]:hidden">
+              <div className="group relative" ref={menuRef}>
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label="Hesap menüsü"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="flex list-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-label-lg text-primary transition-colors hover:bg-surface-low"
+                >
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary font-bold text-white">
                     {initials(user.name, user.email)}
                   </span>
@@ -117,8 +167,12 @@ export function SiteHeader() {
                   <span className="material-symbols-outlined text-base text-outline">
                     expand_more
                   </span>
-                </summary>
-                <div className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-outline-variant/60 bg-white p-2 shadow-raised">
+                </button>
+                {menuOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-outline-variant/60 bg-white p-2 shadow-raised"
+                >
                   <div className="mb-1 border-b border-outline-variant px-3 pb-2 pt-1">
                     <p className="text-label-md text-on-surface-variant">
                       Oturum
@@ -127,19 +181,34 @@ export function SiteHeader() {
                       {user.email}
                     </p>
                   </div>
-                  <Link href="/hesap/taleplerim" className="menu-item">
+                  <Link
+                    href="/hesap/taleplerim"
+                    className="menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
                     <span className="material-symbols-outlined text-lg text-secondary">
                       inbox
                     </span>
                     Taleplerim
                   </Link>
-                  <Link href="/hesap/ilanlarim" className="menu-item">
+                  <Link
+                    href="/hesap/ilanlarim"
+                    className="menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
                     <span className="material-symbols-outlined text-lg text-secondary">
                       rv_hookup
                     </span>
                     İlanlarım
                   </Link>
-                  <Link href="/hesap/profil" className="menu-item">
+                  <Link
+                    href="/hesap/profil"
+                    className="menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
                     <span className="material-symbols-outlined text-lg text-secondary">
                       person
                     </span>
@@ -155,7 +224,8 @@ export function SiteHeader() {
                     </button>
                   </form>
                 </div>
-              </details>
+                ) : null}
+              </div>
             </>
           ) : (
             <>

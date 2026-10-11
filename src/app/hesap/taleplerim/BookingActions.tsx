@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { ConfirmModal } from "../../../components/ConfirmModal";
 import {
   approveBooking,
   cancelBooking,
@@ -27,6 +28,7 @@ export function BookingActions({ bookingId, mode }: Props) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function handleApprove() {
     setPending("approve");
@@ -67,12 +69,7 @@ export function BookingActions({ bookingId, mode }: Props) {
   }
 
   async function handleCancel() {
-    const confirmed = window.confirm(
-      "Bu talebi iptal etmek istediğinize emin misiniz?",
-    );
-    if (!confirmed) {
-      return;
-    }
+    setConfirmOpen(false);
     setPending("cancel");
     setError(null);
     try {
@@ -160,14 +157,29 @@ export function BookingActions({ bookingId, mode }: Props) {
       ) : null}
 
       {mode === "cancel" ? (
-        <button
-          type="button"
-          onClick={() => void handleCancel()}
-          disabled={pending !== null}
-          className="btn btn-outline text-error border-error/30 hover:bg-error-bg py-2"
-        >
-          {pending === "cancel" ? "İptal ediliyor…" : "İptal Et"}
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setConfirmOpen(true);
+            }}
+            disabled={pending !== null}
+            className="btn btn-outline text-error border-error/30 hover:bg-error-bg py-2"
+          >
+            {pending === "cancel" ? "İptal ediliyor…" : "İptal Et"}
+          </button>
+          <ConfirmModal
+            open={confirmOpen}
+            title="Talebi İptal Et"
+            description="Bu talebi iptal etmek istediğinize emin misiniz?"
+            confirmLabel="İptal Et"
+            pending={pending !== null}
+            pendingLabel="İptal ediliyor…"
+            onConfirm={() => void handleCancel()}
+            onCancel={() => setConfirmOpen(false)}
+          />
+        </>
       ) : null}
 
       {error ? (

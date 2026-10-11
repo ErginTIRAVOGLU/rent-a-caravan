@@ -1,7 +1,7 @@
 /// <reference types="@testing-library/jest-dom" />
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { SessionUser } from "../../src/server/users/service";
 
 // Mock next/image
@@ -22,10 +22,17 @@ vi.mock("next/link", () => ({
 
 // Mock next-auth/react completely
 const mockUseSession = vi.fn();
+const mockUpdate = vi.fn();
 vi.mock("next-auth/react", () => ({
   SessionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useSession: () => mockUseSession(),
   signOut: vi.fn(),
+}));
+
+// Mock next/navigation pathname (değiştirilebilir — refresh testleri için)
+const mockPathname = vi.fn(() => "/");
+vi.mock("next/navigation", () => ({
+  usePathname: () => mockPathname(),
 }));
 
 // Mock swr
@@ -45,11 +52,19 @@ import { signOutAction } from "../../src/lib/auth-actions";
 
 const mockSignOutAction = vi.mocked(signOutAction);
 
+const testUser: SessionUser = {
+  id: "user-1",
+  name: "Test User",
+  email: "test@example.com",
+  role: "USER",
+  isBanned: false,
+};
+
 function renderHeader(session?: SessionUser | null, unreadCount?: number) {
   mockUseSession.mockReturnValue({
     data: session ? { user: session } : null,
     status: session ? "authenticated" : "unauthenticated",
-    update: vi.fn(),
+    update: mockUpdate,
   });
 
   mockSWR.mockReturnValue({
@@ -64,9 +79,14 @@ function renderHeader(session?: SessionUser | null, unreadCount?: number) {
   return render(<SiteHeader />);
 }
 
+function openMenu() {
+  fireEvent.click(screen.getByRole("button", { name: "Hesap menüsü" }));
+}
+
 describe("SiteHeader", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPathname.mockReturnValue("/");
   });
 
   afterEach(() => {
@@ -88,14 +108,7 @@ describe("SiteHeader", () => {
   });
 
   it("shows user avatar and dropdown when authenticated", () => {
-    const user: SessionUser = {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      role: "USER",
-      isBanned: false,
-    };
-    renderHeader(user);
+    renderHeader(testUser);
 
     expect(screen.getByText("T")).toBeInTheDocument(); // Initials
     expect(screen.getByText("Test User")).toBeInTheDocument();
@@ -115,53 +128,26 @@ describe("SiteHeader", () => {
   });
 
   it("does not show admin link for regular users", () => {
-    const user: SessionUser = {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      role: "USER",
-      isBanned: false,
-    };
-    renderHeader(user);
+    renderHeader(testUser);
 
     expect(screen.queryByRole("link", { name: "Admin" })).not.toBeInTheDocument();
   });
 
   it("shows unread message badge when count > 0", () => {
-    const user: SessionUser = {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      role: "USER",
-      isBanned: false,
-    };
-    renderHeader(user, 3);
+    renderHeader(testUser, 3);
 
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
   it("does not show unread message badge when count is 0", () => {
-    const user: SessionUser = {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      role: "USER",
-      isBanned: false,
-    };
-    renderHeader(user, 0);
+    renderHeader(testUser, 0);
 
     expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 
   it("calls signOutAction when logout button is clicked", async () => {
-    const user: SessionUser = {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      role: "USER",
-      isBanned: false,
-    };
-    renderHeader(user);
+    renderHeader(testUser);
+    openMenu();
 
     const logoutButton = screen.getByRole("button", { name: /çıkış/i });
     await logoutButton.click();
@@ -173,7 +159,7 @@ describe("SiteHeader", () => {
     mockUseSession.mockReturnValue({
       data: undefined,
       status: "loading",
-      update: vi.fn(),
+      update: mockUpdate,
     });
 
     mockSWR.mockReturnValue({
@@ -197,38 +183,73 @@ describe("SiteHeader", () => {
   });
 
   it("shows user menu items in dropdown", () => {
-    const user: SessionUser = {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      role: "USER",
-      isBanned: false,
-    };
-    renderHeader(user);
+    renderHeader(testUser);
+    openMenu();
 
-    const userButton = screen.getByText("Test User").closest("summary");
-    if (userButton) {
-      userButton.click();
-    }
-
-    expect(screen.getByRole("link", { name: /taleplerim/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /taleplerim/i })).toBeInTheDocument();
     expect(screen.getByTestId("link-/hesap/ilanlarim")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /profil/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /profil/i })).toBeInTheDocument();
   });
 
   it("İlanlarım menü ikonu geçerli Material Symbols glyph'i kullanır", () => {
-    const user: SessionUser = {
-      id: "user-1",
-      name: "Test User",
-      email: "test@example.com",
-      role: "USER",
-      isBanned: false,
-    };
-    renderHeader(user);
+    renderHeader(testUser);
+    openMenu();
 
     const link = screen.getByTestId("link-/hesap/ilanlarim");
     expect(
       link.querySelector(".material-symbols-outlined")?.textContent,
     ).toBe("rv_hookup");
+  });
+
+  it("menü kapalıyken menü öğeleri DOM'da değildir", () => {
+    renderHeader(testUser);
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /taleplerim/i })).not.toBeInTheDocument();
+  });
+
+  it("dışarı tıklayınca menü kapanır", () => {
+    renderHeader(testUser);
+    openMenu();
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+
+    fireEvent.mouseDown(document.body);
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("Escape ile menü kapanır", () => {
+    renderHeader(testUser);
+    openMenu();
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("menü öğesine tıklayınca menü kapanır", () => {
+    renderHeader(testUser);
+    openMenu();
+
+    fireEvent.click(screen.getByRole("menuitem", { name: /profil/i }));
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("mount'ta session tazelenir (giriş sonrası stale header regresyonu)", () => {
+    renderHeader(testUser);
+
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("route değişiminde session tazelenir", () => {
+    const { rerender } = renderHeader(testUser);
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+
+    mockPathname.mockReturnValue("/hesap/profil");
+    rerender(<SiteHeader />);
+
+    expect(mockUpdate).toHaveBeenCalledTimes(2);
   });
 });
