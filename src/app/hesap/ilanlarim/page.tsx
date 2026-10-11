@@ -61,7 +61,7 @@ export default async function IlanlarimPage() {
       {listings.length === 0 ? (
         <div className="card mt-8 p-8 text-center">
           <span className="material-symbols-outlined text-3xl text-outline">
-            caravan
+            rv_hookup
           </span>
           <p className="mt-2 font-semibold text-on-surface">Henüz hiç ilanınız yok</p>
           <Link href="/hesap/ilanlarim/yeni" className="btn btn-primary btn-sm mt-4">

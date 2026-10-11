@@ -172,18 +172,18 @@ export function ConversationThread({
                 <div
                   className={`max-w-[70%] ${
                     isOwn
-                      ? "rounded-tr-none rounded-bl-lg rounded-br-lg bg-accent text-accent-deep"
+                      ? "rounded-tr-none rounded-bl-lg rounded-br-lg bg-accent text-white"
                       : "rounded-tl-none rounded-bl-lg rounded-br-lg bg-surface-low text-on-surface"
                   } px-3 py-2`}
                 >
                   <p className="text-body-md whitespace-pre-wrap break-words">{msg.content}</p>
-                  <p className="mt-1 text-right text-body-xs text-on-surface-variant/70">
+                  <p className={`mt-1 text-right text-body-xs ${isOwn ? "text-white/70" : "text-on-surface-variant/70"}`}>
                     {time}
                     {isOwn && msg.optimistic && <span className="ml-1">(gönderiliyor…)</span>}
                   </p>
                 </div>
                 {isOwn && (
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-title-sm font-bold text-accent-deep">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-title-sm font-bold text-white">
                     S
                   </span>
                 )}
