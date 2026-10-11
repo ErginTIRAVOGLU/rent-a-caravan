@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { requireAdmin } from "../../../lib/auth";
-import { prisma } from "../../../lib/prisma";
+import { getReviewsEnabledCore } from "../../../server/admin/service";
 import { SettingActions } from "./SettingActions";
 
 export const metadata: Metadata = {
@@ -11,10 +11,7 @@ export const metadata: Metadata = {
 export default async function AdminSettingsPage() {
   await requireAdmin();
 
-  const reviewsSetting = await prisma.setting.findUnique({
-    where: { key: "reviewsEnabled" },
-  });
-  const reviewsEnabled = reviewsSetting ? Boolean(reviewsSetting.value) : true;
+  const reviewsEnabled = await getReviewsEnabledCore();
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-12">

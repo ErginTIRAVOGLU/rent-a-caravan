@@ -1,14 +1,20 @@
+import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 
 import { prisma } from "../../../src/lib/prisma";
 import { makeUser, makeListing, resetDb } from "../../helpers/db";
 
+// Hoisted auth mock
+const { authMock } = vi.hoisted(() => ({
+  authMock: vi.fn(),
+}));
+
 // Mock next-auth
 vi.mock("next-auth", () => ({
   default: vi.fn(() => ({
-    auth: vi.fn(),
+    auth: authMock,
     handlers: { GET: vi.fn(), POST: vi.fn() },
     signIn: vi.fn(),
     signOut: vi.fn(),
@@ -30,11 +36,21 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) =>
+    React.createElement("a", { href, ...props }, children),
+}));
+
 // jsdom setup for testing
 const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>", { url: "http://localhost" });
 global.window = dom.window as unknown as Window & typeof globalThis;
 global.document = dom.window.document;
-global.navigator = dom.window.navigator;
+// Node.js 21+ global.navigator salt okunur — defineProperty ile override.
+Object.defineProperty(global, "navigator", {
+  value: dom.window.navigator,
+  writable: true,
+  configurable: true,
+});
 global.HTMLElement = dom.window.HTMLElement;
 global.Element = dom.window.Element;
 global.Node = dom.window.Node;
@@ -49,6 +65,18 @@ beforeEach(async () => {
 afterEach(() => {
   vi.useRealTimers();
 });
+
+function setupSession(user: { id: string; name: string; email: string }) {
+  authMock.mockResolvedValue({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: "USER",
+      isBanned: false,
+    },
+  });
+}
 
 describe("/hesap/mesajlar page", () => {
   let owner: Awaited<ReturnType<typeof makeUser>>;
@@ -71,21 +99,14 @@ describe("/hesap/mesajlar page", () => {
   });
 
   it("sohbet listesi render edilir", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: renter.id,
-      name: renter.name,
-      email: renter.email,
-      role: "USER",
-      isBanned: false,
-    });
+    setupSession(renter);
 
     const { default: MesajlarPage } = await import("../../../src/app/hesap/mesajlar/page");
-    render(await MesajlarPage());
+    const { getByText } = render(await MesajlarPage());
 
-    expect(screen.getByText("Mesajlarım")).toBeInTheDocument();
-    expect(screen.getByText("İlan 1")).toBeInTheDocument();
-    expect(screen.getByText("İlan 2")).toBeInTheDocument();
+    expect(getByText("Mesajlarım")).toBeInTheDocument();
+    expect(getByText("İlan 1")).toBeInTheDocument();
+    expect(getByText("İlan 2")).toBeInTheDocument();
   });
 
   it("unread badge gösterilir", async () => {
@@ -97,37 +118,23 @@ describe("/hesap/mesajlar page", () => {
       ],
     });
 
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: renter.id,
-      name: renter.name,
-      email: renter.email,
-      role: "USER",
-      isBanned: false,
-    });
+    setupSession(renter);
 
     const { default: MesajlarPage } = await import("../../../src/app/hesap/mesajlar/page");
-    render(await MesajlarPage());
+    const { getByText } = render(await MesajlarPage());
 
-    expect(screen.getByText("2")).toBeInTheDocument(); // unread badge
+    expect(getByText("2")).toBeInTheDocument(); // unread badge
   });
 
   it("sohbet yoksa boş durum gösterilir", async () => {
     await prisma.conversation.deleteMany({ where: { renterId: renter.id } });
 
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: renter.id,
-      name: renter.name,
-      email: renter.email,
-      role: "USER",
-      isBanned: false,
-    });
+    setupSession(renter);
 
     const { default: MesajlarPage } = await import("../../../src/app/hesap/mesajlar/page");
-    render(await MesajlarPage());
+    const { getByText } = render(await MesajlarPage());
 
-    expect(screen.getByText("Henüz mesajınız yok")).toBeInTheDocument();
-    expect(screen.getByText("Karavan Arayın")).toBeInTheDocument();
+    expect(getByText("Henüz mesajınız yok")).toBeInTheDocument();
+    expect(getByText("Karavan Arayın")).toBeInTheDocument();
   });
 });

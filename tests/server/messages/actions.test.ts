@@ -3,10 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "../../../src/lib/prisma";
 import { makeUser, makeListing, resetDb } from "../../helpers/db";
 
+// Hoisted auth mock
+const { authMock } = vi.hoisted(() => ({
+  authMock: vi.fn(),
+}));
+
 // Mock next-auth before it's imported by auth.ts
 vi.mock("next-auth", () => ({
   default: vi.fn(() => ({
-    auth: vi.fn(),
+    auth: authMock,
     handlers: { GET: vi.fn(), POST: vi.fn() },
     signIn: vi.fn(),
     signOut: vi.fn(),
@@ -35,7 +40,20 @@ import {
 
 beforeEach(async () => {
   await resetDb();
+  vi.clearAllMocks();
 });
+
+function sessionFor(user: { id: string; name: string; email: string }) {
+  authMock.mockResolvedValue({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: "USER",
+      isBanned: false,
+    },
+  });
+}
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -55,14 +73,7 @@ describe("startConversation action", () => {
   });
 
   it("oturumlu kullanıcı için sohbet başlatır", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: renter.id,
-      name: renter.name,
-      email: renter.email,
-      role: "USER",
-      isBanned: false,
-    });
+    sessionFor(renter);
 
     const result = await startConversation(listing.id);
 
@@ -74,8 +85,7 @@ describe("startConversation action", () => {
   });
 
   it("oturum yoksa redirect atar (requireUser)", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue(null);
+    authMock.mockResolvedValue(null);
 
     // redirect throw ettiği için action da throw etmelidir
     await expect(startConversation(listing.id)).rejects.toThrow();
@@ -101,14 +111,7 @@ describe("sendMessage action", () => {
   });
 
   it("oturumlu kullanıcı mesaj gönderir", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: renter.id,
-      name: renter.name,
-      email: renter.email,
-      role: "USER",
-      isBanned: false,
-    });
+    sessionFor(renter);
 
     const result = await sendMessage(conversationId, "Test mesajı");
 
@@ -120,8 +123,7 @@ describe("sendMessage action", () => {
   });
 
   it("oturum yoksa redirect atar", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue(null);
+    authMock.mockResolvedValue(null);
 
     await expect(sendMessage(conversationId, "Test")).rejects.toThrow();
   });
@@ -153,14 +155,7 @@ describe("markMessagesRead action", () => {
   });
 
   it("oturumlu kullanıcı mesajları okundu işaretler", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: owner.id,
-      name: owner.name,
-      email: owner.email,
-      role: "USER",
-      isBanned: false,
-    });
+    sessionFor(owner);
 
     const result = await markMessagesRead(conversationId);
 
@@ -171,8 +166,7 @@ describe("markMessagesRead action", () => {
   });
 
   it("oturum yoksa redirect atar", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue(null);
+    authMock.mockResolvedValue(null);
 
     await expect(markMessagesRead(conversationId)).rejects.toThrow();
   });
@@ -194,14 +188,7 @@ describe("getConversations action", () => {
   });
 
   it("oturumlu kullanıcının sohbet listesini döndürür", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: renter.id,
-      name: renter.name,
-      email: renter.email,
-      role: "USER",
-      isBanned: false,
-    });
+    sessionFor(renter);
 
     const result = await getConversations();
 
@@ -213,8 +200,7 @@ describe("getConversations action", () => {
   });
 
   it("oturum yoksa redirect atar", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue(null);
+    authMock.mockResolvedValue(null);
 
     await expect(getConversations()).rejects.toThrow();
   });
@@ -237,14 +223,7 @@ describe("getConversation action", () => {
   });
 
   it("oturumlu kullanıcı sohbet detayını alır", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue({
-      id: renter.id,
-      name: renter.name,
-      email: renter.email,
-      role: "USER",
-      isBanned: false,
-    });
+    sessionFor(renter);
 
     const result = await getConversation(conversationId);
 
@@ -255,8 +234,7 @@ describe("getConversation action", () => {
   });
 
   it("oturum yoksa redirect atar", async () => {
-    const { getSessionUser } = await import("../../../src/lib/auth");
-    vi.mocked(getSessionUser).mockResolvedValue(null);
+    authMock.mockResolvedValue(null);
 
     await expect(getConversation(conversationId)).rejects.toThrow();
   });

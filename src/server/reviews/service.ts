@@ -274,9 +274,18 @@ export async function getReviewsForListing(
   return ok({ reviews, averageRating });
 }
 
+export type WrittenReview = Review & {
+  listing: { id: string; title: string };
+};
+
+export type ReceivedReview = Review & {
+  author: { id: string; name: string; avatarUrl: string | null };
+  listing: { id: string; title: string };
+};
+
 export type UserReviews = {
-  written: Review[];
-  received: Review[];
+  written: WrittenReview[];
+  received: ReceivedReview[];
 };
 
 /**
@@ -285,7 +294,7 @@ export type UserReviews = {
 export async function getUserReviews(
   user: SessionUser,
 ): Promise<ActionResult<UserReviews>> {
-  const [written, received] = await Promise.all([
+  const [written, received]: [WrittenReview[], ReceivedReview[]] = await Promise.all([
     prisma.review.findMany({
       where: { authorId: user.id },
       include: { listing: { select: { id: true, title: true } } },

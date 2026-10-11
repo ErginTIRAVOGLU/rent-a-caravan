@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { requireUser } from "../../../lib/auth";
-import { prisma } from "../../../lib/prisma";
+import { getUserReviews } from "../../../server/reviews/service";
 import { AccountNav } from "../../../components/AccountNav";
 import { StarRating } from "../../../components/StarRating";
 import { ReviewActions } from "./ReviewActions";
@@ -14,42 +14,14 @@ export const metadata: Metadata = {
 // Değerlendirmeler sayfası — iki bölüm:
 //   1) "Yazdıklarım": kullanıcının yazdığı yorumlar (düzenle/sil).
 //   2) "İlanlarıma Yazılanlar": ilanlarına yazılan yorumlar (salt okunur).
-
-type ReviewWithListing = {
-  id: string;
-  rating: number;
-  comment: string | null;
-  createdAt: Date;
-  listing: { id: string; title: string };
-};
-
-type ReviewWithAuthor = {
-  id: string;
-  rating: number;
-  comment: string | null;
-  createdAt: Date;
-  author: { id: string; name: string; avatarUrl: string | null };
-  listing: { id: string; title: string };
-};
+// Veri kaynağı: getUserReviews service (sayfa doğrudan Prisma sorgulamaz).
 
 export default async function DegerlendirmelerPage() {
   const user = await requireUser();
 
-  const [written, received] = await Promise.all([
-    prisma.review.findMany({
-      where: { authorId: user.id },
-      include: { listing: { select: { id: true, title: true } } },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.review.findMany({
-      where: { listing: { ownerId: user.id } },
-      include: {
-        author: { select: { id: true, name: true, avatarUrl: true } },
-        listing: { select: { id: true, title: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const reviewsResult = await getUserReviews(user);
+  const written = reviewsResult.ok ? reviewsResult.data.written : [];
+  const received = reviewsResult.ok ? reviewsResult.data.received : [];
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
