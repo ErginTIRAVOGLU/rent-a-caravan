@@ -85,6 +85,24 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
   const reviewsResult = await getReviewsForListing(id);
   const reviewsData = reviewsResult.ok ? reviewsResult.data : null;
 
+  // "Değerlendir" kapısı — yorum-yaz sayfasıyla AYNI kural:
+  // yalnız COMPLETED + kendi booking'i + mevcut yorum yok. Sahibe yok.
+  let canReview = false;
+  if (user && user.id !== listing.ownerId) {
+    const booking = await prisma.bookingRequest.findFirst({
+      where: { listingId: id, renterId: user.id, status: "COMPLETED" },
+      select: { id: true },
+      orderBy: { createdAt: "desc" },
+    });
+    if (booking) {
+      const existingReview = await prisma.review.findUnique({
+        where: { bookingId: booking.id },
+        select: { id: true },
+      });
+      canReview = !existingReview;
+    }
+  }
+
   // Konaklama tarihleri URL'den. Fiyat özeti formun AYNI kurallarını kullanır
   // (validateStay): URL'yle 30 geceden uzun, geçmiş veya minimum-altı tarih
   // verilirse kitaplanamayacak toplam ASLA gösterilmez — özet ile talep formu
@@ -275,6 +293,14 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
 
           <section className={cardClassName}>
             <SectionTitle icon="star">Yorumlar</SectionTitle>
+            {canReview ? (
+              <Link
+                href={`/ilan/${listing.id}/yorum-yaz`}
+                className="btn btn-primary btn-sm mt-3"
+              >
+                Değerlendir
+              </Link>
+            ) : null}
             {reviewsData && reviewsData.reviews.length > 0 ? (
               <div className="mt-3 space-y-4">
                 {reviewsData.averageRating !== null ? (
