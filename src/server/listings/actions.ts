@@ -7,6 +7,7 @@ import { ok, type ActionResult } from "../../lib/result";
 import {
   createListingCore,
   deleteListingCore,
+  deleteListingPhotoCore,
   submitListingCore,
   updateListingCore,
 } from "./service";
@@ -61,4 +62,12 @@ export async function submitListing(
 ): Promise<ActionResult<ClientListing>> {
   const user = await requireUser();
   return toClientResult(await submitListingCore(user, id));
+}
+
+/** İlan fotoğrafı sil — sahiplik + yetim kuralı service'te (PhotoUploader "Kaldır"). */
+export async function deleteListingPhoto(
+  key: unknown,
+): Promise<ActionResult<true>> {
+  const user = await requireUser();
+  return deleteListingPhotoCore(user, key);
 }

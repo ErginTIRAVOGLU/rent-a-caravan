@@ -1,8 +1,11 @@
 import type { Listing } from "@prisma/client";
 import type { ZodError } from "zod";
+import { UTApi } from "uploadthing/server";
 
 import { prisma } from "../../lib/prisma";
 import { fail, firstIssue, ok, type ActionResult } from "../../lib/result";
+import { assertRateLimit, PHOTO_DELETE_LIMIT } from "../../lib/rate-limit";
+import { extractFileKey } from "../../lib/upload";
 import {
   listingSchema,
   listingUpdateSchema,
@@ -23,10 +26,30 @@ const YETKI_YOK = "Bu işlem için yetkiniz yok.";
 const ILAN_BULUNAMADI = "İlan bulunamadı.";
 const GECERSIZ_DURUM = "Bu ilan şu anda gönderilemez.";
 const GECERSIZ_ILAN_ID = "Geçersiz ilan kimliği.";
+const GECERSIZ_DOSYA = "Geçersiz dosya anahtarı.";
+const DOSYA_YETKI_YOK = "Bu dosyayı silmeye yetkiniz yok.";
+const DOSYA_SILINEMEDI = "Fotoğraf sunucudan silinemedi, lütfen tekrar deneyin.";
 
 // Prisma @default(cuid()) ile üretilen id deseni: `c` + 24 alfanümerik.
 // Bozuk/çöp bir id Prisma'ya ulaşmadan reddedilir (Türkçe ActionResult).
 const CUID_RE = /^c[a-z0-9]{24}$/;
+
+/**
+ * UploadThing dosya anahtarı deseni — gerçek anahtarlar `uuid_dosyaadı`
+ * biçimindedir (ör. `2e0fdb64-…_image.jpg`), cuid DEĞİLDİR; bu yüzden CUID_RE
+ * burada kullanılamaz. Kapı reports service'teki isCuid ile aynı stildedir
+ * (önce TİP kontrolü, sonra regex) ama UploadThing alfabesine göredir:
+ * harf/rakam ile `._-/`, en fazla 512 karakter, `..` segmenti yok.
+ */
+const FILE_KEY_RE = /^[A-Za-z0-9._/-]{1,512}$/;
+
+/** Dosya anahtarını doğrular; geçersizse fail, geçerliyse null döner. */
+function invalidFileKey(key: unknown): ActionResult<never> | null {
+  if (typeof key !== "string" || !FILE_KEY_RE.test(key) || key.includes("..")) {
+    return fail(GECERSIZ_DOSYA, "photoUrls");
+  }
+  return null;
+}
 
 /** İlan id'sini doğrular; geçersizse fail, geçerliyse null döner. */
 function invalidId(id: string): ActionResult<never> | null {
@@ -227,4 +250,60 @@ export async function submitListingCore(
     data: { status: "PENDING", rejectionReason: null },
   });
   return ok(listing);
+}
+
+/**
+ * İlan fotoğrafı silme — PhotoUploader "Kaldır" buradan geçer (UTApi
+ * sunucu sırrı gerektirir, istemcide çalışmaz).
+ *
+ * Sıra: anahtar biçimi → hız sınırı → sahiplik kuralı → silme.
+ * Sahiplik kuralı: key, `ownerId === user.id` olan bir ilanın `photoUrls`
+ * listesindeyse VEYA hiçbir ilan key'e atıf yapmıyorsa (yetim = az önce
+ * yüklenmiş taslak fotoğraf; anahtarlar tahmin edilemez, ayrıca auth +
+ * hız sınırı var) `UTApi.deleteFiles` çağrılır. Başkasının ilanına ait
+ * key reddedilir ve `deleteFiles` ASLA çağrılmaz.
+ *
+ * Yetim kuralının gerekçesi: ListingForm fotoğrafları ilan satırı
+ * oluşmadan yükler (create gönderim anında yapılır), bu yüzden salt
+ * sahiplik kontrolü taslak fotoğrafların silinmesini bozardı.
+ */
+export async function deleteListingPhotoCore(
+  user: SessionUser,
+  key: unknown,
+): Promise<ActionResult<true>> {
+  const badKey = invalidFileKey(key);
+  if (badKey) {
+    return badKey;
+  }
+  const fileKey = key as string;
+
+  const rate = await assertRateLimit(
+    "photo-delete",
+    user.id,
+    PHOTO_DELETE_LIMIT.limit,
+    PHOTO_DELETE_LIMIT.windowSeconds,
+  );
+  if (!rate.ok) {
+    return rate;
+  }
+
+  const candidates = await prisma.listing.findMany({
+    select: { ownerId: true, photoUrls: true },
+  });
+  const referencedByOther = candidates.some(
+    (listing) =>
+      listing.ownerId !== user.id &&
+      listing.photoUrls.some((url) => extractFileKey(url) === fileKey),
+  );
+  if (referencedByOther) {
+    return fail(DOSYA_YETKI_YOK);
+  }
+
+  try {
+    const utapi = new UTApi();
+    await utapi.deleteFiles(fileKey);
+  } catch {
+    return fail(DOSYA_SILINEMEDI);
+  }
+  return ok(true);
 }
