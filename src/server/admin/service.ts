@@ -13,14 +13,16 @@ import type { SessionUser } from "../users/service";
 //   PENDING  → ACTIVE    (approveListingCore; rejectionReason temizlenir)
 //   PENDING  → REJECTED  (rejectListingCore; gerekçe ZORUNLU)
 //   ACTIVE   → PAUSED    (pauseListingCore)
+//   PAUSED   → ACTIVE    (unpauseListingCore — admin "Yayına Al"; duraklatılan
+//                          ilan admin eliyle yayına döner, sahibinin yeniden
+//                          gönderimi gerekmez)
 //   REJECTED → PENDING   (yalnız ilan sahibinin T6 submitListingCore akışı)
 //   DRAFT    → PENDING   (yalnız ilan sahibinin T6 submitListingCore akışı)
-//   PAUSED   → PENDING   (yalnız ilan sahibinin T6 submitListingCore akışı —
-//                          PAUSED'ın TEK çıkış yolu; geniş inceleme düzeltmesi)
+//   PAUSED   → PENDING   (ilan sahibinin T6 submitListingCore akışı —
+//                          PAUSED'ın SAHİP tarafı çıkışı; admin tarafı çıkışı
+//                          unpauseListingCore'dur)
 // Matriste olmayan her geçiş (ör. DRAFT → ACTIVE, ACTIVE → ACTIVE,
-// PAUSED → ACTIVE) fail döner ve HİÇ mutation olmaz. "Duraklatmayı
-// kaldır" admin yetkisi YOK — yeniden yayına alma, sahibinin yeniden
-// gönderimi + admin onayı üzerinden yürür.
+// PAUSED → REJECTED) fail döner ve HİÇ mutation olmaz.
 //
 // Yetki matrisi: dört işlem de YALNIZ admin (action katmanı requireAdmin ile
 // oturum kapısı uygular; service'te role ayrıca doğrulanır — savunma derinliği).
@@ -236,6 +238,49 @@ export async function pauseListingCore(
 
   if (result.ok) {
     await notifyListingStatusChanged(result.data, "PAUSED");
+    return ok(result.data.listing);
+  }
+  return result;
+}
+
+/**
+ * Yayına al — YALNIZ admin; matris: yalnız PAUSED → ACTIVE.
+ * pauseListingCore'un simetriği: atomik `updateMany({id,status:"PAUSED"})`
+ * kalıbı, commit SONRASI ilan sahibine e-posta (status ACTIVE).
+ */
+export async function unpauseListingCore(
+  admin: SessionUser,
+  id: string,
+): Promise<ActionResult<Listing>> {
+  if (admin.role !== "ADMIN") {
+    return fail(YETKI_YOK);
+  }
+  if (!CUID_RE.test(id)) {
+    return fail(GECERSIZ_ILAN_ID);
+  }
+
+  const result = await safeTx<Decision>(async (tx) => {
+    // Atomik geçiş (approve ile aynı kalıp): id + PAUSED koşulu tek yazımada.
+    const res = await tx.listing.updateMany({
+      where: { id, status: "PAUSED" },
+      data: { status: "ACTIVE" },
+    });
+    if (res.count === 0) {
+      const exists = await tx.listing.findUnique({
+        where: { id },
+        select: { id: true },
+      });
+      return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
+    }
+    const updated = await tx.listing.findUniqueOrThrow({
+      where: { id },
+      include: { owner: { select: { email: true } } },
+    });
+    return ok({ listing: updated, ownerEmail: updated.owner.email });
+  });
+
+  if (result.ok) {
+    await notifyListingStatusChanged(result.data, "ACTIVE");
     return ok(result.data.listing);
   }
   return result;

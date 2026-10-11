@@ -4,9 +4,10 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { SessionUser } from "../../src/server/users/service";
 
-// Mock next/image
+// Mock next/image (test altyapısı — üretim işareti değil)
 vi.mock("next/image", () => ({
   default: ({ alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    // eslint-disable-next-line @next/next/no-img-element -- mock ham <img> basar
     <img alt={alt} {...props} data-testid="logo-image" />
   ),
 }));
@@ -137,6 +138,14 @@ describe("SiteHeader", () => {
     renderHeader(testUser, 3);
 
     expect(screen.getByText("3")).toBeInTheDocument();
+  });
+
+  it("okunmamış rozeti neyin sayısı olduğunu açıklar (title + aria-label)", () => {
+    renderHeader(testUser, 2);
+
+    const badge = screen.getByText("2");
+    expect(badge).toHaveAttribute("title", "Okunmamış mesajlar");
+    expect(badge).toHaveAttribute("aria-label", "2 okunmamış mesaj");
   });
 
   it("does not show unread message badge when count is 0", () => {

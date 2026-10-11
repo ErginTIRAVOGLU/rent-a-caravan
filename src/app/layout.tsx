@@ -36,7 +36,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        {/* design2 ikon seti */}
+        {/* design2 ikon seti: ikon fontları için display=block Google önerisidir;
+            no-page-custom-font kuralı pages/ dizinine aittir (App Router false-positive) */}
+        {/* eslint-disable-next-line @next/next/google-font-display, @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
           rel="stylesheet"

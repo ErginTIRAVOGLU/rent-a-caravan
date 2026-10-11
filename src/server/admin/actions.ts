@@ -9,6 +9,7 @@ import {
   pauseListingCore,
   rejectListingCore,
   setUserBannedCore,
+  unpauseListingCore,
   updateSettingCore,
   type BannedUser,
 } from "./service";
@@ -56,6 +57,14 @@ export async function pauseListing(
 ): Promise<ActionResult<ClientListing>> {
   const admin = await requireAdmin();
   return toClientResult(await pauseListingCore(admin, id));
+}
+
+/** Duraklatılan ilanı yayına al — oturum kapısı requireAdmin; yalnız PAUSED → ACTIVE. */
+export async function unpauseListing(
+  id: string,
+): Promise<ActionResult<ClientListing>> {
+  const admin = await requireAdmin();
+  return toClientResult(await unpauseListingCore(admin, id));
 }
 
 /**

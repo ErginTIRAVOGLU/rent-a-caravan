@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import useSWR from "swr";
 
 import type { Conversation } from "@prisma/client";
@@ -58,9 +59,12 @@ export function ConversationList({ initialConversations, userId }: Props) {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   {conv.listing.photoUrls[0] ? (
-                    <img
+                    <Image
                       src={conv.listing.photoUrls[0]}
                       alt=""
+                      width={48}
+                      height={48}
+                      unoptimized
                       className="h-12 w-12 shrink-0 rounded-lg object-cover"
                     />
                   ) : (

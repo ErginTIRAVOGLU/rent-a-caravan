@@ -13,6 +13,7 @@ import {
   pauseListingCore,
   rejectListingCore,
   setUserBannedCore,
+  unpauseListingCore,
 } from "../src/server/admin/service";
 import { submitListingCore } from "../src/server/listings/service";
 import {
@@ -379,6 +380,105 @@ it("pause: ACTIVE → PAUSED + email; PENDING/DRAFT ilan duraklatılamaz", async
 
   // Yalnızca ilk başarılı pause e-posta gönderdi
   expect(sendListingStatusChanged).toHaveBeenCalledTimes(1);
+});
+
+// ---------------------------------------------------------------------------
+// unpauseListingCore — PAUSED → ACTIVE (admin "Yayına Al")
+// ---------------------------------------------------------------------------
+
+it("unpause: ACTIVE → PAUSED → ACTIVE turu, iki karar da sahibine e-postalanır", async () => {
+  await resetDb();
+  const admin = await prisma.user.create({
+    data: makeUser({ role: "ADMIN" }),
+  });
+  const owner = await prisma.user.create({ data: makeUser() });
+  const listing = await prisma.listing.create({
+    data: makeListing(owner.id, { status: "ACTIVE" }),
+  });
+
+  const paused = await pauseListingCore(adminSession(admin), listing.id);
+  expect(paused.ok).toBe(true);
+  expect((await getListing(listing.id)).status).toBe("PAUSED");
+
+  const unpaused = await unpauseListingCore(adminSession(admin), listing.id);
+  expect(unpaused.ok).toBe(true);
+  expect((await getListing(listing.id)).status).toBe("ACTIVE");
+
+  expect(sendListingStatusChanged).toHaveBeenCalledTimes(2);
+  const [, second] = vi.mocked(sendListingStatusChanged).mock.calls[1];
+  expect(second.status).toBe("ACTIVE");
+});
+
+it("unpause: role=USER fail, PAUSED durum değişmez, email yok", async () => {
+  await resetDb();
+  const admin = await prisma.user.create({
+    data: makeUser({ role: "ADMIN" }),
+  });
+  const member = await prisma.user.create({ data: makeUser() });
+  const owner = await prisma.user.create({ data: makeUser() });
+  const listing = await prisma.listing.create({
+    data: makeListing(owner.id, { status: "PAUSED" }),
+  });
+  expect(admin.id).toBeTruthy();
+
+  const result = await unpauseListingCore(memberSession(member), listing.id);
+
+  expect(result.ok).toBe(false);
+  if (!result.ok) {
+    expect(result.error).toContain("yetkiniz yok");
+  }
+  expect((await getListing(listing.id)).status).toBe("PAUSED");
+  expect(sendListingStatusChanged).not.toHaveBeenCalled();
+});
+
+it("unpause: matris dışı durumlar fail (PENDING/ACTIVE/DRAFT/REJECTED), mutation yok", async () => {
+  await resetDb();
+  const admin = await prisma.user.create({
+    data: makeUser({ role: "ADMIN" }),
+  });
+  const owner = await prisma.user.create({ data: makeUser() });
+  const pending = await prisma.listing.create({
+    data: makeListing(owner.id, { status: "PENDING" }),
+  });
+  const active = await prisma.listing.create({
+    data: makeListing(owner.id, { status: "ACTIVE" }),
+  });
+  const draft = await prisma.listing.create({
+    data: makeListing(owner.id, { status: "DRAFT" }),
+  });
+  const rejected = await prisma.listing.create({
+    data: makeListing(owner.id, { status: "REJECTED" }),
+  });
+
+  for (const listing of [pending, active, draft, rejected]) {
+    const result = await unpauseListingCore(adminSession(admin), listing.id);
+    expect(result.ok).toBe(false);
+  }
+  expect((await getListing(pending.id)).status).toBe("PENDING");
+  expect((await getListing(active.id)).status).toBe("ACTIVE");
+  expect((await getListing(draft.id)).status).toBe("DRAFT");
+  expect((await getListing(rejected.id)).status).toBe("REJECTED");
+  expect(sendListingStatusChanged).not.toHaveBeenCalled();
+});
+
+it("unpause: geçersiz/kayıtsız kimlik fail döner", async () => {
+  await resetDb();
+  const admin = await prisma.user.create({
+    data: makeUser({ role: "ADMIN" }),
+  });
+
+  const badId = await unpauseListingCore(adminSession(admin), "abc");
+  expect(badId.ok).toBe(false);
+  if (!badId.ok) {
+    expect(badId.error).toContain("Geçersiz ilan kimliği");
+  }
+
+  const missingId = `c${"0".repeat(24)}`;
+  const missing = await unpauseListingCore(adminSession(admin), missingId);
+  expect(missing.ok).toBe(false);
+  if (!missing.ok) {
+    expect(missing.error).toContain("bulunamadı");
+  }
 });
 
 // ---------------------------------------------------------------------------

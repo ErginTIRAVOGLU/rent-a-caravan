@@ -1,6 +1,7 @@
 import { compare } from "bcryptjs";
 import { expect, it } from "vitest";
 import { prisma } from "../src/lib/prisma";
+import { updateReportStatusCore } from "../src/server/reports/service";
 import { seed } from "../prisma/seed";
 import { makeListing, makeUser, resetDb } from "./helpers/db";
 
@@ -38,4 +39,76 @@ it("makeUser/makeListing varsayılan fabrika değerleriyle kayıt oluşturur", a
   expect(listing.capacity).toBe(4);
   expect(listing.vehicleType).toBe("PANELVAN");
   expect(listing.status).toBe("ACTIVE");
+});
+
+it("seed şikayet id'leri cuid desenindedir — 'İncele' kapıdan geçer", async () => {
+  await resetDb();
+  await seed();
+
+  const reports = await prisma.report.findMany();
+  expect(reports.length).toBeGreaterThan(0);
+  const CUID_RE = /^c[a-z0-9]{24}$/;
+  for (const report of reports) {
+    expect(report.id).toMatch(CUID_RE);
+  }
+
+  // Gerçek senaryo: seed'in OPEN şikayeti "İncele" (OPEN → REVIEWING)
+  // geçişini kapıda "Geçersiz şikayet kimliği." yemeden yapar.
+  const admin = await prisma.user.findUniqueOrThrow({
+    where: { email: "admin@karavan.test" },
+  });
+  const open = reports.find((r) => r.status === "OPEN");
+  expect(open).toBeTruthy();
+  const result = await updateReportStatusCore(
+    {
+      id: admin.id,
+      name: admin.name,
+      email: admin.email,
+      role: "ADMIN",
+      isBanned: false,
+    },
+    open!.id,
+    "REVIEWING",
+  );
+  expect(result.ok).toBe(true);
+});
+
+it("desen dışı (eski seed biçimi) şikayet id'si kapıda reddedilir", async () => {
+  await resetDb();
+  await seed();
+
+  // Eski satır biçimi DB'ye yazılabilir ama gate Prisma'ya ulaşmadan reddeder.
+  const reporter = await prisma.user.findUniqueOrThrow({
+    where: { email: "kiraci@karavan.test" },
+  });
+  const listing = await prisma.listing.findFirstOrThrow();
+  await prisma.report.create({
+    data: {
+      id: "seed-report-1",
+      reporterId: reporter.id,
+      targetType: "LISTING",
+      targetId: listing.id,
+      reason: "Eski biçim id ile şikayet.",
+    },
+  });
+  const admin = await prisma.user.findUniqueOrThrow({
+    where: { email: "admin@karavan.test" },
+  });
+
+  const result = await updateReportStatusCore(
+    {
+      id: admin.id,
+      name: admin.name,
+      email: admin.email,
+      role: "ADMIN",
+      isBanned: false,
+    },
+    "seed-report-1",
+    "REVIEWING",
+  );
+
+  expect(result.ok).toBe(false);
+  if (!result.ok) {
+    expect(result.error).toContain("Geçersiz şikayet kimliği");
+  }
 });

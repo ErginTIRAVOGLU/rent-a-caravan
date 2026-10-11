@@ -16,7 +16,7 @@ const STATUS_LABELS: Record<ListingStatus, string> = {
   PENDING: "İncelemede",
   ACTIVE: "Yayında",
   REJECTED: "Reddedildi",
-  PAUSED: "Askıda",
+  PAUSED: "Duraklatıldı",
 };
 
 const STATUS_BADGES: Record<ListingStatus, string> = {
@@ -29,12 +29,13 @@ const STATUS_BADGES: Record<ListingStatus, string> = {
 
 /**
  * İlan moderasyonu: İNCELEME KUYRUĞU (PENDING — onayla/reddet), YAYINDAKİLER
- * (ACTIVE — duraklat) ve RED GEÇMİŞİ (REJECTED — gerekçeyle, salt okunur).
- * Durum geçişleri yalnızca service matrisinde (PENDING→ACTIVE|REJECTED,
- * ACTIVE→PAUSED) yapılır; diğer durumlar için burada düğme sunulmaz.
+ * (ACTIVE — duraklat), DURAKLATILMIŞLAR (PAUSED — yayına al) ve RED GEÇMİŞİ
+ * (REJECTED — gerekçeyle, salt okunur). Durum geçişleri yalnızca service
+ * matrisinde (PENDING→ACTIVE|REJECTED, ACTIVE→PAUSED, PAUSED→ACTIVE)
+ * yapılır; diğer durumlar için burada düğme sunulmaz.
  */
 export default async function AdminListingsPage() {
-  const [pending, active, rejected] = await Promise.all([
+  const [pending, active, paused, rejected] = await Promise.all([
     prisma.listing.findMany({
       where: { status: "PENDING" },
       include: { owner: { select: { name: true, email: true } } },
@@ -42,6 +43,12 @@ export default async function AdminListingsPage() {
     }),
     prisma.listing.findMany({
       where: { status: "ACTIVE" },
+      include: { owner: { select: { name: true, email: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.listing.findMany({
+      where: { status: "PAUSED" },
       include: { owner: { select: { name: true, email: true } } },
       orderBy: { createdAt: "desc" },
       take: 50,
@@ -112,6 +119,42 @@ export default async function AdminListingsPage() {
         ) : (
           <ul className="mt-3 space-y-4">
             {active.map((listing) => (
+              <li key={listing.id} className="card p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-bold text-on-surface">{listing.title}</h3>
+                    <p className="mt-1 text-body-md text-on-surface-variant">
+                      {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
+                      /gece · {listing.owner.name}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
+                    {STATUS_LABELS[listing.status]}
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <AdminListingActions
+                    listingId={listing.id}
+                    status={listing.status}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Duraklatılmış ilanlar — yayına alma adayları */}
+      <section className="mt-10">
+        <h2 className="section-title">Duraklatılmış ilanlar ({paused.length})</h2>
+        {paused.length === 0 ? (
+          <div className="card mt-3 p-6 text-center">
+            <span className="material-symbols-outlined text-3xl text-outline">pause_circle</span>
+            <p className="mt-2 font-semibold text-on-surface">Duraklatılmış ilan yok</p>
+          </div>
+        ) : (
+          <ul className="mt-3 space-y-4">
+            {paused.map((listing) => (
               <li key={listing.id} className="card p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

@@ -3,7 +3,7 @@
 import type { Review } from "@prisma/client";
 
 import { requireUser } from "../../lib/auth";
-import { ok, type ActionResult } from "../../lib/result";
+import { type ActionResult } from "../../lib/result";
 import {
   createReviewCore,
   deleteReviewCore,
