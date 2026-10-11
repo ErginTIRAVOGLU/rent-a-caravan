@@ -137,4 +137,26 @@ describe("/hesap/mesajlar page", () => {
     expect(getByText("Henüz mesajınız yok")).toBeInTheDocument();
     expect(getByText("Karavan Arayın")).toBeInTheDocument();
   });
+
+  it("sohbet kartı blok kutudur; önizleme metni tam görünür", async () => {
+    // Regresyon: kart Link'i satır-içi (inline) <a> idi; blok çocuklarla
+    // parçalanıp kart çerçevesi sağa kayıyor, önizlemenin başı kırpılmış
+    // görünüyordu. `block` sınıfı bunu engeller.
+    const fullPreview = "E2E senaryo 4: Ekim için müsaitlik var mı?";
+    const convs = await prisma.conversation.findMany({ where: { renterId: renter.id } });
+    await prisma.conversation.update({
+      where: { id: convs[0].id },
+      data: { lastMessagePreview: fullPreview },
+    });
+
+    setupSession(renter);
+
+    const { default: MesajlarPage } = await import("../../../src/app/hesap/mesajlar/page");
+    const { getByText } = render(await MesajlarPage());
+
+    const preview = getByText(fullPreview);
+    const cardLink = preview.closest("a");
+    expect(cardLink).not.toBeNull();
+    expect(cardLink!.classList.contains("block")).toBe(true);
+  });
 });
