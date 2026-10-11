@@ -132,7 +132,7 @@ export default async function Home() {
         {listings.length === 0 ? (
           <div className="card mt-6 p-10 text-center">
             <span className="material-symbols-outlined text-4xl text-outline">
-              caravan
+              rv_hookup
             </span>
             <p className="mt-3 font-semibold text-on-surface">
               Şu anda yayında ilan bulunmuyor

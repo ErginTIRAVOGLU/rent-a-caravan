@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
       value: pendingListings,
       href: "/admin/ilanlar",
       hint: "İnceleme sırasındaki ilanlar",
-      icon: "caravan",
+      icon: "rv_hookup",
       color: "accent",
     },
     {

@@ -215,4 +215,20 @@ describe("SiteHeader", () => {
     expect(screen.getByTestId("link-/hesap/ilanlarim")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /profil/i })).toBeInTheDocument();
   });
+
+  it("İlanlarım menü ikonu geçerli Material Symbols glyph'i kullanır", () => {
+    const user: SessionUser = {
+      id: "user-1",
+      name: "Test User",
+      email: "test@example.com",
+      role: "USER",
+      isBanned: false,
+    };
+    renderHeader(user);
+
+    const link = screen.getByTestId("link-/hesap/ilanlarim");
+    expect(
+      link.querySelector(".material-symbols-outlined")?.textContent,
+    ).toBe("rv_hookup");
+  });
 });

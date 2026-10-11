@@ -141,7 +141,7 @@ export function SiteHeader() {
                   </Link>
                   <Link href="/hesap/ilanlarim" className="menu-item">
                     <span className="material-symbols-outlined text-lg text-secondary">
-                      caravan
+                      rv_hookup
                     </span>
                     İlanlarım
                   </Link>
