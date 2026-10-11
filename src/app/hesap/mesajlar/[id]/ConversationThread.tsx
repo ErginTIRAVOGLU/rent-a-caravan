@@ -31,7 +31,7 @@ export function ConversationThread({
   >([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasMarkedRead = useRef(false);
   /** Kendi mesajı gönderildiğinde bir sonraki render'da alta kaydır. */
@@ -52,25 +52,32 @@ export function ConversationThread({
     }
   }, [conversation]);
 
-  // Alta kaydırma: thread üstten açılır; yalnız kendi mesajı gönderilince veya
-  // kullanıcı zaten alta yakınken (poll güncellemesi geçmiş okumayı bölmez).
+  // Alta kaydırma: YALNIZ yazışma kutusu kayar (`container.scrollTo`) —
+  // `scrollIntoView` sayfanın tamamını kaydırırdı. Thread üstten açılır;
+  // yalnız kendi mesajı gönderilince veya kullanıcı zaten alta yakınken
+  // (poll güncellemesi geçmiş okumayı bölmez).
+  function scrollChatToBottom(smooth: boolean) {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+  }
+
   useEffect(() => {
     const container = scrollContainerRef.current;
-    const end = messagesEndRef.current;
-    if (!container || !end) return;
+    if (!container) return;
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
     if (scrollForOwnMessage.current) {
       scrollForOwnMessage.current = false;
-      end.scrollIntoView({ behavior: "smooth" });
+      scrollChatToBottom(true);
       return;
     }
     const distanceFromBottom =
       container.scrollHeight - container.scrollTop - container.clientHeight;
     if (distanceFromBottom < 120) {
-      end.scrollIntoView({ behavior: "smooth" });
+      scrollChatToBottom(true);
     }
   }, [conversation?.messages, optimisticMessages]);
 
@@ -260,7 +267,6 @@ export function ConversationThread({
             );
           })
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Mesaj gönderim formu */}

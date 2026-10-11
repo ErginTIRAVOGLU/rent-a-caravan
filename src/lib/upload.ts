@@ -50,6 +50,54 @@ export function validatePhotoFiles(
 }
 
 /**
+ * Dosya başlığı (magic byte) imzasını MIME türüne göre doğrular.
+ * Saf fonksiyon — `Uint8Array` + mime alır; istemcide gerçek `File`
+ * nesneleri üzerinde (`file.slice(0, 12).arrayBuffer()`) kullanılır.
+ * Spoof'lanmış dosyaları (ör. exe bytes + png MIME) eler; tek başına
+ * dosyanın tamamen güvenli olduğunu kanıtlamaz, ilk kapıdır.
+ */
+export function checkPhotoSignature(
+  bytes: Uint8Array,
+  mimeType: string,
+): boolean {
+  if (mimeType === "image/jpeg") {
+    return (
+      bytes.length >= 3 &&
+      bytes[0] === 0xff &&
+      bytes[1] === 0xd8 &&
+      bytes[2] === 0xff
+    );
+  }
+  if (mimeType === "image/png") {
+    return (
+      bytes.length >= 8 &&
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47 &&
+      bytes[4] === 0x0d &&
+      bytes[5] === 0x0a &&
+      bytes[6] === 0x1a &&
+      bytes[7] === 0x0a
+    );
+  }
+  if (mimeType === "image/webp") {
+    return (
+      bytes.length >= 12 &&
+      bytes[0] === 0x52 && // 'R'
+      bytes[1] === 0x49 && // 'I'
+      bytes[2] === 0x46 && // 'F'
+      bytes[3] === 0x46 && // 'F'
+      bytes[8] === 0x57 && // 'W'
+      bytes[9] === 0x45 && // 'E'
+      bytes[10] === 0x42 && // 'B'
+      bytes[11] === 0x50 // 'P'
+    );
+  }
+  return false;
+}
+
+/**
  * UploadThing URL'sinden dosya anahtarını (fileKey) çıkarır.
  * URL formatı: https://<bucket>.ufs.sh/f/<fileKey>
  * veya: https://ufs.sh/f/<appId>/<fileKey> (path-style appId)

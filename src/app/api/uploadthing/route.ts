@@ -1,12 +1,12 @@
 import {
   createRouteHandler,
   createUploadthing,
-  UploadThingError,
   type FileRouter,
 } from "uploadthing/server";
 
 import { getSessionUser } from "../../../lib/auth";
-import { MAX_PHOTOS, validatePhotoFiles } from "../../../lib/upload";
+import { MAX_PHOTOS } from "../../../lib/upload";
+import { imageUploaderMiddleware } from "../../../server/uploadthing";
 
 // UploadThing dosya yönlendiricisi (T7) — tek uç nokta: imageUploader.
 // - Tür filtresi: MIME anahtarlarıyla yalnız jpeg/png/webp kabul edilir.
@@ -16,91 +16,17 @@ import { MAX_PHOTOS, validatePhotoFiles } from "../../../lib/upload";
 // - Boyut: UploadThing `FileSize` tipi yalnız 2'nin kuvveti çarpanı kabul
 //   eder ("4MB"/"8MB", "5MB" DEĞİL); bu yüzden router 8MB yazılır ve asıl
 //   5 MB sınırı middleware'de validatePhotoFiles ile uygulanır.
-// - Güvenlik: MIME türü ve dosya boyutu dışında "magic byte" imzası doğrulanır
-//   (JPEG: FF D8 FF, PNG: 89 50 4E 47 0D 0A 1A 0A, WebP: RIFF....WEBP).
+// - Güvenlik: MIME türü ve dosya boyutu burada (metadata aşamasında)
+//   sınanır. Magic-byte imza kontrolü burada YAPILAMAZ: UploadThing
+//   presigned-URL akışında middleware dosya BYTES'ları gelmeden çalışır;
+//   `FileUploadData` yalnız `{ name, size, type, customId?, lastModified? }`
+//   JSON metadata'sıdır (`stream()`/`arrayBuffer()` YOK). İmza kontrolü
+//   istemcide yapılır (PhotoUploader, `checkPhotoSignature` — gerçek `File`
+//   nesneleri üzerinde, `startUpload` öncesi).
 // awaitServerData=false: istemci dosya adresini (ufsUrl) yanıtından alır,
 // sunucu verisi beklenmez.
 
 const f = createUploadthing();
-
-/** UploadThing'in middleware'e verdiği dosya nesnesi tipi (native `File` DEĞİL). */
-type UploadThingFile = {
-  name: string;
-  size: number;
-  type: string;
-  lastModified?: number;
-  stream(): ReadableStream<Uint8Array>;
-};
-
-/**
- * Dosyanın MIME türüne göre magic byte imzasını doğrular.
- * Bu, isminin/MIME'ün spoof edilerek zararlı dosya (ör. PHP, exe) yüklenmesini engeller.
- * İmza kontrolü tek başına dosyanın tamamen güvenli/parse edilebilir olduğunu kanıtlamaz,
- * ancak yanlış türdeki dosyaları erken elemek için etkili bir ilk kapıdır.
- * 
- * Not: UploadThing `FileUploadData` native `File` değil; `arrayBuffer()` yok.
- * `stream()` ile `ReadableStream` alır, ilk 12 byte'ı okuyup kontrol ederiz.
- */
-const hasValidPhotoSignature = async (file: UploadThingFile): Promise<boolean> => {
-  const stream = file.stream();
-  const reader = stream.getReader();
-  try {
-    const { value, done } = await reader.read();
-    if (done || !value) return false;
-    const bytes = new Uint8Array(value);
-    // İlk chunk genelde yeterli; değilse bir chunk daha oku (nadir)
-    if (bytes.length < 12) {
-      const { value: value2, done: done2 } = await reader.read();
-      if (!done2 && value2) {
-        const combined = new Uint8Array(bytes.length + value2.length);
-        combined.set(bytes);
-        combined.set(value2, bytes.length);
-        return checkSignature(combined, file.type);
-      }
-    }
-    return checkSignature(bytes, file.type);
-  } finally {
-    reader.releaseLock();
-  }
-};
-
-const checkSignature = (bytes: Uint8Array, mimeType: string): boolean => {
-  if (mimeType === "image/jpeg") {
-    return (
-      bytes.length >= 3 &&
-      bytes[0] === 0xff &&
-      bytes[1] === 0xd8 &&
-      bytes[2] === 0xff
-    );
-  }
-  if (mimeType === "image/png") {
-    return (
-      bytes.length >= 8 &&
-      bytes[0] === 0x89 &&
-      bytes[1] === 0x50 &&
-      bytes[2] === 0x4e &&
-      bytes[3] === 0x47 &&
-      bytes[4] === 0x0d &&
-      bytes[5] === 0x0a &&
-      bytes[6] === 0x1a &&
-      bytes[7] === 0x0a
-    );
-  }
-  if (mimeType === "image/webp") {
-    return (
-      bytes.length >= 12 &&
-      bytes[0] === 0x52 && // 'R'
-      bytes[1] === 0x49 && // 'I'
-      bytes[2] === 0x46 && // 'F'
-      bytes[3] === 0x46 && // 'F'
-      bytes[8] === 0x57 && // 'W'
-      bytes[9] === 0x45 && // 'E'
-      bytes[10] === 0x42 && // 'B'
-      bytes[11] === 0x50 // 'P'
-    );
-  }
-  return false;
-};
 
 const ourFileRouter = {
   imageUploader: f(
@@ -111,25 +37,7 @@ const ourFileRouter = {
     },
     { awaitServerData: false },
   )
-    .middleware(async ({ files }) => {
-      // Sunucu otoriter: istemci doğrulaması atlatılsa bile adet/tür/boyut
-      // burada tekrar sınanır. Oturum kontrolü route.ts sarmalayıcısında (401).
-      // Güvenlik: Magic byte imzası ile MIME türü doğrulaması.
-      for (const file of files) {
-        // UploadThing `FileUploadData` tipi TS'de `stream()` içermiyor ama runtime'da vardır
-        if (!(await hasValidPhotoSignature(file as unknown as UploadThingFile))) {
-          throw new UploadThingError({
-            code: "BAD_REQUEST",
-            message: "Dosya içeriği türüyle eşleşmiyor.",
-          });
-        }
-      }
-      const check = validatePhotoFiles(files, 0);
-      if (!check.ok) {
-        throw new UploadThingError({ code: "BAD_REQUEST", message: check.error });
-      }
-      return {};
-    })
+    .middleware(imageUploaderMiddleware)
     .onUploadComplete(async () => {
       // Kalıcılık istemciden: başarı durumunda ufsUrl photoUrls'e yazılır.
     }),

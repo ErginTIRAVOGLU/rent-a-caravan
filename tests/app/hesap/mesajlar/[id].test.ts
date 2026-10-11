@@ -76,6 +76,8 @@ global.requestAnimationFrame = (cb) => setTimeout(cb, 16);
 global.cancelAnimationFrame = (id) => clearTimeout(id);
 // jsdom doesn't implement scrollIntoView
 dom.window.HTMLElement.prototype.scrollIntoView = () => {};
+// jsdom doesn't implement Element.scrollTo either (yalnız yazışma kutusu kayar)
+dom.window.HTMLElement.prototype.scrollTo = () => {};
 // jsdom FormData constructor doesn't accept undefined (event.currentTarget can be undefined)
 vi.stubGlobal(
   "FormData",
