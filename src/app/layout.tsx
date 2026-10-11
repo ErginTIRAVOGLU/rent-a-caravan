@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
+import { Providers } from "./providers";
 
 import "./globals.css";
 
@@ -44,10 +45,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body
         className={`${jakarta.variable} flex min-h-screen flex-col font-sans antialiased`}
       >
-        <SiteHeader />
-        {/* Sabit header için üst boşluk; ana sayfa hero'su -mt-20 ile altına girer. */}
-        <div className="flex-1 pt-20">{children}</div>
-        <SiteFooter />
+        <Providers>
+          <SiteHeader />
+          {/* Sabit header için üst boşluk; ana sayfa hero'su -mt-20 ile altına girer. */}
+          <div className="flex-1 pt-20">{children}</div>
+          <SiteFooter />
+        </Providers>
       </body>
     </html>
   );
