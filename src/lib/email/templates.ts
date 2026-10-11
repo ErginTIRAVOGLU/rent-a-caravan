@@ -146,3 +146,65 @@ export function registerVerifyTemplate(
     ]),
   };
 }
+
+/** Günlük özette (T9) listelenecek en fazla sohbet sayısı. */
+export const DIGEST_MAX_CONVERSATIONS = 5;
+
+/** Önizlemenin e-postaya sığdığı üst sınır (karakter). */
+const DIGEST_PREVIEW_MAX = 140;
+
+export interface DigestConversationData {
+  id: string;
+  listingTitle: string;
+  preview: string;
+  unreadCount: number;
+  /** Sohbetin mesajlar sayfası: `/hesap/mesajlar/{id}`. */
+  url: string;
+}
+
+export interface DailyDigestData {
+  userName: string;
+  conversations: DigestConversationData[];
+}
+
+/** Önizleme metni: satır sonlarını/kısa boşlukları sıkıştırır, uzunsa kısaltır. */
+function previewText(value: string): string {
+  const collapsed = value.replaceAll(/\s+/g, " ").trim();
+  if (collapsed.length <= DIGEST_PREVIEW_MAX) {
+    return collapsed;
+  }
+  return `${collapsed.slice(0, DIGEST_PREVIEW_MAX).trimEnd()}…`;
+}
+
+/**
+ * Günlük mesaj özeti (T9): okunmamış sohbetleri tek e-postada listeler —
+ * ilan başlığı, son mesaj önizlemesi, okunmamış sayısı ve "Mesajları gör"
+ * bağlantısı. Liste en fazla `DIGEST_MAX_CONVERSATIONS` sohbeti gösterir.
+ */
+export function dailyDigestTemplate(
+  to: string,
+  data: DailyDigestData,
+): EmailMessage {
+  const heading = "Günlük mesaj özetiniz";
+  const conversations = data.conversations.slice(0, DIGEST_MAX_CONVERSATIONS);
+  const lines = [
+    `Sayın ${escapeHtml(data.userName)},`,
+    "Karavan Kiralama platformunda okumadığınız mesajlar var. İşte günlük özetiniz:",
+  ];
+
+  if (conversations.length === 0) {
+    lines.push("Şu anda okunmamış mesajınız bulunmuyor.");
+  }
+  for (const conversation of conversations) {
+    lines.push(
+      `<strong>${escapeHtml(conversation.listingTitle)}</strong> — ${conversation.unreadCount} okunmamış mesaj<br />` +
+        `&ldquo;${escapeHtml(previewText(conversation.preview))}&rdquo;<br />` +
+        `<a href="${escapeHtml(conversation.url)}" style="color: #2563eb;">Mesajları gör</a>`,
+    );
+  }
+
+  lines.push(
+    "Tüm sohbetlerinizi hesabınızdaki mesajlar sayfasından görebilirsiniz.",
+  );
+  return { to, subject: heading, html: layout(heading, lines) };
+}
