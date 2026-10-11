@@ -4,6 +4,7 @@ import { sendListingStatusChanged } from "../../lib/email/events";
 import { prisma } from "../../lib/prisma";
 import { fail, ok, type ActionResult } from "../../lib/result";
 import type { SessionUser } from "../users/service";
+import { recordStatusChange } from "../listings/history";
 
 // Admin moderasyon çekirdeği — spec §7. HTTP/oturum yok: `admin` açık parametre;
 // aksiyonlar requireAdmin ile sarar.
@@ -23,6 +24,9 @@ import type { SessionUser } from "../users/service";
 //                          unpauseListingCore'dur)
 // Matriste olmayan her geçiş (ör. DRAFT → ACTIVE, ACTIVE → ACTIVE,
 // PAUSED → REJECTED) fail döner ve HİÇ mutation olmaz.
+//
+// Geçmiş: HER başarılı geçişte ListingStatusHistory satırı yazılır
+// (actor = kararı veren admin id'si, reason yalnız reject'te).
 //
 // Yetki matrisi: dört işlem de YALNIZ admin (action katmanı requireAdmin ile
 // oturum kapısı uygular; service'te role ayrıca doğrulanır — savunma derinliği).
@@ -135,6 +139,12 @@ export async function approveListingCore(
       });
       return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
     }
+    await recordStatusChange(tx, {
+      listingId: id,
+      fromStatus: "PENDING",
+      toStatus: "ACTIVE",
+      actorId: admin.id,
+    });
     const updated = await tx.listing.findUniqueOrThrow({
       where: { id },
       include: { owner: { select: { email: true } } },
@@ -186,6 +196,13 @@ export async function rejectListingCore(
       });
       return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
     }
+    await recordStatusChange(tx, {
+      listingId: id,
+      fromStatus: "PENDING",
+      toStatus: "REJECTED",
+      actorId: admin.id,
+      reason: trimmed,
+    });
     const updated = await tx.listing.findUniqueOrThrow({
       where: { id },
       include: { owner: { select: { email: true } } },
@@ -229,6 +246,12 @@ export async function pauseListingCore(
       });
       return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
     }
+    await recordStatusChange(tx, {
+      listingId: id,
+      fromStatus: "ACTIVE",
+      toStatus: "PAUSED",
+      actorId: admin.id,
+    });
     const updated = await tx.listing.findUniqueOrThrow({
       where: { id },
       include: { owner: { select: { email: true } } },
@@ -272,6 +295,12 @@ export async function unpauseListingCore(
       });
       return fail<Decision>(exists ? GECERSIZ_DURUM : ILAN_BULUNAMADI);
     }
+    await recordStatusChange(tx, {
+      listingId: id,
+      fromStatus: "PAUSED",
+      toStatus: "ACTIVE",
+      actorId: admin.id,
+    });
     const updated = await tx.listing.findUniqueOrThrow({
       where: { id },
       include: { owner: { select: { email: true } } },

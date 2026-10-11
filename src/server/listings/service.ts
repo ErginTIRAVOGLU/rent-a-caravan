@@ -11,6 +11,7 @@ import {
   listingUpdateSchema,
 } from "../../lib/validators/listing";
 import type { SessionUser } from "../users/service";
+import { recordStatusChange } from "./history";
 
 // İlan CRUD çekirdeği — saf kural katmanı (DB + yetki + sunucu otoriter kararlar).
 // HTTP/oturum yok: `user` her zaman açık parametre; aksiyonlar requireUser ile sarar.
@@ -20,11 +21,19 @@ import type { SessionUser } from "../users/service";
 //    admin yetkisi BU görevde yok (T10 moderasyonu ele alır) — sıkı sahip-sadece.
 // 2. Sunucu otoriter: create her zaman `status: "DRAFT"` + `ownerId: user.id` yazar;
 //    istemciden gelen status/ownerId asla okunmaz. Durum geçişi yalnız
-//    submitListingCore (DRAFT|REJECTED|PAUSED → PENDING, en az 1 foto).
+//    submitListingCore (DRAFT|REJECTED|PAUSED → PENDING, en az 1 foto) ve
+//    pauseOwnListingCore (ACTIVE → PAUSED, yalnız sahip) ile olur.
+// 3. PAUSED düzenleme: updateListingCore'da durum kapısı YOK — sahip PAUSED
+//    ilanını her zaman düzenleyebilir; ilan PENDING'e submitListingCore ile
+//    döner (admin yeniden inceler). PAUSED için TEK çıkış yolu budur
+//    (sahip tarafı); admin tarafı çıkışı unpauseListingCore'dur.
+// 4. Geçmiş: HER durum geçişinde ListingStatusHistory satırı yazılır
+//    (submit + owner pause; admin geçişleri admin/service.ts'te).
 
 const YETKI_YOK = "Bu işlem için yetkiniz yok.";
 const ILAN_BULUNAMADI = "İlan bulunamadı.";
 const GECERSIZ_DURUM = "Bu ilan şu anda gönderilemez.";
+const DURAKLATILAMAZ = "Bu ilan şu anda duraklatılamaz.";
 const GECERSIZ_ILAN_ID = "Geçersiz ilan kimliği.";
 const GECERSIZ_DOSYA = "Geçersiz dosya anahtarı.";
 const DOSYA_YETKI_YOK = "Bu dosyayı silmeye yetkiniz yok.";
@@ -245,9 +254,60 @@ export async function submitListingCore(
     return fail("İlanı göndermek için en az 1 fotoğraf eklemelisiniz.", "photoUrls");
   }
 
-  const listing = await prisma.listing.update({
-    where: { id },
-    data: { status: "PENDING", rejectionReason: null },
+  const fromStatus = existing.status;
+  const listing = await prisma.$transaction(async (tx) => {
+    const updated = await tx.listing.update({
+      where: { id },
+      data: { status: "PENDING", rejectionReason: null },
+    });
+    await recordStatusChange(tx, {
+      listingId: id,
+      fromStatus,
+      toStatus: "PENDING",
+      actorId: user.id,
+    });
+    return updated;
+  });
+  return ok(listing);
+}
+
+/**
+ * Kendi ilanını duraklatma — YALNIZ sahip (`ownerId === user.id`);
+ * matris: yalnız ACTIVE → PAUSED. Admin `pauseListingCore`'dan ayrıdır:
+ * admin herhangi bir ilanı duraklatabilir, sahip yalnız kendisininkini.
+ * Geçiş history'ye yazılır (actor = sahip).
+ */
+export async function pauseOwnListingCore(
+  user: SessionUser,
+  id: string,
+): Promise<ActionResult<Listing>> {
+  const badId = invalidId(id);
+  if (badId) {
+    return badId;
+  }
+  const existing = await prisma.listing.findUnique({ where: { id } });
+  if (!existing) {
+    return fail(ILAN_BULUNAMADI);
+  }
+  if (existing.ownerId !== user.id) {
+    return fail(YETKI_YOK); // yetkisiz girişim: mutation yok
+  }
+  if (existing.status !== "ACTIVE") {
+    return fail(DURAKLATILAMAZ);
+  }
+
+  const listing = await prisma.$transaction(async (tx) => {
+    const updated = await tx.listing.update({
+      where: { id },
+      data: { status: "PAUSED" },
+    });
+    await recordStatusChange(tx, {
+      listingId: id,
+      fromStatus: "ACTIVE",
+      toStatus: "PAUSED",
+      actorId: user.id,
+    });
+    return updated;
   });
   return ok(listing);
 }

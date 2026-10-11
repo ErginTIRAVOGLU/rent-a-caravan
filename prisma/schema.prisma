@@ -126,6 +126,7 @@ model Listing {
   bookingRequests BookingRequest[]
   conversations   Conversation[]
   reviews         Review[]
+  statusHistory   ListingStatusHistory[]
 
   @@index([city, status])
 }
@@ -211,6 +212,23 @@ model Report {
   status     ReportStatus     @default(OPEN)
   updatedAt  DateTime?
   createdAt  DateTime         @default(now())
+}
+
+// İlan durum geçmişi — HER durum geçişinde bir satır yazılır (admin
+// approve/reject/pause/unpause + owner pause/submit). actorId işlemi yapan
+// kullanıcı, sistem/cron ise "system". reason yalnız gerekçeli geçişlerde
+// (admin reject) dolar.
+model ListingStatusHistory {
+  id        String        @id @default(cuid())
+  listing   Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String
+  fromStatus ListingStatus
+  toStatus   ListingStatus
+  actorId   String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([listingId, createdAt])
 }
 
 // Spec §5: DB sayaçlı hız sınırı — `expiresAt` timestamp (dakikalık pencere).
