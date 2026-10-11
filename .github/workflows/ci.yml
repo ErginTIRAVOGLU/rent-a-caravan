@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: check (lint, typecheck, unit, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: karavan_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
+      AUTH_SECRET: ci-test-secret-not-for-production-000000000000
+      CRON_SECRET: ci-dummy-cron-secret
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      # CI-only dummy values: integrations are stubbed in tests; the build
+      # only needs the variables to be present, never real credentials.
+      RESEND_API_KEY: ci-dummy-resend-key
+      UPLOADTHING_TOKEN: ci-dummy-uploadthing-token
+      AUTH_GOOGLE_ID: ci-dummy-google-id
+      AUTH_GOOGLE_SECRET: ci-dummy-google-secret
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Same steps as `npm run check` locally
+      # (prisma generate && next typegen && tsc --noEmit && eslint . && vitest run).
+      # Vitest globalSetup (tests/helpers/global-setup.ts) runs
+      # `prisma migrate deploy` against TEST_DATABASE_URL.
+      - run: npm run check
+      - run: npm run build
+
+  e2e:
+    name: e2e (playwright chromium)
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: karavan_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # E2E specs use the dev DB (DATABASE_URL); point both at the same
+      # postgres service database so the app and fixtures share state.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
+      AUTH_SECRET: ci-test-secret-not-for-production-000000000000
+      CRON_SECRET: ci-dummy-cron-secret
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      RESEND_API_KEY: ci-dummy-resend-key
+      UPLOADTHING_TOKEN: ci-dummy-uploadthing-token
+      AUTH_GOOGLE_ID: ci-dummy-google-id
+      AUTH_GOOGLE_SECRET: ci-dummy-google-secret
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx prisma migrate deploy
+      - run: npm run seed
+      # Playwright webServer (tests/e2e/playwright.config.ts) runs
+      # `npm run build && npm run start`; globalSetup prepares fixtures.
+      - run: npx playwright test --config tests/e2e/playwright.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          # CI reporter is `line` (see tests/e2e/playwright.config.ts), so no
+          # HTML report is produced — upload traces/screenshots instead.
+          path: test-results/
+          if-no-files-found: ignore

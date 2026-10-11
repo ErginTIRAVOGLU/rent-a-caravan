@@ -5,6 +5,7 @@ import {
   MAX_FILE_BYTES,
   MAX_PHOTOS,
   validatePhotoFiles,
+  extractFileKey,
 } from "../src/lib/upload";
 
 /**
@@ -100,4 +101,32 @@ it("sabitler: 5 MB, jpeg/png/webp, MAX_PHOTOS validators/listing ile aynı", () 
   expect(MAX_FILE_BYTES).toBe(5 * 1024 * 1024);
   expect([...ALLOWED_TYPES]).toEqual(["image/jpeg", "image/png", "image/webp"]);
   expect(MAX_PHOTOS).toBe(10);
+});
+
+describe("extractFileKey", () => {
+  it("extracts key from standard UploadThing URL", () => {
+    const url = "https://bucket.ufs.sh/f/abc123_key.jpg";
+    expect(extractFileKey(url)).toBe("abc123_key.jpg");
+  });
+
+  it("extracts key from URL with subdomain", () => {
+    const url = "https://myapp.ufs.sh/f/xyz789_image.png";
+    expect(extractFileKey(url)).toBe("xyz789_image.png");
+  });
+
+  it("extracts key from URL with path-style appId", () => {
+    const url = "https://ufs.sh/f/myapp/abc123_key.jpg";
+    expect(extractFileKey(url)).toBe("myapp/abc123_key.jpg");
+  });
+
+  it("returns null for non-UploadThing URLs", () => {
+    expect(extractFileKey("https://example.com/image.jpg")).toBeNull();
+    expect(extractFileKey("not-a-url")).toBeNull();
+    expect(extractFileKey("")).toBeNull();
+  });
+
+  it("returns null for UploadThing URL without /f/ path", () => {
+    expect(extractFileKey("https://bucket.ufs.sh/other/path")).toBeNull();
+    expect(extractFileKey("https://bucket.ufs.sh/f/")).toBeNull();
+  });
 });

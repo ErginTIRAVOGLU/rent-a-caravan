@@ -6,6 +6,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 vi.mock("../src/lib/email/events", () => ({
   sendBookingRequested: vi.fn(),
   sendBookingStatusChanged: vi.fn(),
+  sendBookingCompleted: vi.fn(),
 }));
 
 import {

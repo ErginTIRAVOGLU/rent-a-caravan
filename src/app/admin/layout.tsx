@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/admin", label: "Genel Bakış", icon: "dashboard" },
   { href: "/admin/ilanlar", label: "İlanlar", icon: "caravan" },
   { href: "/admin/kullanicilar", label: "Kullanıcılar", icon: "group" },
+  { href: "/admin/sikayetler", label: "Şikayetler", icon: "report_problem" },
   { href: "/admin/ayarlar", label: "Ayarlar", icon: "settings" },
 ] as const;
 

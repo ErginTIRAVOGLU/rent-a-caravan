@@ -48,3 +48,31 @@ export function validatePhotoFiles(
   }
   return ok(true);
 }
+
+/**
+ * UploadThing URL'sinden dosya anahtarını (fileKey) çıkarır.
+ * URL formatı: https://<bucket>.ufs.sh/f/<fileKey>
+ * veya: https://ufs.sh/f/<appId>/<fileKey> (path-style appId)
+ * 
+ * @param url - UploadThing dosya URL'si
+ * @returns Dosya anahtarı (fileKey) veya null (geçersiz URL için)
+ */
+export function extractFileKey(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    // Sadece ufs.sh host'larına izin ver
+    if (!urlObj.hostname.endsWith(".ufs.sh") && urlObj.hostname !== "ufs.sh") {
+      return null;
+    }
+    const pathParts = urlObj.pathname.split("/").filter(Boolean);
+    // /f/<fileKey> veya /f/<appId>/<fileKey> formatını bekle
+    const fIndex = pathParts.indexOf("f");
+    if (fIndex === -1 || fIndex === pathParts.length - 1) {
+      return null;
+    }
+    // /f/ den sonraki tüm parçaları birleştir (appId/path-style durumunda)
+    return pathParts.slice(fIndex + 1).join("/");
+  } catch {
+    return null;
+  }
+}

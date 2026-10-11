@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { generateReactHelpers } from "@uploadthing/react";
+import { UTApi } from "uploadthing/server";
 
 import type { OurFileRouter } from "../app/api/uploadthing/route";
 import {
@@ -9,6 +10,7 @@ import {
   MAX_FILE_BYTES,
   MAX_PHOTOS,
   validatePhotoFiles,
+  extractFileKey,
 } from "../lib/upload";
 
 // Adım 2 (Fotoğraflar) yükleyicisi: UploadThing ile çoklu yükleme,
@@ -85,6 +87,15 @@ export function PhotoUploader({
   function removePhoto(url: string) {
     setError(null);
     onChange(urlsRef.current.filter((existing) => existing !== url));
+
+    // Best-effort: UploadThing'ten dosyayı sil (hata olursa sessizce yut)
+    const key = extractFileKey(url);
+    if (key) {
+      const utapi = new UTApi();
+      utapi.deleteFiles(key).catch(() => {
+        // Sessizce yut - best-effort silme
+      });
+    }
   }
 
   return (

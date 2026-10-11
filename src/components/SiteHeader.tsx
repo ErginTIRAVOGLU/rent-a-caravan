@@ -1,12 +1,10 @@
-import Image from "next/image";
+"use client";
+
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-
-import { getSessionUser } from "../lib/auth";
+import Image from "next/image";
+import useSWR from "swr";
 import { signOutAction } from "../lib/auth-actions";
-
-// Global site başlığı — sunucu bileşeni, oturum durumunu (Plan 1 backlog
-// #1/#2 karşılığı) SSR ile bilir. Plan 2'de client `useSession`'a taşınacak.
-// Dropdown <details> ile JS'siz çalışır.
 
 const NAV_LINKS = [
   { href: "/arama", label: "Karavanları Keşfet" },
@@ -19,8 +17,49 @@ function initials(name: string, email: string) {
   return source.slice(0, 1).toUpperCase();
 }
 
-export async function SiteHeader() {
-  const user = await getSessionUser();
+function buildValidatedUrl(baseUrl: string): string {
+  try {
+    if (baseUrl.includes("/../") || /\/%2e%2e\//i.test(baseUrl)) {
+      throw new Error("Invalid path");
+    }
+    const url = new URL(baseUrl, window.location.origin);
+    if (!["http:", "https:"].includes(url.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+    if (url.origin !== window.location.origin) {
+      throw new Error("Invalid host");
+    }
+    return url.href;
+  } catch {
+    throw new Error("Invalid URL");
+  }
+}
+
+function fetcher(url: string): Promise<number> {
+  return fetch(buildValidatedUrl(url)).then((res) => {
+    if (!res.ok) return 0;
+    return res.json().then((j: { count?: unknown }) =>
+      typeof j.count === "number" ? j.count : 0,
+    );
+  });
+}
+
+export function SiteHeader() {
+  const { data: session, status } = useSession();
+  const user = session?.user ?? null;
+
+  // Unread message count with SWR polling (15s)
+  const { data: unreadCount = 0 } = useSWR("/api/messages/unread-count", fetcher, {
+    refreshInterval: 15000,
+    revalidateOnFocus: true,
+    fallbackData: 0,
+  });
+
+  const handleSignOut = async () => {
+    await signOutAction();
+    // signOutAction already redirects to "/", but we can also call signOut as fallback
+    // signOut({ redirectTo: "/" });
+  };
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-surface-mid bg-surface/90 shadow-card backdrop-blur-xl">
@@ -55,7 +94,9 @@ export async function SiteHeader() {
 
         {/* Sağ aksiyonlar */}
         <div className="flex shrink-0 items-center gap-2">
-          {user ? (
+          {status === "loading" ? (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-low animate-pulse" aria-hidden="true" />
+          ) : user ? (
             <>
               {user.role === "ADMIN" && (
                 <Link href="/admin" className="btn btn-outline btn-sm">
@@ -73,6 +114,12 @@ export async function SiteHeader() {
                   <span className="hidden max-w-28 truncate sm:inline">
                     {user.name || "Hesabım"}
                   </span>
+                  {/* Unread message badge */}
+                  {unreadCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1.5 text-[10px] font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                   <span className="material-symbols-outlined text-base text-outline">
                     expand_more
                   </span>
@@ -104,7 +151,7 @@ export async function SiteHeader() {
                     </span>
                     Profil
                   </Link>
-                  <form action={signOutAction} className="mt-1 border-t border-outline-variant pt-1">
+                  <form onSubmit={handleSignOut} className="mt-1 border-t border-outline-variant pt-1">
                     <button type="submit" className="menu-item text-error hover:bg-error-bg">
                       <span className="material-symbols-outlined text-lg">
                         logout

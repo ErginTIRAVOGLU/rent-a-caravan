@@ -307,6 +307,18 @@ export async function setUserBannedCore(
 }
 
 /**
+ * Yorum sistemi açık mı? — Setting "reviewsEnabled" anahtarı; yoksa true.
+ * Display guard'lar ve createReviewCore bu getter'ı kullanır.
+ */
+export async function getReviewsEnabledCore(): Promise<boolean> {
+  const setting = await prisma.setting.findUnique({
+    where: { key: "reviewsEnabled" },
+    select: { value: true },
+  });
+  return setting ? Boolean(setting.value) : true;
+}
+
+/**
  * Genel ayar güncelle — YALNIZ admin.
  * `Setting` modeli: key (String @id), value (Json), updatedAt.
  * Boşsa default true (reviewsEnabled için) — getter `?? true` uygular.

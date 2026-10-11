@@ -8,9 +8,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Yönetim genel bakışı: canlı sayaçlar. Şikâyet (Report) modeli DB'de vardır
- * ancak şikâyet yönetim akışı Plan 2'de — burada yalnızca açık şikâyet sayısı
- * gösterilir.
+ * Yönetim genel bakışı: canlı sayaçlar. Açık şikâyet kartı artık çalışan
+ * `/admin/sikayetler` kuyruğuna bağlanır (şikâyet akışı Plan 2'de tamamlandı).
  */
 export default async function AdminDashboardPage() {
   const [pendingListings, activeListings, userCount, openReports] =
@@ -49,8 +48,8 @@ export default async function AdminDashboardPage() {
     {
       label: "Açık şikâyet",
       value: openReports,
-      href: null,
-      hint: "Şikâyet yönetimi yakında",
+      href: "/admin/sikayetler",
+      hint: "İnceleme bekleyen bildirimler",
       icon: "report_problem",
       color: "error",
     },
