@@ -6,6 +6,9 @@ import { authConfig } from "./lib/auth.config";
 // içermez — tam yapılandırma `src/lib/auth.ts`'tedir ve Node tarafında kalır).
 // Coarse yönlendirmeler `authConfig.callbacks.authorized` içinde; asıl denetim
 // sayfa/aksiyonlardaki `requireUser`/`requireAdmin`'dadır.
+//
+// NOT: Next.js 16 `middleware.ts` dosya geleneğini `proxy.ts` lehine kaldırdı;
+// içerik aynıdır, yalnız dosya adı değişti.
 const { auth: middleware } = NextAuth(authConfig);
 
 export default middleware;
