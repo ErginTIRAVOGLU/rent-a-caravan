@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import useSWR from "swr";
 
@@ -169,9 +170,12 @@ export function ConversationThread({
       <div className="card p-4">
         <div className="flex items-center gap-3">
           {conversation.listing.photoUrls[0] ? (
-            <img
+            <Image
               src={conversation.listing.photoUrls[0]}
               alt=""
+              width={48}
+              height={48}
+              unoptimized
               className="h-12 w-12 shrink-0 rounded-lg object-cover"
             />
           ) : (

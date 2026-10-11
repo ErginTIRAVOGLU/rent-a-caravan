@@ -4,9 +4,10 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { SessionUser } from "../../src/server/users/service";
 
-// Mock next/image
+// Mock next/image (test altyapısı — üretim işareti değil)
 vi.mock("next/image", () => ({
   default: ({ alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    // eslint-disable-next-line @next/next/no-img-element -- mock ham <img> basar
     <img alt={alt} {...props} data-testid="logo-image" />
   ),
 }));
