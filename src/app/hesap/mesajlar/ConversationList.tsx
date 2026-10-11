@@ -53,7 +53,7 @@ export function ConversationList({ initialConversations, userId }: Props) {
           <li key={conv.id}>
             <Link
               href={`/hesap/mesajlar/${conv.id}`}
-              className="card p-4 hover:bg-surface-low transition-colors group"
+              className="card block p-4 hover:bg-surface-low transition-colors group"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">

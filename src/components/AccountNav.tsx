@@ -4,7 +4,7 @@ import Link from "next/link";
 // Dokunma hedefi >= 40px (min-h-10); aktif sayfa aria-current ile işaretlenir.
 
 const LINKS = [
-  { href: "/hesap/ilanlarim", label: "İlanlarım", key: "ilanlarim", icon: "caravan" },
+  { href: "/hesap/ilanlarim", label: "İlanlarım", key: "ilanlarim", icon: "rv_hookup" },
   { href: "/hesap/taleplerim", label: "Taleplerim", key: "taleplerim", icon: "inbox" },
   { href: "/hesap/mesajlar", label: "Mesajlar", key: "mesajlar", icon: "chat_bubble" },
   { href: "/hesap/degerlendirmeler", label: "Değerlendirmeler", key: "degerlendirmeler", icon: "star" },
