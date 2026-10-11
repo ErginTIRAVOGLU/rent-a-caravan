@@ -61,7 +61,9 @@ test("senaryo 3: admin onay bekleyen ilanı onaylar ve ilan aramada görünür",
     await expect(
       page.getByRole("heading", { level: 1, name: LISTINGS.bolu }),
     ).toBeVisible();
-    await expect(page.getByText("Yayında")).toBeVisible();
+    // exact: sayfadaki "Durum geçmişi" bölümü de ("… → Yayında") aynı kelimeyi
+    // içerir; rozet tekil eşleşir.
+    await expect(page.getByText("Yayında", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "İlan sahibi" }),
     ).toBeVisible();

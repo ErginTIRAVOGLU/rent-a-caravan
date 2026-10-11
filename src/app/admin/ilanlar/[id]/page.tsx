@@ -14,6 +14,10 @@ import {
 import { prisma } from "../../../../lib/prisma";
 import { AdminListingActions } from "../AdminListingActions";
 import { STATUS_BADGES, STATUS_LABELS } from "../listing-status";
+import {
+  actorLabelFor,
+  ListingHistoryList,
+} from "../../../../components/ListingHistoryList";
 
 export const metadata: Metadata = {
   title: "İlan İnceleme",
@@ -52,6 +56,10 @@ export default async function AdminListingDetailPage({ params }: Props) {
   if (!listing) {
     notFound();
   }
+  const history = await prisma.listingStatusHistory.findMany({
+    where: { listingId: listing.id },
+    orderBy: { createdAt: "asc" },
+  });
 
   const location = [listing.city, listing.district].filter(Boolean).join(" · ");
   const brandModel = [listing.brand, listing.model].filter(Boolean).join(" ");
@@ -199,6 +207,22 @@ export default async function AdminListingDetailPage({ params }: Props) {
                 listingId={listing.id}
                 status={listing.status}
               />
+            </section>
+
+            <section className="card p-5 sm:p-6">
+              <h2 className="section-title">Durum geçmişi</h2>
+              <div className="mt-2">
+                <ListingHistoryList
+                  entries={history.map((entry) => ({
+                    id: entry.id,
+                    fromStatus: entry.fromStatus,
+                    toStatus: entry.toStatus,
+                    actorLabel: actorLabelFor(entry.actorId, listing.ownerId),
+                    reason: entry.reason,
+                    createdAt: entry.createdAt,
+                  }))}
+                />
+              </div>
             </section>
           </div>
         </aside>

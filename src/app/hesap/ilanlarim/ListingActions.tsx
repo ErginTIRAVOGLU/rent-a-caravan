@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import type { ListingStatus } from "@prisma/client";
 
 import { ConfirmModal } from "../../../components/ConfirmModal";
-import { deleteListing, submitListing } from "../../../server/listings/actions";
+import {
+  deleteListing,
+  pauseOwnListing,
+  submitListing,
+} from "../../../server/listings/actions";
 
 type Props = {
   listingId: string;
@@ -19,12 +23,17 @@ type Props = {
  */
 export function ListingActions({ listingId, status }: Props) {
   const router = useRouter();
-  const [pending, setPending] = useState<"submit" | "delete" | null>(null);
+  const [pending, setPending] = useState<"submit" | "delete" | "pause" | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
   /** Yalnız DRAFT/REJECTED/PAUSED incelemeye gönderilebilir (service ile aynı kural). */
   const canSubmit = status === "DRAFT" || status === "REJECTED" || status === "PAUSED";
+  /** Yalnız ACTIVE duraklatılabilir (service pauseOwnListingCore ile aynı kural). */
+  const canPause = status === "ACTIVE";
 
   // Server action reddi (ağ/serileştirme/sunucu throw) için ortak TR mesajı.
   const HATA = "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
@@ -64,6 +73,24 @@ export function ListingActions({ listingId, status }: Props) {
     }
   }
 
+  async function handlePause() {
+    setPauseConfirmOpen(false);
+    setPending("pause");
+    setError(null);
+    try {
+      const result = await pauseOwnListing(listingId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(HATA);
+    } finally {
+      setPending(null);
+    }
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
       {canSubmit ? (
@@ -78,6 +105,19 @@ export function ListingActions({ listingId, status }: Props) {
             : status === "REJECTED" || status === "PAUSED"
               ? "Tekrar Gönder"
               : "Gönder"}
+        </button>
+      ) : null}
+      {canPause ? (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setPauseConfirmOpen(true);
+          }}
+          disabled={pending !== null}
+          className="btn btn-outline py-2"
+        >
+          {pending === "pause" ? "Duraklatılıyor…" : "Duraklat"}
         </button>
       ) : null}
       <button
@@ -100,6 +140,17 @@ export function ListingActions({ listingId, status }: Props) {
         pendingLabel="Siliniyor…"
         onConfirm={() => void handleDelete()}
         onCancel={() => setConfirmOpen(false)}
+      />
+      <ConfirmModal
+        open={pauseConfirmOpen}
+        title="İlanı Duraklat"
+        description="Bu ilanı duraklatmak istediğinize emin misiniz? Aramalarda görünmez; düzenleyip yeniden incelemeye gönderebilirsiniz."
+        confirmLabel="Duraklat"
+        pending={pending !== null}
+        pendingLabel="Duraklatılıyor…"
+        tone="primary"
+        onConfirm={() => void handlePause()}
+        onCancel={() => setPauseConfirmOpen(false)}
       />
       {error ? (
         <p role="alert" className="text-body-md text-error ml-auto">

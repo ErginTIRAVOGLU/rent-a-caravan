@@ -64,6 +64,67 @@ describe("PhotoUploader remove", () => {
   });
 });
 
+describe("PhotoUploader sıralama (ok düğmeleri)", () => {
+  const A = "https://bucket.ufs.sh/f/aaa_foto-a.jpg";
+  const B = "https://bucket.ufs.sh/f/bbb_foto-b.jpg";
+  const C = "https://bucket.ufs.sh/f/ccc_foto-c.jpg";
+
+  it("ilk fotoğraf 'Kapak' rozeti taşır", () => {
+    const onChange = vi.fn();
+    render(<PhotoUploader photoUrls={[A, B]} onChange={onChange} />);
+
+    const badges = screen.getAllByText("Kapak");
+    expect(badges).toHaveLength(1);
+  });
+
+  it("'Sağa' ilk fotoğrafı ikinci sıraya taşır (kapak güncellenir)", () => {
+    const onChange = vi.fn();
+    render(<PhotoUploader photoUrls={[A, B, C]} onChange={onChange} />);
+
+    const rightButtons = screen.getAllByRole("button", { name: "Sağa" });
+    fireEvent.click(rightButtons[0]);
+
+    expect(onChange).toHaveBeenCalledWith([B, A, C]);
+  });
+
+  it("'Sola' son fotoğrafı bir öne taşır", () => {
+    const onChange = vi.fn();
+    render(<PhotoUploader photoUrls={[A, B, C]} onChange={onChange} />);
+
+    const leftButtons = screen.getAllByRole("button", { name: "Sola" });
+    fireEvent.click(leftButtons[2]);
+
+    expect(onChange).toHaveBeenCalledWith([A, C, B]);
+  });
+
+  it("'Öne al' üçüncü fotoğrafı kapak yapar", () => {
+    const onChange = vi.fn();
+    render(<PhotoUploader photoUrls={[A, B, C]} onChange={onChange} />);
+
+    const pinButtons = screen.getAllByRole("button", { name: "Öne al" });
+    fireEvent.click(pinButtons[2]);
+
+    expect(onChange).toHaveBeenCalledWith([C, A, B]);
+  });
+
+  it("sınırda düğmeler disabled: ilk fotoğrafta Öne al+Sola, son fotoğrafta Sağa", () => {
+    const onChange = vi.fn();
+    render(<PhotoUploader photoUrls={[A, B, C]} onChange={onChange} />);
+
+    const pinButtons = screen.getAllByRole("button", { name: "Öne al" });
+    const leftButtons = screen.getAllByRole("button", { name: "Sola" });
+    const rightButtons = screen.getAllByRole("button", { name: "Sağa" });
+
+    expect(pinButtons[0]).toBeDisabled();
+    expect(leftButtons[0]).toBeDisabled();
+    expect(rightButtons[2]).toBeDisabled();
+    // Ortadaki fotoğrafın tüm düğmeleri aktif
+    expect(pinButtons[1]).not.toBeDisabled();
+    expect(leftButtons[1]).not.toBeDisabled();
+    expect(rightButtons[1]).not.toBeDisabled();
+  });
+});
+
 describe("PhotoUploader imza kontrolü (istemci)", () => {
   const pngBytes = new Uint8Array([
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,

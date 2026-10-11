@@ -91,12 +91,17 @@ export function SiteHeader() {
     };
   }, [menuOpen]);
 
-  // Unread message count with SWR polling (15s)
-  const { data: unreadCount = 0 } = useSWR("/api/messages/unread-count", fetcher, {
-    refreshInterval: 15000,
-    revalidateOnFocus: true,
-    fallbackData: 0,
-  });
+  // Unread message count with SWR polling (15s). Çıkışlı durumda istek
+  // atılmaz (null key) — gereksiz 401 gürültüsü ve yanıp sönen rozet yok.
+  const { data: unreadCount = 0 } = useSWR(
+    user ? "/api/messages/unread-count" : null,
+    fetcher,
+    {
+      refreshInterval: 15000,
+      revalidateOnFocus: true,
+      fallbackData: 0,
+    },
+  );
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-surface-mid bg-surface/90 shadow-card backdrop-blur-xl">
