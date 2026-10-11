@@ -94,6 +94,19 @@ export function PhotoUploader({
     // Hata durumunda startUpload yanıt vermez; mesaj onUploadError'ta ayarlanır.
   }
 
+  /** Sıralama: diziyi kopyala, taşı, onChange ile üst forma aynen yansıt. */
+  function movePhoto(fromIndex: number, toIndex: number) {
+    setError(null);
+    const next = [...urlsRef.current];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    onChange(next);
+  }
+
+  function moveToCover(fromIndex: number) {
+    movePhoto(fromIndex, 0);
+  }
+
   async function removePhoto(url: string) {
     setError(null);
     // Liste iyimser güncellenir; sunucu silme hatası kullanıcıya gösterilir.
@@ -116,7 +129,8 @@ export function PhotoUploader({
       </p>
       <p className="mt-1 text-xs text-gray-500">
         JPG, PNG veya WebP; dosya başına en fazla {MAX_MB} MB. İlanı göndermek
-        için en az 1 fotoğraf gerekir.
+        için en az 1 fotoğraf gerekir. İlk fotoğraf kapak olur — oklarla
+        sırayı değiştirebilirsiniz.
       </p>
 
       <div className="mt-3">
@@ -161,6 +175,11 @@ export function PhotoUploader({
               alt={`İlan fotoğrafı ${index + 1}`}
               className="h-24 w-full object-cover"
             />
+            {index === 0 ? (
+              <span className="absolute left-1 top-1 rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white">
+                Kapak
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={() => void removePhoto(url)}
@@ -169,6 +188,35 @@ export function PhotoUploader({
             >
               Kaldır
             </button>
+            <div className="flex items-center justify-between gap-1 border-t border-gray-100 px-1 py-1">
+              <button
+                type="button"
+                onClick={() => movePhoto(index, index - 1)}
+                disabled={isUploading || index === 0}
+                title={`Fotoğraf ${index + 1}: sola taşı`}
+                className="min-h-9 min-w-9 flex-1 rounded px-1 py-1.5 text-sm font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-30"
+              >
+                <span aria-hidden="true">←</span> Sola
+              </button>
+              <button
+                type="button"
+                onClick={() => moveToCover(index)}
+                disabled={isUploading || index === 0}
+                title={`Fotoğraf ${index + 1}: kapak yap`}
+                className="min-h-9 flex-1 rounded px-1 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-30"
+              >
+                Öne al
+              </button>
+              <button
+                type="button"
+                onClick={() => movePhoto(index, index + 1)}
+                disabled={isUploading || index === photoUrls.length - 1}
+                title={`Fotoğraf ${index + 1}: sağa taşı`}
+                className="min-h-9 min-w-9 flex-1 rounded px-1 py-1.5 text-sm font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-30"
+              >
+                Sağa <span aria-hidden="true">→</span>
+              </button>
+            </div>
           </li>
         ))}
         {photoUrls.length === 0 ? (

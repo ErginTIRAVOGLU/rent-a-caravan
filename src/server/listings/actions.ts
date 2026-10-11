@@ -8,6 +8,7 @@ import {
   createListingCore,
   deleteListingCore,
   deleteListingPhotoCore,
+  pauseOwnListingCore,
   submitListingCore,
   updateListingCore,
 } from "./service";
@@ -56,12 +57,20 @@ export async function deleteListing(
   return toClientResult(await deleteListingCore(user, id));
 }
 
-/** İlanı incelemeye gönder — DRAFT|REJECTED → PENDING, en az 1 foto zorunlu. */
+/** İlanı incelemeye gönder — DRAFT|REJECTED|PAUSED → PENDING, en az 1 foto zorunlu. */
 export async function submitListing(
   id: string,
 ): Promise<ActionResult<ClientListing>> {
   const user = await requireUser();
   return toClientResult(await submitListingCore(user, id));
+}
+
+/** Kendi ilanını duraklat — yalnız sahip; yalnız ACTIVE → PAUSED. */
+export async function pauseOwnListing(
+  id: string,
+): Promise<ActionResult<ClientListing>> {
+  const user = await requireUser();
+  return toClientResult(await pauseOwnListingCore(user, id));
 }
 
 /** İlan fotoğrafı sil — sahiplik + yetim kuralı service'te (PhotoUploader "Kaldır"). */

@@ -11,6 +11,7 @@ import {
   updateListing,
 } from "../server/listings/actions";
 import { PhotoUploader } from "./PhotoUploader";
+import { ListingPreviewPhotos } from "./ListingPreviewPhotos";
 
 // Çok adımlı ilan formu — adımlar bu bileşenin state'inde tutulur.
 // 1) bilgiler → 2) fotoğraflar (UploadThing, PhotoUploader) → 3) önizleme.
@@ -577,6 +578,8 @@ export function ListingForm() {
           <h2 className="text-lg font-semibold text-gray-900">
             {form.title || "İsimsiz ilan"}
           </h2>
+
+          <ListingPreviewPhotos photoUrls={form.photoUrls} />
 
           <dl className="divide-y divide-gray-100 rounded-xl border border-gray-100">
             {[

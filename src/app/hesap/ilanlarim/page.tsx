@@ -94,6 +94,14 @@ export default async function IlanlarimPage() {
               <div className="mt-4">
                 <ListingActions listingId={listing.id} status={listing.status} />
               </div>
+              <div className="mt-2">
+                <Link
+                  href={`/hesap/ilanlarim/${listing.id}/gecmis`}
+                  className="text-sm font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
+                >
+                  Geçmiş
+                </Link>
+              </div>
             </li>
           ))}
         </ul>
