@@ -1,10 +1,18 @@
-import nextPlugin from "@next/eslint-plugin-next";
-import reactHooks from "eslint-plugin-react-hooks";
-import jsxA11y from "eslint-plugin-jsx-a11y";
-import importPlugin from "eslint-plugin-import";
-import reactPlugin from "eslint-plugin-react";
-import tseslint from "typescript-eslint";
-import globals from "globals";
+import { createRequire } from "node:module";
+
+// CJS plugin'leri `import` default ile ÇEKME (bilinçli): `__esModule` +
+// iç `default` taşıyan paketlerde default-import yorumu Node sürümüne göre
+// değişir (lokal Node 26 tam objeyi, CI'daki Node 22 iç `.default`'u
+// çözdü → `flatConfig` undefined crash'i). `require()` CJS semantiği her
+// sürümde deterministiktir.
+const require = createRequire(import.meta.url);
+const nextPlugin = require("@next/eslint-plugin-next");
+const reactHooks = require("eslint-plugin-react-hooks");
+const jsxA11y = require("eslint-plugin-jsx-a11y");
+const importPlugin = require("eslint-plugin-import");
+const reactPlugin = require("eslint-plugin-react");
+const tseslint = require("typescript-eslint");
+const globals = require("globals");
 
 // FlatCompat KULLANILMAZ (bilinçli): `compat.extends("next/...")` kalıbı
 // `@rushstack/eslint-patch`'in kırılgan caller-tespit zincirine girer ve
