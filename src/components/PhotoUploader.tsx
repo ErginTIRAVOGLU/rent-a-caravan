@@ -9,6 +9,7 @@ import {
   MAX_FILE_BYTES,
   MAX_PHOTOS,
   validatePhotoFiles,
+  checkPhotoSignature,
   extractFileKey,
 } from "../lib/upload";
 import { deleteListingPhoto } from "../server/listings/actions";
@@ -70,6 +71,15 @@ export function PhotoUploader({
     if (!check.ok) {
       setError(check.error);
       return;
+    }
+    // İmza doğrulaması (istemci): gerçek `File` bytes'larının ilk 12
+    // baytı MIME türüyle eşleşmeli; eşleşmezse yükleme BAŞLAMAZ.
+    for (const file of picked) {
+      const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+      if (!checkPhotoSignature(head, file.type)) {
+        setError("Dosya içeriği türüyle eşleşmiyor.");
+        return;
+      }
     }
     try {
       const uploaded = await startUpload(picked);
