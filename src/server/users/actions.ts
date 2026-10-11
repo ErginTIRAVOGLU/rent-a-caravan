@@ -8,6 +8,7 @@ import { firstIssue } from "../../lib/result";
 import { loginSchema } from "../../lib/validators/auth";
 import { registerUser, updateProfileCore, EmailNotVerifiedError, verifyEmail } from "./service";
 import { prisma } from "../../lib/prisma";
+import { assertRateLimit, VERIFY_RESEND_LIMIT } from "../../lib/rate-limit";
 import { createVerifyToken } from "../../lib/auth/tokens";
 import { sendRegisterVerify } from "../../lib/email/events";
 
@@ -168,6 +169,10 @@ export async function verifyEmailAction(
 
 /**
  * Doğrulama e-postasını yeniden gönderir.
+ *
+ * Oracle koruması: bilinmeyen / doğrulanmamış / doğrulanmış adresler
+ * BİREBİR aynı yanıtı döner (kayıtlı-ve-doğrulanmış durumu sızdırılmaz).
+ * Hız sınırı: adres başına VERIFY_RESEND_LIMIT (istismar/kötüye kullanım engeli).
  */
 export async function resendVerifyEmailAction(
   _prevState: VerifyEmailResult,
@@ -177,15 +182,23 @@ export async function resendVerifyEmailAction(
   if (typeof email !== "string" || email.length === 0) {
     return fail("E-posta adresi gerekli.");
   }
+  const normalized = email.toLowerCase().trim();
 
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
-  if (!user) {
-    // Güvenlik: kullanıcı yoksa da başarılıymiş gibi davran (enumaration engeli).
-    return ok({ verified: false });
+  const rate = await assertRateLimit(
+    "verify",
+    normalized,
+    VERIFY_RESEND_LIMIT.limit,
+    VERIFY_RESEND_LIMIT.windowSeconds,
+  );
+  if (!rate.ok) {
+    return rate;
   }
 
-  if (user.emailVerified !== null) {
-    return fail("E-posta zaten doğrulanmış.");
+  const user = await prisma.user.findUnique({ where: { email: normalized } });
+  if (!user || user.emailVerified !== null) {
+    // Güvenlik: kullanıcı yoksa veya zaten doğrulanmışsa da başarılıymış
+    // gibi davran (enumeration engeli) — e-posta gönderilmez.
+    return ok({ verified: false });
   }
 
   const token = createVerifyToken(user.email);

@@ -26,9 +26,20 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
+const { sendRegisterVerifyMock } = vi.hoisted(() => ({
+  sendRegisterVerifyMock: vi.fn(),
+}));
+
+vi.mock("../../../src/lib/email/events", () => ({
+  sendRegisterVerify: sendRegisterVerifyMock,
+}));
+
 const TEST_SECRET = "test-secret-32-characters-long!!";
 
-import { verifyEmailAction } from "../../../src/server/users/actions";
+import {
+  resendVerifyEmailAction,
+  verifyEmailAction,
+} from "../../../src/server/users/actions";
 
 beforeEach(() => {
   vi.stubEnv("AUTH_SECRET", TEST_SECRET);
@@ -136,5 +147,86 @@ describe("verifyEmailAction", () => {
     // emailVerified değişmemeli
     const updated = await prisma.user.findUniqueOrThrow({ where: { email } });
     expect(updated.emailVerified).toEqual(verifiedAt);
+  });
+});
+
+describe("resendVerifyEmailAction", () => {
+  beforeEach(async () => {
+    await resetDb();
+    sendRegisterVerifyMock.mockClear();
+  });
+
+  function resendForm(email: string): FormData {
+    const formData = new FormData();
+    formData.append("email", email);
+    return formData;
+  }
+
+  it("bilinmeyen ve doğrulanmış adresler BİREBİR aynı yanıtı döner (oracle yok)", async () => {
+    const verifiedEmail = "verified@karavan.test";
+    await prisma.user.create({
+      data: makeUser({
+        email: verifiedEmail,
+        emailVerified: new Date("2026-01-01T00:00:00.000Z"),
+      }),
+    });
+
+    const unknown = await resendVerifyEmailAction(
+      { ok: false, error: "initial" },
+      resendForm("yok@karavan.test"),
+    );
+    const verified = await resendVerifyEmailAction(
+      { ok: false, error: "initial" },
+      resendForm(verifiedEmail),
+    );
+
+    expect(unknown).toEqual(verified);
+    expect(unknown.ok).toBe(true);
+    // İkisinde de e-posta gönderilmez (doğrulanmışa yeniden gönderim yok).
+    expect(sendRegisterVerifyMock).not.toHaveBeenCalled();
+  });
+
+  it("doğrulanmamış kullanıcıya e-posta gönderir ve ok döner", async () => {
+    const email = "unverified@karavan.test";
+    await prisma.user.create({ data: makeUser({ email, emailVerified: null }) });
+
+    const result = await resendVerifyEmailAction(
+      { ok: false, error: "initial" },
+      resendForm(email),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.data).toEqual({ verified: false });
+    expect(sendRegisterVerifyMock).toHaveBeenCalledTimes(1);
+    expect(sendRegisterVerifyMock.mock.calls[0][0]).toBe(email);
+  });
+
+  it("e-posta boşsa fail döner", async () => {
+    const formData = new FormData();
+    formData.append("email", "");
+
+    const result = await resendVerifyEmailAction(
+      { ok: false, error: "initial" },
+      formData,
+    );
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("art arda istekler hız sınırına takılır", async () => {
+    const email = "throttled@karavan.test";
+    await prisma.user.create({ data: makeUser({ email, emailVerified: null }) });
+    const prevState = { ok: false, error: "initial" } as const;
+
+    let last = await resendVerifyEmailAction(prevState, resendForm(email));
+    // VERIFY_RESEND_LIMIT aşılana kadar ok, sonra fail.
+    for (let i = 0; i < 10 && last.ok; i += 1) {
+      last = await resendVerifyEmailAction(prevState, resendForm(email));
+    }
+
+    expect(last.ok).toBe(false);
+    if (!last.ok) {
+      expect(last.error).toBe("Çok fazla istek gönderdiniz, biraz bekleyin");
+    }
   });
 });

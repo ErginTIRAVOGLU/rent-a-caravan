@@ -10,6 +10,8 @@ import { fail, ok, type ActionResult } from "./result";
 export const BOOKING_LIMIT = { limit: 5, windowSeconds: 60 } as const;
 /** Mesaj gönderimi (Plan 2): kullanıcı başına 20 istek / 60 sn. */
 export const MESSAGE_LIMIT = { limit: 20, windowSeconds: 60 } as const;
+/** Doğrulama e-postası tekrar gönderimi: adres başına 5 istek / 60 sn. */
+export const VERIFY_RESEND_LIMIT = { limit: 5, windowSeconds: 60 } as const;
 
 const RATE_LIMIT_ERROR = "Çok fazla istek gönderdiniz, biraz bekleyin";
 
@@ -24,11 +26,11 @@ const RATE_LIMIT_ERROR = "Çok fazla istek gönderdiniz, biraz bekleyin";
  * Read-then-write yok: çift tıklama baskınlarında (eşzamanlı istekler) sayaç
  * asla eksik saymaz; RETURNING edilen count limit kararını verir.
  *
- * `bucket`: sayacın türü ("booking"/"message") — aynı kullanıcı için türler
+ * `bucket`: sayacın türü ("booking"/"message"/"verify") — aynı kullanıcı için türler
  * birbirinden bağımsız sayılır. `key`: kullanıcı kimliği.
  */
 export async function assertRateLimit(
-  kind: "booking" | "message",
+  kind: "booking" | "message" | "verify",
   key: string,
   limit: number,
   windowSeconds: number,

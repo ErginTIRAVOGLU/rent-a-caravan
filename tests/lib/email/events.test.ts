@@ -189,6 +189,22 @@ describe("sendDailyDigest", () => {
     expect(sent[0].html).toContain("2 okunmamış mesaj"); // kiracı için 2
   });
 
+  it("aynı gönderenin birden çok okunmamış mesajında önizleme EN YENİ olandır", async () => {
+    const { renter } = await seedConversation([
+      { from: "owner", content: "Eski okunmamış mesaj", hoursAgo: 5 },
+      { from: "owner", content: "En yeni okunmamış mesaj", hoursAgo: 1 },
+    ]);
+    const { client, sent } = captureClient();
+
+    await sendDailyDigest(client);
+
+    // last-write-wins regresyonu: eski mesaj yeninin üstüne yazılmamalı.
+    const mail = mailTo(sent, renter.email);
+    expect(mail.html).toContain("En yeni okunmamış mesaj");
+    expect(mail.html).not.toContain("Eski okunmamış mesaj");
+    expect(mail.html).toContain("2 okunmamış mesaj");
+  });
+
   it("önizleme en son gelen KARŞI TARAF mesajıdır", async () => {
     const { owner, renter } = await seedConversation([
       { from: "owner", content: "Eski mesaj", hoursAgo: 5 },

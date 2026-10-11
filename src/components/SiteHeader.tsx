@@ -17,10 +17,12 @@ function initials(name: string, email: string) {
   return source.slice(0, 1).toUpperCase();
 }
 
-function fetcher(url: string) {
+function fetcher(url: string): Promise<number> {
   return fetch(url).then((res) => {
     if (!res.ok) return 0;
-    return res.json();
+    return res.json().then((j: { count?: unknown }) =>
+      typeof j.count === "number" ? j.count : 0,
+    );
   });
 }
 

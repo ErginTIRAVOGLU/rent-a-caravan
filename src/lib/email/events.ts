@@ -148,8 +148,7 @@ interface UnreadGroup {
  * Okunmamış sohbetleri kullanıcı bazında toplar.
  *
  * Sınırlar: iki ayrı sorgu ile sohbet başına okunmamış SAYISI (groupBy) ve
- * en son okunmamış ÖNİZLEME (distinct + orderBy) alınır — ikisi de satır
- * sayısı sohbet sayısıyla sınırlıdır, mesaj geçmişi büyüdükçe büyümez.
+ * en son okunmamış ÖNİZLEME (distinct + orderBy, take ile sınırlı) alınır.
  */
 async function collectDigests(since: Date): Promise<DigestEntry[]> {
   const conversations = await prisma.conversation.findMany({
@@ -180,7 +179,10 @@ async function collectDigests(since: Date): Promise<DigestEntry[]> {
     _count: { id: true },
   });
   // (sohbet, gönderen) bazında en son okunmamış mesaj (önizleme) —
-  // `distinct` satır sayısını sohbet × gönderen ile sınırlar.
+  // satırlar createdAt azalan sırada gelir; first-write-wins ile grubun
+  // EN YENİ mesajı korunur (last-write-wins en eskiye düşerdi).
+  // `take` aday sorgusunu sınırlar (sohbet başına 1 satır hedeflenir,
+  // kullanıcı başına en fazla 5 sohbet e-postaya girer).
   const latestMessages = await prisma.message.findMany({
     where: {
       conversationId: { in: conversationIds },
@@ -189,6 +191,7 @@ async function collectDigests(since: Date): Promise<DigestEntry[]> {
     },
     distinct: ["conversationId", "senderId"],
     orderBy: { createdAt: "desc" },
+    take: 500,
     select: {
       conversationId: true,
       senderId: true,
@@ -212,6 +215,9 @@ async function collectDigests(since: Date): Promise<DigestEntry[]> {
     const entry = bySender?.get(message.senderId);
     if (!entry) {
       continue; // sayaçta yok: tutarsız an, atla
+    }
+    if (entry.preview) {
+      continue; // first-write-wins: satırlar en yeniden eskiye gelir
     }
     entry.preview = message.content;
     entry.lastUnreadAt = message.createdAt;

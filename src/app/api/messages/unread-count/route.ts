@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "../../../../lib/auth";
+import { prisma } from "../../../../lib/prisma";
 
 /**
  * GET /api/messages/unread-count
  * Returns the count of unread messages for the current user.
- * Currently returns 0 as a placeholder until messaging is implemented.
  */
 export async function GET() {
   const session = await auth();
@@ -14,9 +14,18 @@ export async function GET() {
     return NextResponse.json({ count: 0 }, { status: 401 });
   }
 
-  // TODO: Implement actual unread message count query when messaging feature is added
-  // For now, return 0 as placeholder
-  const unreadCount = 0;
+  // Tüm zamanların okunmamış sayısı (rozet semantiği "okunmamış"):
+  // kullanıcının dahil olduğu sohbetlerde başkasının gönderdiği,
+  // henüz okunmamış mesajlar.
+  const unreadCount = await prisma.message.count({
+    where: {
+      senderId: { not: user.id },
+      readAt: null,
+      conversation: {
+        OR: [{ renterId: user.id }, { ownerId: user.id }],
+      },
+    },
+  });
 
   return NextResponse.json({ count: unreadCount });
 }
