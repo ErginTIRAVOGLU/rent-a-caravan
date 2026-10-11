@@ -92,7 +92,14 @@ describe("ConversationThread scroll + optimistic", () => {
     markReadMock.mockResolvedValue({ ok: true, data: 0 });
     sendMessageMock.mockResolvedValue({
       ok: true,
-      data: { id: "server-msg" },
+      data: {
+        id: "server-1",
+        conversationId: CONV_ID,
+        senderId: RENTER_ID,
+        content: "Yeni mesaj",
+        readAt: null,
+        createdAt: new Date("2026-01-01T10:03:00Z"),
+      },
     });
     mutateMock.mockResolvedValue(undefined);
   });
@@ -113,16 +120,16 @@ describe("ConversationThread scroll + optimistic", () => {
     el.scrollTop = state.scrollTop;
   }
 
-  it("ilk yüklemede alta kaydırır", () => {
+  it("ilk yüklemede alta kaydırmaz (thread üstten açılır)", () => {
     setup([makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))]);
 
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollSpy).not.toHaveBeenCalled();
   });
 
   it("poll güncellemesi yukarıda okuyan kullanıcıyı alta çekmez", () => {
     const first = [makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))];
     const { rerender } = setup(first);
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollSpy).not.toHaveBeenCalled();
 
     // Kullanıcı yukarıda: 1500px kala.
     const log = screen.getByRole("log");
@@ -142,13 +149,13 @@ describe("ConversationThread scroll + optimistic", () => {
     );
 
     expect(screen.getByText("Orada mısınız?")).toBeInTheDocument();
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollSpy).not.toHaveBeenCalled();
   });
 
   it("alta yakınken gelen poll mesajında alta kaydırır", () => {
     const first = [makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))];
     const { rerender } = setup(first);
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollSpy).not.toHaveBeenCalled();
 
     // Kullanıcı altta: 50px kala.
     const log = screen.getByRole("log");
@@ -166,7 +173,7 @@ describe("ConversationThread scroll + optimistic", () => {
       />,
     );
 
-    expect(scrollSpy).toHaveBeenCalledTimes(2);
+    expect(scrollSpy).toHaveBeenCalledTimes(1);
   });
 
   it("gönderilen mesaj revalidation bitene kadar görünür kalır (boşluk yok)", async () => {
@@ -186,6 +193,39 @@ describe("ConversationThread scroll + optimistic", () => {
       expect(mutateMock).toHaveBeenCalled();
     });
     expect(screen.getByText("Yeni mesaj")).toBeInTheDocument();
+  });
+
+  it("gönderim başarısında mesaj revalidation beklenmeden rozetsiz görünür", async () => {
+    // mutate asla çözülmese bile mesaj rozetsiz görünür (deterministik swap).
+    mutateMock.mockReturnValueOnce(new Promise(() => {}));
+    setup([makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))]);
+
+    const input = screen.getByPlaceholderText("Mesajınızı yazın…");
+    fireEvent.change(input, { target: { value: "Yeni mesaj" } });
+    const form = input.closest("form");
+    if (form) fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByText("Yeni mesaj")).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/gönderiliyor/)).not.toBeInTheDocument();
+    });
+  });
+
+  it("gönderim hatasında optimistic mesaj silinir ve Türkçe hata gösterilir", async () => {
+    sendMessageMock.mockResolvedValueOnce({ ok: false, error: "Gönderilemedi." });
+    setup([makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))]);
+
+    const input = screen.getByPlaceholderText("Mesajınızı yazın…");
+    fireEvent.change(input, { target: { value: "Yeni mesaj" } });
+    const form = input.closest("form");
+    if (form) fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("Gönderilemedi.");
+    });
+    expect(screen.queryByText("Yeni mesaj")).not.toBeInTheDocument();
   });
 
   it("sunucu yankısı gelince optimistic tekilleşir (çift görünmez)", async () => {

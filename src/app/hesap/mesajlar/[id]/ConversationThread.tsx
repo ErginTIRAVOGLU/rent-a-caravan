@@ -34,10 +34,10 @@ export function ConversationThread({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasMarkedRead = useRef(false);
-  /** İlk yüklemede alta kaydırılır; sonrasında yalnız alta yakınken / kendi mesajında. */
-  const isFirstLoad = useRef(true);
   /** Kendi mesajı gönderildiğinde bir sonraki render'da alta kaydır. */
   const scrollForOwnMessage = useRef(false);
+  /** İlk render'da kaydırma yapılmaz — thread üstten açılır. */
+  const isFirstRender = useRef(true);
 
   const { data: conversation, mutate } = useSWR<ConversationThreadData>(
     `/api/conversations/${initialConversation.id}`,
@@ -52,15 +52,14 @@ export function ConversationThread({
     }
   }, [conversation]);
 
-  // Alta kaydırma: yalnız ilk yüklemede, kendi mesajı gönderilince veya
+  // Alta kaydırma: thread üstten açılır; yalnız kendi mesajı gönderilince veya
   // kullanıcı zaten alta yakınken (poll güncellemesi geçmiş okumayı bölmez).
   useEffect(() => {
     const container = scrollContainerRef.current;
     const end = messagesEndRef.current;
     if (!container || !end) return;
-    if (isFirstLoad.current) {
-      isFirstLoad.current = false;
-      end.scrollIntoView();
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       return;
     }
     if (scrollForOwnMessage.current) {
@@ -88,9 +87,10 @@ export function ConversationThread({
         const serverTime = new Date(server.createdAt).getTime();
         const index = remaining.findIndex(
           (opt) =>
-            opt.senderId === server.senderId &&
-            opt.content === server.content &&
-            serverTime >= new Date(opt.createdAt).getTime() - 1000,
+            opt.id === server.id ||
+            (opt.senderId === server.senderId &&
+              opt.content === server.content &&
+              serverTime >= new Date(opt.createdAt).getTime() - 1000),
         );
         if (index >= 0) remaining.splice(index, 1);
       }
@@ -143,8 +143,19 @@ export function ConversationThread({
         setOptimisticMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
         return;
       }
-      // Optimistic mesaj sunucu yankısı gelene kadar tutulur (dedupe effect'i
-      // temizler); revalidation yankıyı getirir, arada boşluk olmaz.
+      // Başarıda optimistic mesajı gerçek mesajla değiştir (deterministik):
+      // sunucu yankı/dedupe yarışı artık görünürlüğü etkileyemez.
+      const serverSender =
+        (result.data as unknown as { sender?: Pick<User, "id" | "name" | "avatarUrl"> })
+          .sender ?? optimisticMessage.sender;
+      const confirmedMessage = {
+        ...result.data,
+        sender: serverSender,
+        optimistic: false as const,
+      };
+      setOptimisticMessages((prev) =>
+        prev.map((m) => (m.id === optimisticMessage.id ? confirmedMessage : m)),
+      );
       form.reset();
       await mutate();
     } catch {
