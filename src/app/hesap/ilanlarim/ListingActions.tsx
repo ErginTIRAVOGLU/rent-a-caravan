@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ListingStatus } from "@prisma/client";
 
+import { ConfirmModal } from "../../../components/ConfirmModal";
 import { deleteListing, submitListing } from "../../../server/listings/actions";
 
 type Props = {
@@ -20,6 +21,7 @@ export function ListingActions({ listingId, status }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState<"submit" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   /** Yalnız DRAFT/REJECTED/PAUSED incelemeye gönderilebilir (service ile aynı kural). */
   const canSubmit = status === "DRAFT" || status === "REJECTED" || status === "PAUSED";
@@ -45,12 +47,7 @@ export function ListingActions({ listingId, status }: Props) {
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm(
-      "Bu ilanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
-    );
-    if (!confirmed) {
-      return;
-    }
+    setConfirmOpen(false);
     setPending("delete");
     setError(null);
     try {
@@ -85,12 +82,25 @@ export function ListingActions({ listingId, status }: Props) {
       ) : null}
       <button
         type="button"
-        onClick={() => void handleDelete()}
+        onClick={() => {
+          setError(null);
+          setConfirmOpen(true);
+        }}
         disabled={pending !== null}
         className="btn btn-outline text-error border-error/30 hover:bg-error-bg py-2"
       >
         {pending === "delete" ? "Siliniyor…" : "Sil"}
       </button>
+      <ConfirmModal
+        open={confirmOpen}
+        title="İlanı Sil"
+        description="Bu ilanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        confirmLabel="Sil"
+        pending={pending !== null}
+        pendingLabel="Siliniyor…"
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setConfirmOpen(false)}
+      />
       {error ? (
         <p role="alert" className="text-body-md text-error ml-auto">
           {error}

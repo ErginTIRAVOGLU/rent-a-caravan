@@ -31,7 +31,12 @@ export function ConversationThread({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasMarkedRead = useRef(false);
+  /** İlk yüklemede alta kaydırılır; sonrasında yalnız alta yakınken / kendi mesajında. */
+  const isFirstLoad = useRef(true);
+  /** Kendi mesajı gönderildiğinde bir sonraki render'da alta kaydır. */
+  const scrollForOwnMessage = useRef(false);
 
   const { data: conversation, mutate } = useSWR<ConversationThreadData>(
     `/api/conversations/${initialConversation.id}`,
@@ -46,10 +51,51 @@ export function ConversationThread({
     }
   }, [conversation]);
 
-  // Scroll to bottom when messages change
+  // Alta kaydırma: yalnız ilk yüklemede, kendi mesajı gönderilince veya
+  // kullanıcı zaten alta yakınken (poll güncellemesi geçmiş okumayı bölmez).
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = scrollContainerRef.current;
+    const end = messagesEndRef.current;
+    if (!container || !end) return;
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      end.scrollIntoView();
+      return;
+    }
+    if (scrollForOwnMessage.current) {
+      scrollForOwnMessage.current = false;
+      end.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceFromBottom < 120) {
+      end.scrollIntoView({ behavior: "smooth" });
+    }
   }, [conversation?.messages, optimisticMessages]);
+
+  // Sunucu verisine yansıyan optimistic mesajları temizle (bire bir eşleşme:
+  // aynı içerikten iki kez gönderildiyse yalnız yankılanan kadar silinir).
+  // Eski geçmişteki aynı içerikli mesajlar createdAt korumasıyla elenmez.
+  useEffect(() => {
+    const serverMessages = conversation?.messages ?? [];
+    if (serverMessages.length === 0) return;
+    setOptimisticMessages((prev) => {
+      if (prev.length === 0) return prev;
+      const remaining = [...prev];
+      for (const server of serverMessages) {
+        const serverTime = new Date(server.createdAt).getTime();
+        const index = remaining.findIndex(
+          (opt) =>
+            opt.senderId === server.senderId &&
+            opt.content === server.content &&
+            serverTime >= new Date(opt.createdAt).getTime() - 1000,
+        );
+        if (index >= 0) remaining.splice(index, 1);
+      }
+      return remaining.length === prev.length ? prev : remaining;
+    });
+  }, [conversation?.messages]);
 
   const allMessages = [
     ...(conversation?.messages ?? []).map((m) => ({ ...m, optimistic: false as const })),
@@ -63,7 +109,8 @@ export function ConversationThread({
     event.preventDefault();
     if (!conversation) return;
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const content = formData.get("content")?.toString().trim();
     if (!content) return;
 
@@ -85,6 +132,7 @@ export function ConversationThread({
       optimistic: true,
     };
     setOptimisticMessages((prev) => [...prev, optimisticMessage]);
+    scrollForOwnMessage.current = true;
 
     try {
       const result = await sendMessage(conversation.id, content);
@@ -94,9 +142,10 @@ export function ConversationThread({
         setOptimisticMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
         return;
       }
-      // Remove optimistic message, server data will come via SWR refresh
-      setOptimisticMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
-      mutate(); // Trigger SWR revalidation
+      // Optimistic mesaj sunucu yankısı gelene kadar tutulur (dedupe effect'i
+      // temizler); revalidation yankıyı getirir, arada boşluk olmaz.
+      form.reset();
+      await mutate();
     } catch {
       setError("Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.");
       setOptimisticMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
@@ -148,7 +197,12 @@ export function ConversationThread({
       </div>
 
       {/* Mesaj listesi */}
-      <div className="card p-4 h-[500px] overflow-y-auto space-y-4" role="log" aria-live="polite">
+      <div
+        ref={scrollContainerRef}
+        className="card p-4 h-[500px] overflow-y-auto space-y-4"
+        role="log"
+        aria-live="polite"
+      >
         {allMessages.length === 0 ? (
           <p className="text-center text-body-md text-on-surface-variant mt-8">
             Henüz mesaj yok. İlk mesajı siz gönderin!

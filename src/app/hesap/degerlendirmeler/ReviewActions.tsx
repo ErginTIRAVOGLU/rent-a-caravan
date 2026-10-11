@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { ConfirmModal } from "../../../components/ConfirmModal";
 import { StarRating } from "../../../components/StarRating";
 import { deleteReview, updateReview } from "../../../server/reviews/actions";
 
@@ -26,13 +27,10 @@ export function ReviewActions({
   const [comment, setComment] = useState(initialComment ?? "");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function handleDelete() {
-    if (
-      !window.confirm("Bu yorumu silmek istediğinize emin misiniz?")
-    ) {
-      return;
-    }
+    setConfirmOpen(false);
     setPending(true);
     setError(null);
     try {
@@ -86,12 +84,12 @@ export function ReviewActions({
           label="Puan seçin"
         />
         <textarea
-          rows={2}
+          rows={5}
           maxLength={1000}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Yorumunuz…"
-          className="input"
+          className="input w-full min-h-28"
         />
         <div className="flex gap-2">
           <button type="submit" disabled={pending} className="btn btn-primary btn-sm">
@@ -133,12 +131,30 @@ export function ReviewActions({
       </button>
       <button
         type="button"
-        onClick={() => void handleDelete()}
+        onClick={() => {
+          setError(null);
+          setConfirmOpen(true);
+        }}
         disabled={pending}
         className="btn btn-outline btn-sm text-error border-error/30 hover:bg-error-bg"
       >
         Sil
       </button>
+      {error ? (
+        <p role="alert" className="text-body-md text-error">
+          {error}
+        </p>
+      ) : null}
+      <ConfirmModal
+        open={confirmOpen}
+        title="Yorumu Sil"
+        description="Bu yorumu silmek istediğinize emin misiniz?"
+        confirmLabel="Sil"
+        pending={pending}
+        pendingLabel="Siliniyor…"
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

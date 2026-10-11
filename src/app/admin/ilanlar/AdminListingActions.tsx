@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ListingStatus } from "@prisma/client";
 
+import { ConfirmModal } from "../../../components/ConfirmModal";
 import {
   approveListing,
   pauseListing,
@@ -30,6 +31,7 @@ export function AdminListingActions({ listingId, status }: Props) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Server action reddi (ağ/serileştirme/sunucu throw) için ortak TR mesajı.
   const HATA = "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
@@ -76,12 +78,7 @@ export function AdminListingActions({ listingId, status }: Props) {
   }
 
   async function handlePause() {
-    const confirmed = window.confirm(
-      "Bu ilanı duraklatmak istediğinize emin misiniz? Aramalarda görünmez.",
-    );
-    if (!confirmed) {
-      return;
-    }
+    setConfirmOpen(false);
     setPending("pause");
     setError(null);
     try {
@@ -167,14 +164,30 @@ export function AdminListingActions({ listingId, status }: Props) {
       ) : null}
 
       {status === "ACTIVE" ? (
-        <button
-          type="button"
-          onClick={() => void handlePause()}
-          disabled={pending !== null}
-          className="btn btn-outline text-info border-info/30 hover:bg-info-bg py-2"
-        >
-          {pending === "pause" ? "Duraklatılıyor…" : "Duraklat"}
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setConfirmOpen(true);
+            }}
+            disabled={pending !== null}
+            className="btn btn-outline text-info border-info/30 hover:bg-info-bg py-2"
+          >
+            {pending === "pause" ? "Duraklatılıyor…" : "Duraklat"}
+          </button>
+          <ConfirmModal
+            open={confirmOpen}
+            title="İlanı Duraklat"
+            description="Bu ilanı duraklatmak istediğinize emin misiniz? Aramalarda görünmez."
+            confirmLabel="Duraklat"
+            pending={pending !== null}
+            pendingLabel="Duraklatılıyor…"
+            tone="primary"
+            onConfirm={() => void handlePause()}
+            onCancel={() => setConfirmOpen(false)}
+          />
+        </>
       ) : null}
 
       {error ? (
