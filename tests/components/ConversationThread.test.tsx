@@ -82,13 +82,13 @@ function makeConversation(messages: ThreadMessage[]) {
   };
 }
 
-const scrollSpy = vi.fn();
+const scrollToSpy = vi.fn();
 
 describe("ConversationThread scroll + optimistic", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    scrollSpy.mockClear();
-    window.HTMLElement.prototype.scrollIntoView = scrollSpy;
+    scrollToSpy.mockClear();
+    window.HTMLElement.prototype.scrollTo = scrollToSpy;
     markReadMock.mockResolvedValue({ ok: true, data: 0 });
     sendMessageMock.mockResolvedValue({
       ok: true,
@@ -123,13 +123,13 @@ describe("ConversationThread scroll + optimistic", () => {
   it("ilk yüklemede alta kaydırmaz (thread üstten açılır)", () => {
     setup([makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))]);
 
-    expect(scrollSpy).not.toHaveBeenCalled();
+    expect(scrollToSpy).not.toHaveBeenCalled();
   });
 
   it("poll güncellemesi yukarıda okuyan kullanıcıyı alta çekmez", () => {
     const first = [makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))];
     const { rerender } = setup(first);
-    expect(scrollSpy).not.toHaveBeenCalled();
+    expect(scrollToSpy).not.toHaveBeenCalled();
 
     // Kullanıcı yukarıda: 1500px kala.
     const log = screen.getByRole("log");
@@ -149,13 +149,13 @@ describe("ConversationThread scroll + optimistic", () => {
     );
 
     expect(screen.getByText("Orada mısınız?")).toBeInTheDocument();
-    expect(scrollSpy).not.toHaveBeenCalled();
+    expect(scrollToSpy).not.toHaveBeenCalled();
   });
 
   it("alta yakınken gelen poll mesajında alta kaydırır", () => {
     const first = [makeMessage("m1", OWNER_ID, "Merhaba", new Date("2026-01-01T10:01:00Z"))];
     const { rerender } = setup(first);
-    expect(scrollSpy).not.toHaveBeenCalled();
+    expect(scrollToSpy).not.toHaveBeenCalled();
 
     // Kullanıcı altta: 50px kala.
     const log = screen.getByRole("log");
@@ -173,7 +173,9 @@ describe("ConversationThread scroll + optimistic", () => {
       />,
     );
 
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollToSpy).toHaveBeenCalledTimes(1);
+    // Yalnız yazışma kutusu kayar (sayfa değil): container.scrollTo + en alt.
+    expect(scrollToSpy).toHaveBeenCalledWith({ top: 2000, behavior: "smooth" });
   });
 
   it("gönderilen mesaj revalidation bitene kadar görünür kalır (boşluk yok)", async () => {
@@ -258,3 +260,4 @@ describe("ConversationThread scroll + optimistic", () => {
     });
   });
 });
+
