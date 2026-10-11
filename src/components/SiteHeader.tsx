@@ -55,12 +55,6 @@ export function SiteHeader() {
     fallbackData: 0,
   });
 
-  const handleSignOut = async () => {
-    await signOutAction();
-    // signOutAction already redirects to "/", but we can also call signOut as fallback
-    // signOut({ redirectTo: "/" });
-  };
-
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-surface-mid bg-surface/90 shadow-card backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-12">
@@ -151,7 +145,8 @@ export function SiteHeader() {
                     </span>
                     Profil
                   </Link>
-                  <form onSubmit={handleSignOut} className="mt-1 border-t border-outline-variant pt-1">
+                  {/* form action: signOut içindeki redirect Next tarafından ele alınır */}
+                  <form action={signOutAction} className="mt-1 border-t border-outline-variant pt-1">
                     <button type="submit" className="menu-item text-error hover:bg-error-bg">
                       <span className="material-symbols-outlined text-lg">
                         logout
