@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { generateReactHelpers } from "@uploadthing/react";
-import { UTApi } from "uploadthing/server";
 
 import type { OurFileRouter } from "../app/api/uploadthing/route";
 import {
@@ -12,6 +11,7 @@ import {
   validatePhotoFiles,
   extractFileKey,
 } from "../lib/upload";
+import { deleteListingPhoto } from "../server/listings/actions";
 
 // Adım 2 (Fotoğraflar) yükleyicisi: UploadThing ile çoklu yükleme,
 // önizleme ve silme. photoUrls state'i formun kendisinde (ListingForm)
@@ -84,17 +84,18 @@ export function PhotoUploader({
     // Hata durumunda startUpload yanıt vermez; mesaj onUploadError'ta ayarlanır.
   }
 
-  function removePhoto(url: string) {
+  async function removePhoto(url: string) {
     setError(null);
+    // Liste iyimser güncellenir; sunucu silme hatası kullanıcıya gösterilir.
     onChange(urlsRef.current.filter((existing) => existing !== url));
 
-    // Best-effort: UploadThing'ten dosyayı sil (hata olursa sessizce yut)
     const key = extractFileKey(url);
-    if (key) {
-      const utapi = new UTApi();
-      utapi.deleteFiles(key).catch(() => {
-        // Sessizce yut - best-effort silme
-      });
+    if (!key) {
+      return;
+    }
+    const result = await deleteListingPhoto(key);
+    if (!result.ok) {
+      setError(result.error);
     }
   }
 
@@ -152,7 +153,7 @@ export function PhotoUploader({
             />
             <button
               type="button"
-              onClick={() => removePhoto(url)}
+              onClick={() => void removePhoto(url)}
               disabled={isUploading}
               className="absolute right-1 top-1 rounded bg-black/60 px-2 py-1 text-xs font-semibold text-white hover:bg-black/80 disabled:opacity-60"
             >

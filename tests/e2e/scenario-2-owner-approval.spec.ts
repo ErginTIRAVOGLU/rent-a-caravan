@@ -22,9 +22,16 @@ import { ACCOUNTS, BOOKING_MESSAGE_SCENARIO_2, CITIES, LISTINGS } from "./fixtur
 test("senaryo 2: sahip talebi onaylar ve kiracı 'Onaylandı' durumunu görür", async ({
   browser,
 }) => {
-  const bookingMessage = BOOKING_MESSAGE_SCENARIO_2;
+  // Retry-güvenli kimlik: her deneme (ilk + retry) kendi satırını bulur.
+  // Mesaj: retry step-1'de ikinci kayıt oluşsa bile step-2 filtresi yalnız bu
+  // denemenin satırını eşleştirir (sabit mesaj 2 satır eşleştirip
+  // toHaveCount(1)'i patlatıyordu). Tarih: step-3 tarih filtresi de yalnız bu
+  // denemenin satırını eşleştirir (giden satırlar mesajı göstermez).
+  const attempt = test.info().retry;
+  const bookingMessage = `${BOOKING_MESSAGE_SCENARIO_2} #${Date.now()}`;
   // Senaryo 1'in kullandığı aralıktan farklı, gelecekte bir konaklama aralığı.
-  const stay = { start: isoDay(60), end: isoDay(63), guests: "2" };
+  // Deneme başına +1 gün kaydırma: retry kendi tarih aralığını kullanır.
+  const stay = { start: isoDay(60 + attempt), end: isoDay(63 + attempt), guests: "2" };
 
   await test.step("kiracı rezervasyon talebi gönderir", async () => {
     const page = await browser.newPage();
@@ -33,7 +40,11 @@ test("senaryo 2: sahip talebi onaylar ve kiracı 'Onaylandı' durumunu görür",
     await waitForHydration(page.getByRole("heading", { name: "Rezervasyon Talebi" }));
 
     await fillBookingForm(page, stay, bookingMessage);
-    await page.getByRole("button", { name: "Talebi Gönder" }).click();
+    // Hidrasyon koruması: istemci form henüz bağlanmamışken gönderim sessizce
+    // kaybolur (senaryo-4'teki "Sor" butonu ile aynı kalıp).
+    const submitButton = page.getByRole("button", { name: "Talebi Gönder" });
+    await waitForHydration(submitButton);
+    await submitButton.click();
     await expect(page.getByText("Talebiniz gönderildi")).toBeVisible();
     await page.close();
   });
@@ -53,9 +64,14 @@ test("senaryo 2: sahip talebi onaylar ve kiracı 'Onaylandı' durumunu görür",
     await expect(row).toHaveCount(1);
     await expect(row.getByText("Bekliyor")).toBeVisible();
 
-    await row.getByRole("button", { name: "Onayla" }).click();
+    // Hidrasyon koruması: hidrasyon öncesi tıklama sessizce kaybolur, kayıt
+    // PENDING kalır (CI'daki birincil arıza). Satır kapsamlı buton koruması.
+    const approveButton = row.getByRole("button", { name: "Onayla" });
+    await waitForHydration(approveButton);
+    await approveButton.click();
     // Onay sonrası satır yeniden render edilir: rozet "Onaylandı" olur.
-    await expect(row.getByText("Onaylandı")).toBeVisible();
+    // CI'da server action + router.refresh yavaşlayabilir → cömert zaman aşımı.
+    await expect(row.getByText("Onaylandı")).toBeVisible({ timeout: 30_000 });
     await ownerPage.close();
   });
 
