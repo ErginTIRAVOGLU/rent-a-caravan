@@ -9,6 +9,7 @@ jobs:
   check:
     name: check (lint, typecheck, unit, build)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16
@@ -19,7 +20,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -27,6 +28,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
       AUTH_SECRET: ci-test-secret-not-for-production-000000000000
+      CRON_SECRET: ci-dummy-cron-secret
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       # CI-only dummy values: integrations are stubbed in tests; the build
       # only needs the variables to be present, never real credentials.
@@ -53,6 +55,7 @@ jobs:
     name: e2e (playwright chromium)
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16
@@ -63,7 +66,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -73,6 +76,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/karavan_test
       AUTH_SECRET: ci-test-secret-not-for-production-000000000000
+      CRON_SECRET: ci-dummy-cron-secret
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       RESEND_API_KEY: ci-dummy-resend-key
       UPLOADTHING_TOKEN: ci-dummy-uploadthing-token
@@ -96,5 +100,7 @@ jobs:
         if: failure()
         with:
           name: playwright-report
-          path: playwright-report/
+          # CI reporter is `line` (see tests/e2e/playwright.config.ts), so no
+          # HTML report is produced — upload traces/screenshots instead.
+          path: test-results/
           if-no-files-found: ignore
