@@ -209,7 +209,7 @@ describe("/hesap Genel Bakış", () => {
     expect(text).toContain("6.000"); // formatTRY
   });
 
-  it("sıfır veride iki boş durum görünür ve sayfada 0 rozeti/sayacı yok", async () => {
+  it("sıfır veride iki boş durum ve gerçek 0 stat değerleri görünür, menü rozeti yok", async () => {
     const user = await prisma.user.create({
       data: makeUser({ email: "empty@test.com" }),
     });
@@ -222,8 +222,12 @@ describe("/hesap Genel Bakış", () => {
     expect(screen.getByText("İlan ver")).toBeInTheDocument();
     expect(screen.getByText("Karavan Ara")).toBeInTheDocument();
 
-    // Sıfır sayaçlar "0" olarak yazılmaz; hiçbir menü rozeti render edilmez.
-    expect(screen.queryByText("0")).not.toBeInTheDocument();
+    // Stat kartları gerçek sayıyı gösterir: üç sayaç (Yayında ilan, Bekleyen
+    // talep, Okunmamış mesaj) sıfırdır. Ortalama puan yorum yokluğundan "—".
+    expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(1);
+
+    // "0" yasağı yalnız menü rozetlerine aittir; sayfada hiç rozet yok.
     expect(
       container.querySelectorAll('[data-testid^="nav-badge-"]').length,
     ).toBe(0);

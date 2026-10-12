@@ -52,11 +52,6 @@ function DateRange({ start, end }: { start: Date; end: Date }) {
   );
 }
 
-/** Sıfır sayaç "0" olarak yazılmaz; boş değer em-dash ile gösterilir. */
-function countValue(value: number): string {
-  return value > 0 ? String(value) : "—";
-}
-
 /** Ortalama puan: yorum yoksa "—", tam sayıysa ondalıksız, değilse tek hane. */
 function ratingValue(avg: number | null): string {
   if (avg === null) return "—";
@@ -105,21 +100,21 @@ export default async function HesapDashboardPage() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Yayında ilan"
-          value={countValue(activeListings)}
+          value={activeListings}
           icon="rv_hookup"
           tone="success"
           href="/hesap/ilanlarim"
         />
         <StatCard
           label="Bekleyen talep"
-          value={countValue(counts.pendingIncoming)}
+          value={counts.pendingIncoming}
           icon="inbox"
           tone="accent"
           href="/hesap/taleplerim"
         />
         <StatCard
           label="Okunmamış mesaj"
-          value={countValue(counts.unreadMessages)}
+          value={counts.unreadMessages}
           icon="chat_bubble"
           tone="primary"
           href="/hesap/mesajlar"
