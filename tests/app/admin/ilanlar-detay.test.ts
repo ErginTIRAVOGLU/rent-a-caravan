@@ -222,7 +222,7 @@ describe("/admin/ilanlar/[id] — önizleme", () => {
 });
 
 describe("/admin/ilanlar — İncele linkleri", () => {
-  it("dört bölümün her satırında detay sayfasına İncele linki var", async () => {
+  it("her durum sekmesinin satırında detay sayfasına İncele linki var", async () => {
     const owner = await prisma.user.create({
       data: makeUser({ email: "sahip@test.com" }),
     });
@@ -247,13 +247,20 @@ describe("/admin/ilanlar — İncele linkleri", () => {
     const { default: AdminListingsPage } = await import(
       "../../../src/app/admin/ilanlar/page"
     );
-    const { getAllByRole } = render(await AdminListingsPage());
 
+    // Tek durum listesi render edilir; her sekme kendi durumunun satırını
+    // ve detay sayfasına giden İncele linkini gösterir.
     for (const listing of created) {
+      const { getAllByRole, unmount } = render(
+        await AdminListingsPage({
+          searchParams: Promise.resolve({ durum: listing.status }),
+        }),
+      );
       const links = getAllByRole("link", { name: "İncele" }).filter(
         (link) => link.getAttribute("href") === `/admin/ilanlar/${listing.id}`,
       );
       expect(links.length).toBeGreaterThanOrEqual(1);
+      unmount();
     }
   });
 });

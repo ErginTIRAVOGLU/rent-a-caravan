@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { requireUser } from "../../../../../lib/auth";
 import { prisma } from "../../../../../lib/prisma";
+import { PageHeader } from "../../../../../components/panel/PageHeader";
 import {
   actorLabelFor,
   ListingHistoryList,
@@ -39,7 +40,7 @@ export default async function ListingHistoryPage({ params }: Props) {
   });
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
+    <div className="mx-auto w-full max-w-7xl">
       <Link
         href="/hesap/ilanlarim"
         className="inline-flex items-center gap-1 text-body-md text-on-surface-variant hover:text-primary"
@@ -48,13 +49,11 @@ export default async function ListingHistoryPage({ params }: Props) {
         İlanlarıma dön
       </Link>
 
-      <span className="eyebrow mt-3 block">Hesabım</span>
-      <h1 className="mt-1 text-headline-lg font-bold text-primary">
-        İlan Geçmişi
-      </h1>
-      <p className="mt-1 text-body-md text-on-surface-variant">
-        {listing.title}
-      </p>
+      <PageHeader
+        eyebrow="Hesabım"
+        title="İlan Geçmişi"
+        description={listing.title}
+      />
 
       <section className="card mt-6 p-4 sm:p-5">
         <ListingHistoryList

@@ -2,22 +2,25 @@ import { expect, test } from "@playwright/test";
 
 import { login } from "./helpers/auth";
 import {
+  dataTable,
   dateRangeLabel,
   fillBookingForm,
   isoDay,
   openListingFromSearch,
-  sectionByHeading,
+  selectTab,
   settle,
+  tableRow,
   waitForHydration,
 } from "./helpers/ui";
 import { ACCOUNTS, BOOKING_MESSAGE_SCENARIO_1, CITIES, LISTINGS } from "./fixtures/seed-data";
 
 /**
  * Senaryo 1: Kiracı aramadan ilan bulur, rezervasyon talebi gönderir ve
- * hesabındaki "Giden Taleplerim" listesinde talebi "Bekliyor" olarak görür.
+ * hesabındaki "Taleplerim" panelinde — "Giden" sekmesinde — talebi "Bekliyor"
+ * olarak görür.
  *
- * Not: "Giden Taleplerim" satırında kiracının kendi mesajı gösterilmez (yalnız
- * gelen taleplerde mesaj rozetlenir), bu yüzden satır tarih aralığıyla bulunur.
+ * Not: giden talepler satırında kiracının kendi mesajı gösterilmez (yalnız
+ * gelen taleplerde mesaj önizlenir), bu yüzden satır tarih aralığıyla bulunur.
  */
 test("senaryo 1: kiracı ilan bulur, talep gönderir ve 'Bekliyor' durumunu görür", async ({
   page,
@@ -46,10 +49,14 @@ test("senaryo 1: kiracı ilan bulur, talep gönderir ve 'Bekliyor' durumunu gör
     await settle(page);
     await expect(page.getByRole("heading", { level: 1, name: "Taleplerim" })).toBeVisible();
 
-    const outgoing = sectionByHeading(page, "Giden Taleplerim");
-    const row = outgoing
-      .getByRole("listitem")
-      .filter({ hasText: dateRangeLabel(stay.start, stay.end) });
+    // Yeni panel tek bir listeyi gösterir; kendi talebi "Giden" sekmesindedir.
+    await selectTab(page, "Giden");
+    await expect(page).toHaveURL(/\/hesap\/taleplerim\?sekme=outgoing/);
+
+    const row = tableRow(
+      dataTable(page, "requests-table"),
+      dateRangeLabel(stay.start, stay.end),
+    );
     // Konaklama aralığı kiracının diğer taleplerinden farklı → tek satır.
     await expect(row).toHaveCount(1);
     await expect(row.getByText("Bekliyor")).toBeVisible();

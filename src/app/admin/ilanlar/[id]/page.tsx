@@ -73,7 +73,7 @@ export default async function AdminListingDetailPage({ params }: Props) {
   });
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-12">
+    <div className="mx-auto w-full max-w-7xl">
       <Link
         href="/admin/ilanlar"
         className="inline-flex items-center gap-1 text-body-md text-on-surface-variant hover:text-primary"

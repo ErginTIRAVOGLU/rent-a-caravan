@@ -28,6 +28,81 @@ export function sectionByHeading(page: Page, heading: string): Locator {
     .first();
 }
 
+/** Panel navigasyon grubu (ör. "Hesap menüsü" / "Yönetim menüsü"). */
+export function panelNav(page: Page, name: string): Locator {
+  return page.getByRole("navigation", { name });
+}
+
+/**
+ * Panel durum sekmesi grubu — sayfada üstten `index`. Taleplerim'de iki grup
+ * vardır (0: Gelen/Giden, 1: durum filtreleri); diğer listelerde tek grup (0).
+ */
+export function tabGroup(page: Page, index = 0): Locator {
+  return page.getByRole("navigation", { name: "Durum sekmeleri" }).nth(index);
+}
+
+/**
+ * Etiketli sekme bağlantısı. Etiket, sayaç rozetini (ör. "Giden 2") de
+ * içerdiğinden başlangıç eşleşmesiyle aranır.
+ */
+export function tabLink(page: Page, label: string): Locator {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return page
+    .getByRole("navigation", { name: "Durum sekmeleri" })
+    .getByRole("link", { name: new RegExp(`^${escaped}(?:\\s|$)`) });
+}
+
+/** Sekmeye tıklar ve gezinmenin oturmasını bekler. */
+export async function selectTab(page: Page, label: string): Promise<void> {
+  await tabLink(page, label).click();
+  await settle(page);
+}
+
+/** İstenen sekme grubunda tek aktif sekmeyi ve etiketini doğrular. */
+export async function expectActiveTab(
+  page: Page,
+  groupIndex: number,
+  label: string,
+): Promise<void> {
+  const active = tabGroup(page, groupIndex).locator('[aria-current="page"]');
+  await expect(active).toHaveCount(1);
+  await expect(active).toHaveText(new RegExp(`^${label}`));
+}
+
+/** `data-testid` ile panel veri tablosu/kart kabı (görünür sunum seçilir). */
+export function dataTable(page: Page, testId: string): Locator {
+  return page.getByTestId(testId);
+}
+
+/** Tablo gövdesindeki satır (metinle filtre); mobil kart sunumunu dışlar. */
+export function tableRow(table: Locator, text: string | RegExp): Locator {
+  return table.locator("tbody tr").filter({ hasText: text });
+}
+
+/**
+ * Geçerli belgeye bir işaret koyar ve jetonunu döner. `router.refresh()` gibi
+ * istemci tarafı tazelemeler belgeyi korur; tam sayfa yüklemesi işareti siler.
+ */
+export async function markDocument(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const token = Date.now();
+    (window as Window & { __panelDocToken?: number }).__panelDocToken = token;
+    return token;
+  });
+}
+
+/** İşaret korunmuş mu — tam sayfa yüklemesi OLMADIĞININ kanıtı. */
+export async function expectSameDocument(
+  page: Page,
+  token: number,
+): Promise<void> {
+  const current = await page.evaluate(
+    () =>
+      (window as Window & { __panelDocToken?: number }).__panelDocToken ?? null,
+  );
+  expect(current).toBe(token);
+}
+
 /**
  * Navigasyon sonrası sayfanın etkileşime hazır olmasını bekler.
  *

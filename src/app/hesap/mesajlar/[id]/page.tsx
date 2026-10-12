@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { requireUser } from "../../../../lib/auth";
 import { getConversation } from "../../../../server/messages/actions";
-import { AccountNav } from "../../../../components/AccountNav";
+import { PageHeader } from "../../../../components/panel/PageHeader";
 import { ConversationThread } from "./ConversationThread";
 
 export const metadata: Metadata = {
@@ -24,13 +24,8 @@ export default async function ConversationPage({ params }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-6">
-        <span className="eyebrow">Hesabım</span>
-        <h1 className="mt-1 text-headline-lg font-bold text-primary">Sohbet</h1>
-      </header>
-
-      <AccountNav current="mesajlar" />
+    <div className="mx-auto w-full max-w-7xl">
+      <PageHeader eyebrow="Hesabım" title="Sohbet" />
 
       <ConversationThread
         initialConversation={result.data}

@@ -1,259 +1,188 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ListingStatus, Prisma } from "@prisma/client";
 
-import { formatTRY } from "../../../lib/format";
 import { prisma } from "../../../lib/prisma";
-import { AdminListingActions } from "./AdminListingActions";
-import { STATUS_BADGES, STATUS_LABELS } from "./listing-status";
+import { PageHeader } from "../../../components/panel/PageHeader";
+import {
+  StatusTabs,
+  type TabOption,
+} from "../../../components/panel/StatusTabs";
+import { EmptyState } from "../../../components/panel/EmptyState";
+import { parseTabValue } from "../../../components/panel/tabs";
+import { AdminListingsTable } from "./AdminListingsTable";
+import { STATUS_LABELS } from "./listing-status";
 
 export const metadata: Metadata = {
   title: "İlanlar",
 };
 
-// Durum rozetleri `listing-status.ts` paylaşım modülündedir (kuyruk + detay
-// önizleme aynı haritaları kullanır).
+// `/admin/ilanlar` — durum sekmeleri + sunucu tarafı `?q=` araması + tablo
+// (spec §7.4, §8, §9). Dört ayrı bölüm yerine TEK durum listesi render edilir;
+// sekmeler URL query'sinde yaşar, istemci durumu yoktur. Eski 50 kayıt sınırı
+// kaldırılmıştır (liste MVP ölçeğinde tam yüklenir).
 
-/**
- * İlan moderasyonu: İNCELEME KUYRUĞU (PENDING — onayla/reddet), YAYINDAKİLER
- * (ACTIVE — duraklat), DURAKLATILMIŞLAR (PAUSED — yayına al) ve RED GEÇMİŞİ
- * (REJECTED — gerekçeyle, salt okunur). Durum geçişleri yalnızca service
- * matrisinde (PENDING→ACTIVE|REJECTED, ACTIVE→PAUSED, PAUSED→ACTIVE)
- * yapılır; diğer durumlar için burada düğme sunulmaz.
- */
-export default async function AdminListingsPage() {
-  const [pending, active, paused, rejected] = await Promise.all([
+/** Sekme sırası — ilk sekme (`PENDING`) varsayılandır. */
+const STATUS_ORDER = ["PENDING", "ACTIVE", "PAUSED", "REJECTED"] as const;
+type AdminListingTab = (typeof STATUS_ORDER)[number];
+
+/** Boş sekme başlıkları — duruma özel, tek cümle. */
+const EMPTY_TITLE: Record<AdminListingTab, string> = {
+  PENDING: "İncelemede ilan yok",
+  ACTIVE: "Yayında ilan yok",
+  PAUSED: "Askıda ilan yok",
+  REJECTED: "Reddedilmiş ilan yok",
+};
+
+/** Tek değerli query alanı; dizi/undefined → boş metin. */
+function firstValue(raw: string | string[] | undefined): string {
+  return typeof raw === "string" ? raw : "";
+}
+
+export default async function AdminListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+
+  const durum = parseTabValue(
+    params.durum,
+    STATUS_ORDER,
+    "PENDING",
+  ) as AdminListingTab;
+  const q = firstValue(params.q).trim();
+
+  const where: Prisma.ListingWhereInput = {
+    status: durum,
+    ...(q ? { title: { contains: q, mode: "insensitive" } } : {}),
+  };
+
+  const [grouped, listings] = await Promise.all([
+    // Sayaçlar `q` uygulanmadan tam durum dağılımını verir.
+    prisma.listing.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.listing.findMany({
-      where: { status: "PENDING" },
+      where,
       include: { owner: { select: { name: true, email: true } } },
-      orderBy: { createdAt: "asc" }, // en eski başvuru önce
-    }),
-    prisma.listing.findMany({
-      where: { status: "ACTIVE" },
-      include: { owner: { select: { name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-    prisma.listing.findMany({
-      where: { status: "PAUSED" },
-      include: { owner: { select: { name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-    prisma.listing.findMany({
-      where: { status: "REJECTED" },
-      include: { owner: { select: { name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 50,
+      // İnceleme kuyruğu en eski başvuruyu önce gösterir (adil kuyruk, eski
+      // sayfadaki "en eski başvuru önce" kararı); diğer durumlar en yeniden
+      // eskiye.
+      orderBy: { createdAt: durum === "PENDING" ? "asc" : "desc" },
     }),
   ]);
 
+  const counts: Record<ListingStatus, number> = {
+    DRAFT: 0,
+    PENDING: 0,
+    ACTIVE: 0,
+    PAUSED: 0,
+    REJECTED: 0,
+  };
+  for (const row of grouped) {
+    counts[row.status] = row._count._all;
+  }
+  const total = STATUS_ORDER.reduce((sum, value) => sum + counts[value], 0);
+
+  const tabs: TabOption[] = STATUS_ORDER.map((value) => ({
+    value,
+    label: STATUS_LABELS[value],
+    count: counts[value],
+  }));
+
+  // Sekme linkleri mevcut `q` aramasını korur (StatusTabs sözleşmesi).
+  const tabBasePath = q
+    ? `/admin/ilanlar?q=${encodeURIComponent(q)}`
+    : "/admin/ilanlar";
+  // "Aramayı temizle" mevcut sekmeyi korur, yalnız `q`'yu düşürür.
+  const clearHref =
+    durum === "PENDING" ? "/admin/ilanlar" : `/admin/ilanlar?durum=${durum}`;
+
+  const showChrome = total > 0;
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-12">
-      <header className="mb-6">
-        <span className="eyebrow">Yönetim</span>
-        <h1 className="mt-1 text-headline-lg font-bold text-primary">İlanlar</h1>
-        <p className="mt-1 text-body-md text-on-surface-variant">
-          Bekleyen ilanları inceleyin, onaylayın veya gerekçeyle reddedin.
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-7xl">
+      <PageHeader
+        eyebrow="Yönetim"
+        title="İlanlar"
+        description="Bekleyen ilanları inceleyin, onaylayın veya gerekçeyle reddedin."
+        actions={
+          showChrome ? (
+            <form
+              method="get"
+              action="/admin/ilanlar"
+              role="search"
+              className="flex items-center gap-2"
+            >
+              {durum !== "PENDING" ? (
+                <input type="hidden" name="durum" value={durum} />
+              ) : null}
+              <label htmlFor="admin-ilanlar-q" className="sr-only">
+                İlan ara
+              </label>
+              <input
+                id="admin-ilanlar-q"
+                name="q"
+                type="search"
+                defaultValue={q}
+                placeholder="İlan ara"
+                className="input h-11 w-40 sm:w-56"
+              />
+              <button
+                type="submit"
+                aria-label="Ara"
+                className="btn btn-outline shrink-0"
+              >
+                <span className="material-symbols-outlined text-lg">
+                  search
+                </span>
+              </button>
+            </form>
+          ) : null
+        }
+      />
 
-      {/* İnceleme kuyruğu */}
-      <section className="mt-8">
-        <h2 className="section-title">İncelemedeki ilanlar ({pending.length})</h2>
-        {pending.length === 0 ? (
-          <div className="card mt-3 p-6 text-center">
-            <span className="material-symbols-outlined text-3xl text-outline">inbox</span>
-            <p className="mt-2 font-semibold text-on-surface">İnceleme sırasındaki ilan yok</p>
-          </div>
-        ) : (
-          <ul className="mt-3 space-y-4">
-            {pending.map((listing) => (
-              <li key={listing.id} className="card p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">
-                      <Link
-                        href={`/admin/ilanlar/${listing.id}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {listing.title}
-                      </Link>
-                    </h3>
-                    <p className="mt-1 text-body-md text-on-surface-variant">
-                      {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
-                      /gece · {listing.capacity} kişi · {listing.owner.name} (
-                      {listing.owner.email})
-                    </p>
-                  </div>
-                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
-                    {STATUS_LABELS[listing.status]}
-                  </span>
-                </div>
-                <div className="mt-4 space-y-3">
-                  <Link
-                    href={`/admin/ilanlar/${listing.id}`}
-                    className="btn btn-outline py-2"
-                  >
-                    İncele
-                  </Link>
-                  <AdminListingActions
-                    listingId={listing.id}
-                    status={listing.status}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {showChrome ? (
+        <div className="mb-4">
+          <StatusTabs
+            basePath={tabBasePath}
+            param="durum"
+            tabs={tabs}
+            current={durum}
+          />
+        </div>
+      ) : null}
 
-      {/* Yayındaki ilanlar — duraklatma adayları */}
-      <section className="mt-10">
-        <h2 className="section-title">Yayındaki ilanlar ({active.length})</h2>
-        {active.length === 0 ? (
-          <div className="card mt-3 p-6 text-center">
-            <span className="material-symbols-outlined text-3xl text-outline">check_circle</span>
-            <p className="mt-2 font-semibold text-on-surface">Yayında ilan yok</p>
-          </div>
-        ) : (
-          <ul className="mt-3 space-y-4">
-            {active.map((listing) => (
-              <li key={listing.id} className="card p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">
-                      <Link
-                        href={`/admin/ilanlar/${listing.id}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {listing.title}
-                      </Link>
-                    </h3>
-                    <p className="mt-1 text-body-md text-on-surface-variant">
-                      {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
-                      /gece · {listing.owner.name}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
-                    {STATUS_LABELS[listing.status]}
-                  </span>
-                </div>
-                <div className="mt-4 space-y-3">
-                  <Link
-                    href={`/admin/ilanlar/${listing.id}`}
-                    className="btn btn-outline py-2"
-                  >
-                    İncele
-                  </Link>
-                  <AdminListingActions
-                    listingId={listing.id}
-                    status={listing.status}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* Duraklatılmış ilanlar — yayına alma adayları */}
-      <section className="mt-10">
-        <h2 className="section-title">Duraklatılmış ilanlar ({paused.length})</h2>
-        {paused.length === 0 ? (
-          <div className="card mt-3 p-6 text-center">
-            <span className="material-symbols-outlined text-3xl text-outline">pause_circle</span>
-            <p className="mt-2 font-semibold text-on-surface">Duraklatılmış ilan yok</p>
-          </div>
-        ) : (
-          <ul className="mt-3 space-y-4">
-            {paused.map((listing) => (
-              <li key={listing.id} className="card p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">
-                      <Link
-                        href={`/admin/ilanlar/${listing.id}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {listing.title}
-                      </Link>
-                    </h3>
-                    <p className="mt-1 text-body-md text-on-surface-variant">
-                      {listing.city} · {formatTRY(Number(listing.nightlyPrice))}
-                      /gece · {listing.owner.name}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
-                    {STATUS_LABELS[listing.status]}
-                  </span>
-                </div>
-                <div className="mt-4 space-y-3">
-                  <Link
-                    href={`/admin/ilanlar/${listing.id}`}
-                    className="btn btn-outline py-2"
-                  >
-                    İncele
-                  </Link>
-                  <AdminListingActions
-                    listingId={listing.id}
-                    status={listing.status}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* Red geçmişi — salt okunur */}
-      <section className="mt-10">
-        <h2 className="section-title">Reddedilen ilanlar ({rejected.length})</h2>
-        {rejected.length === 0 ? (
-          <div className="card mt-3 p-6 text-center">
-            <span className="material-symbols-outlined text-3xl text-outline">block</span>
-            <p className="mt-2 font-semibold text-on-surface">Red geçmişi boş</p>
-          </div>
-        ) : (
-          <ul className="mt-3 space-y-4">
-            {rejected.map((listing) => (
-              <li key={listing.id} className="card p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">
-                      <Link
-                        href={`/admin/ilanlar/${listing.id}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {listing.title}
-                      </Link>
-                    </h3>
-                    <p className="mt-1 text-body-md text-on-surface-variant">
-                      {listing.city} · {listing.owner.name} (
-                      {listing.owner.email})
-                    </p>
-                  </div>
-                  <span className={`shrink-0 ${STATUS_BADGES[listing.status]}`}>
-                    {STATUS_LABELS[listing.status]}
-                  </span>
-                </div>
-                {listing.rejectionReason ? (
-                  <p className="mt-3 break-words rounded-lg bg-error-bg p-3 text-body-md text-error">
-                    Red gerekçesi: {listing.rejectionReason}
-                  </p>
-                ) : null}
-                <div className="mt-4">
-                  <Link
-                    href={`/admin/ilanlar/${listing.id}`}
-                    className="btn btn-outline py-2"
-                  >
-                    İncele
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {listings.length === 0 ? (
+        <div className="card">
+          {q ? (
+            <EmptyState
+              icon="search_off"
+              title="Aramanızla eşleşen ilan yok"
+              description="Farklı bir arama deneyin."
+              action={
+                <Link href={clearHref} className="btn btn-outline">
+                  Aramayı temizle
+                </Link>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon="inbox"
+              title={EMPTY_TITLE[durum]}
+              description="Bu durumda ilan bulunmuyor."
+              action={
+                <Link href="/admin" className="btn btn-outline">
+                  Genel Bakışa dön
+                </Link>
+              }
+            />
+          )}
+        </div>
+      ) : (
+        <div className="card overflow-hidden p-2 sm:p-4">
+          <AdminListingsTable listings={listings} />
+        </div>
+      )}
     </div>
   );
 }
