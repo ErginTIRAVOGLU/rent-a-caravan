@@ -41,11 +41,6 @@ vi.mock("swr", () => ({
   }),
 }));
 
-// Mock auth-actions (SiteHeader `signOutAction` bağımlılığı)
-vi.mock("../../src/lib/auth-actions", () => ({
-  signOutAction: vi.fn(),
-}));
-
 // Mock next/image (SiteFooter logo bağımlılığı)
 vi.mock("next/image", () => ({
   default: (props: React.ComponentProps<"img">) => (

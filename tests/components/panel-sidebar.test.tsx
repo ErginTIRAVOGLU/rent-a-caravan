@@ -37,10 +37,6 @@ vi.mock("swr", () => ({
   default: () => ({ data: 0, error: undefined, isLoading: false, mutate: vi.fn() }),
 }));
 
-vi.mock("../../src/lib/auth-actions", () => ({
-  signOutAction: vi.fn(),
-}));
-
 import { PanelSidebar } from "../../src/components/panel/PanelSidebar";
 import { PanelShell } from "../../src/components/panel/PanelShell";
 

@@ -16,10 +16,11 @@ vi.mock("next/link", () => ({
 // Mock next-auth/react completely
 const mockUseSession = vi.fn();
 const mockUpdate = vi.fn();
+const mockSignOut = vi.fn();
 vi.mock("next-auth/react", () => ({
   SessionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useSession: () => mockUseSession(),
-  signOut: vi.fn(),
+  signOut: (...args: unknown[]) => mockSignOut(...args),
 }));
 
 // Mock next/navigation pathname (değiştirilebilir — refresh testleri için)
@@ -34,16 +35,8 @@ vi.mock("swr", () => ({
   default: (key: string) => mockSWR(key),
 }));
 
-// Mock auth-actions
-vi.mock("../../src/lib/auth-actions", () => ({
-  signOutAction: vi.fn(),
-}));
-
 // Import after mocks
 import { SiteHeader } from "../../src/components/SiteHeader";
-import { signOutAction } from "../../src/lib/auth-actions";
-
-const mockSignOutAction = vi.mocked(signOutAction);
 
 const testUser: SessionUser = {
   id: "user-1",
@@ -67,7 +60,7 @@ function renderHeader(session?: SessionUser | null, unreadCount?: number) {
     mutate: vi.fn(),
   });
 
-  mockSignOutAction.mockResolvedValue(undefined);
+  mockSignOut.mockResolvedValue(undefined);
 
   return render(<SiteHeader />);
 }
@@ -147,14 +140,16 @@ describe("SiteHeader", () => {
     expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 
-  it("calls signOutAction when logout button is clicked", async () => {
+  it("calls client signOut with callbackUrl when logout button is clicked", async () => {
     renderHeader(testUser);
     openMenu();
 
     const logoutButton = screen.getByRole("button", { name: /çıkış/i });
     await logoutButton.click();
 
-    expect(mockSignOutAction).toHaveBeenCalled();
+    // İstemci tarafı signOut tam sayfa yönlendirme yapar; sunucu aksiyonu +
+    // redirect istemci router cache'i yüzünden eski girişli başlığı gösteriyordu.
+    expect(mockSignOut).toHaveBeenCalledWith({ callbackUrl: "/" });
   });
 
   it("shows loading state while session is loading", () => {

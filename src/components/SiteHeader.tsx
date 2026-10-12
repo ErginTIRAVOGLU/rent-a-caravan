@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
-import { signOutAction } from "../lib/auth-actions";
 
 const NAV_LINKS = [
   { href: "/arama", label: "Karavanları Keşfet" },
@@ -224,15 +223,25 @@ export function SiteHeader() {
                     </span>
                     Profil
                   </Link>
-                  {/* form action: signOut içindeki redirect Next tarafından ele alınır */}
-                  <form action={signOutAction} className="mt-1 border-t border-outline-variant pt-1">
-                    <button type="submit" className="menu-item text-error hover:bg-error-bg">
+                  {/* Çıkış: istemci tarafı signOut TAM SAYFA yönlendirmesi yapar.
+                      Sunucu aksiyonu + yönlendirme, istemci router cache'i
+                      yüzünden hedef sayfayı eski (girişli) layout'la render
+                      edebiliyordu — kullanıcı ilk tıklamada çıkmamış görünüyordu. */}
+                  <div className="mt-1 border-t border-outline-variant pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        void signOut({ callbackUrl: "/" });
+                      }}
+                      className="menu-item text-error hover:bg-error-bg"
+                    >
                       <span className="material-symbols-outlined text-lg">
                         logout
                       </span>
                       Çıkış
                     </button>
-                  </form>
+                  </div>
                 </div>
                 ) : null}
               </div>

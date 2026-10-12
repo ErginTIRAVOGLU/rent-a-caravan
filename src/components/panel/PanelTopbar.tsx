@@ -3,10 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import useSWR from "swr";
-
-import { signOutAction } from "../../lib/auth-actions";
 
 /**
  * Bildirim zili config'i. `endpoint` verilirse canlı sayaç SWR ile çekilir
@@ -213,12 +211,16 @@ export function PanelTopbar({ notifications }: PanelTopbarProps) {
                 </span>
                 Profil
               </Link>
-              <form
-                action={signOutAction}
-                className="mt-1 border-t border-outline-variant pt-1"
-              >
+              {/* Çıkış: istemci tarafı signOut tam sayfa yönlendirmesi yapar
+                  (bkz. SiteHeader) — sunucu aksiyonu + yönlendirme istemci
+                  router cache'i yüzünden eski girişli başlığı gösterebiliyordu. */}
+              <div className="mt-1 border-t border-outline-variant pt-1">
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void signOut({ callbackUrl: "/" });
+                  }}
                   className="menu-item text-error hover:bg-error-bg"
                 >
                   <span className="material-symbols-outlined text-lg">
@@ -226,7 +228,7 @@ export function PanelTopbar({ notifications }: PanelTopbarProps) {
                   </span>
                   Çıkış
                 </button>
-              </form>
+              </div>
             </div>
           ) : null}
         </div>

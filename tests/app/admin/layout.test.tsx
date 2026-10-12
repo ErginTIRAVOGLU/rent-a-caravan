@@ -70,8 +70,6 @@ vi.mock("swr", () => ({
   }),
 }));
 
-vi.mock("../../../src/lib/auth-actions", () => ({ signOutAction: vi.fn() }));
-
 beforeEach(async () => {
   await resetDb();
   vi.clearAllMocks();
