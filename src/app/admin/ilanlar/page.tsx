@@ -64,7 +64,10 @@ export default async function AdminListingsPage({
     prisma.listing.findMany({
       where,
       include: { owner: { select: { name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
+      // İnceleme kuyruğu en eski başvuruyu önce gösterir (adil kuyruk, eski
+      // sayfadaki "en eski başvuru önce" kararı); diğer durumlar en yeniden
+      // eskiye.
+      orderBy: { createdAt: durum === "PENDING" ? "asc" : "desc" },
     }),
   ]);
 

@@ -202,6 +202,64 @@ describe("/admin/ilanlar", () => {
     expect(table.querySelectorAll("tbody tr")).toHaveLength(51);
   });
 
+  it("PENDING sekmesi en eski başvuruyu önce, diğer sekmeler en yeniyi önce listeler", async () => {
+    const owner = await prisma.user.create({ data: makeUser() });
+    await prisma.listing.create({
+      data: makeListing(owner.id, {
+        title: "En Eski Başvuru",
+        status: "PENDING",
+        createdAt: new Date(Date.UTC(2026, 0, 1)),
+      }),
+    });
+    await prisma.listing.create({
+      data: makeListing(owner.id, {
+        title: "Orta Başvuru",
+        status: "PENDING",
+        createdAt: new Date(Date.UTC(2026, 0, 2)),
+      }),
+    });
+    await prisma.listing.create({
+      data: makeListing(owner.id, {
+        title: "En Yeni Başvuru",
+        status: "PENDING",
+        createdAt: new Date(Date.UTC(2026, 0, 3)),
+      }),
+    });
+    await prisma.listing.create({
+      data: makeListing(owner.id, {
+        title: "Eski Aktif",
+        status: "ACTIVE",
+        createdAt: new Date(Date.UTC(2026, 0, 1)),
+      }),
+    });
+    await prisma.listing.create({
+      data: makeListing(owner.id, {
+        title: "Yeni Aktif",
+        status: "ACTIVE",
+        createdAt: new Date(Date.UTC(2026, 0, 3)),
+      }),
+    });
+    setupAdmin();
+
+    const firstColumn = (scope: HTMLElement) =>
+      Array.from(scope.querySelectorAll("tbody tr td:first-child")).map(
+        (cell) => cell.textContent,
+      );
+
+    // PENDING (inceleme kuyruğu): en eski başvuru önce.
+    const pending = await renderPage();
+    expect(
+      firstColumn(pending.getByTestId("admin-listings-table")),
+    ).toEqual(["En Eski Başvuru", "Orta Başvuru", "En Yeni Başvuru"]);
+    pending.unmount();
+
+    // ACTIVE (ve diğerleri): en yeni önce.
+    const active = await renderPage({ durum: "ACTIVE" });
+    expect(
+      firstColumn(active.getByTestId("admin-listings-table")),
+    ).toEqual(["Yeni Aktif", "Eski Aktif"]);
+  });
+
   it("filtre sonucu boşsa tek EmptyState ve tek 'Aramayı temizle' linki gösterir", async () => {
     const owner = await prisma.user.create({ data: makeUser() });
     await prisma.listing.create({
