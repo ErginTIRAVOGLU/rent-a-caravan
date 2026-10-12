@@ -60,7 +60,7 @@ export function ListingCard({ listing, stay }: ListingCardProps) {
             <h3 className="min-w-0 truncate font-bold text-on-surface transition-colors group-hover:text-primary">
               {listing.title}
             </h3>
-            <span className="shrink-0 text-body-sm text-on-surface-variant">
+            <span className="shrink-0 text-body-sm tabular-nums text-on-surface-variant">
               {listing.capacity} kişi
             </span>
           </div>
@@ -76,7 +76,7 @@ export function ListingCard({ listing, stay }: ListingCardProps) {
 
           <div className="mt-3 flex items-center justify-between border-t border-outline-variant/60 pt-3">
             <p>
-              <span className="text-price text-primary">{formatTRY(price)}</span>
+              <span className="text-price tabular-nums text-primary">{formatTRY(price)}</span>
               <span className="text-body-sm text-on-surface-variant"> / gece</span>
             </p>
             <span className="inline-flex items-center gap-1 text-label-lg text-accent-deep transition-all group-hover:gap-2">

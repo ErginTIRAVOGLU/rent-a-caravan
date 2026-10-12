@@ -5,7 +5,7 @@
 export default function Loading() {
   return (
     <main
-      className="min-h-screen bg-gray-50"
+      className="min-h-dvh bg-gray-50"
       aria-busy="true"
       aria-label="Yükleniyor"
     >

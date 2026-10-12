@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   updateProfileAction,
@@ -31,20 +31,28 @@ export function ProfileForm({ email, initialName, initialPhone }: Props) {
   const [newPassword, setNewPassword] = useState("");
 
   // Sunucu eylemi sonrası route yenilenir ve yeni initial değerler gelir —
-  // kontrollü ad/telefon alanları bunlarla eşitlenir.
-  useEffect(() => {
+  // kontrollü ad/telefon alanları render sırasında bunlarla eşitlenir
+  // (effect içinde setState kademeli render tetiklerdi).
+  const [syncedInitial, setSyncedInitial] = useState({
+    name: initialName,
+    phone: initialPhone,
+  });
+  if (syncedInitial.name !== initialName || syncedInitial.phone !== initialPhone) {
+    setSyncedInitial({ name: initialName, phone: initialPhone });
     setName(initialName);
     setPhone(initialPhone);
-  }, [initialName, initialPhone]);
+  }
 
   // Başarıdan sonra şifre alanları temizlenir (state her eylem sonucunda yeni
   // nesnedir; kimlik değişimi ikinci ve sonraki başarıları da yakalar).
-  useEffect(() => {
+  const [syncedState, setSyncedState] = useState(state);
+  if (state !== syncedState) {
+    setSyncedState(state);
     if (state.done) {
       setCurrentPassword("");
       setNewPassword("");
     }
-  }, [state]);
+  }
 
   return (
     <form action={formAction} className="mt-6 space-y-6">

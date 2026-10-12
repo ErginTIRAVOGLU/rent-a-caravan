@@ -179,7 +179,7 @@ describe("/hesap/mesajlar/[id] page", () => {
     expect(getByText("Merhaba, nasıl yardımcı olabilirim?")).toBeInTheDocument();
   });
 
-  it("kendi mesaj baloncuğu turuncuda beyaz metin kullanır (kontrast)", async () => {
+  it("kendi mesaj baloncuğu koyu turkuazda beyaz metin kullanır (kontrast)", async () => {
     setupSession(renter);
 
     const conversation = await prisma.conversation.findUniqueOrThrow({
@@ -202,20 +202,21 @@ describe("/hesap/mesajlar/[id] page", () => {
     const { default: ConversationPage } = await import("../../../../src/app/hesap/mesajlar/[id]/page");
     const { container, getByText } = render(await ConversationPage({ params: Promise.resolve({ id: conversationId }) }));
 
-    // Kendi mesajı: turuncu baloncuk + beyaz metin (koyu yazı okunmuyordu)
+    // Kendi mesajı: koyu turkuaz baloncuk + beyaz metin (açık turuncu
+    // #FAA150 üstünde beyaz metin ~2:1 kalır; koyu yazı da okunmuyordu)
     const ownContent = getByText("Merhaba");
     const ownBubble = ownContent.closest("div");
-    expect(ownBubble?.className).toContain("bg-accent");
+    expect(ownBubble?.className).toContain("bg-primary");
     expect(ownBubble?.className).toContain("text-white");
     expect(ownBubble?.className).not.toContain("text-accent-deep");
 
-    // Zaman damgası turuncuda okunur olmalı
+    // Zaman damgası koyu baloncukta okunur olmalı
     const timestamp = ownContent.parentElement?.querySelector("p.mt-1");
     expect(timestamp?.className).toContain("text-white/70");
 
     // Kendi avatar başharfi beyaz olmalı
     const ownAvatar = Array.from(
-      container.querySelectorAll("span.rounded-full.bg-accent"),
+      container.querySelectorAll("span.rounded-full.bg-primary"),
     ).find((el) => el.textContent === "S");
     expect(ownAvatar?.className).toContain("text-white");
     expect(ownAvatar?.className).not.toContain("text-accent-deep");

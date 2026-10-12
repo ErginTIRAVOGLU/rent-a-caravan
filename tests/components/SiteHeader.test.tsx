@@ -4,14 +4,6 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { SessionUser } from "../../src/server/users/service";
 
-// Mock next/image (test altyapısı — üretim işareti değil)
-vi.mock("next/image", () => ({
-  default: ({ alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    // eslint-disable-next-line @next/next/no-img-element -- mock ham <img> basar
-    <img alt={alt} {...props} data-testid="logo-image" />
-  ),
-}));
-
 // Mock next/link
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: React.ComponentProps<"a">) => (
@@ -94,11 +86,12 @@ describe("SiteHeader", () => {
     vi.resetAllMocks();
   });
 
-  it("renders logo and brand name", () => {
+  it("renders brand name link", () => {
     renderHeader();
 
-    expect(screen.getByTestId("logo-image")).toBeInTheDocument();
-    expect(screen.getByText("Karavan Kiralama")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /karavan kiralama/i }),
+    ).toBeInTheDocument();
   });
 
   it("shows login and register links when unauthenticated", () => {
@@ -180,7 +173,9 @@ describe("SiteHeader", () => {
 
     render(<SiteHeader />);
 
-    expect(screen.getByTestId("logo-image")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /karavan kiralama/i }),
+    ).toBeInTheDocument();
   });
 
   it("shows navigation links", () => {

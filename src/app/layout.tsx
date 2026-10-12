@@ -21,7 +21,8 @@ export const metadata: Metadata = {
 // bandı bloklanmaz.
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
+  // Villasepeti-tipi ince ağırlıklar (200/300) display metin için de hazır.
+  weight: ["200", "300", "400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-jakarta",
 });
@@ -45,7 +46,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body
-        className={`${jakarta.variable} flex min-h-screen flex-col font-sans antialiased`}
+        className={`${jakarta.variable} flex min-h-dvh flex-col font-sans antialiased`}
       >
         <Providers>
           <SiteHeader />

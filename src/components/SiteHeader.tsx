@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
 import { signOutAction } from "../lib/auth-actions";
@@ -56,7 +55,9 @@ export function SiteHeader() {
   // `update` kimliği render'lar arası değişebilir; effect bağımlılığına
   // alınırsa her çağrı yeniden tetiklenir. Ref üzerinden günceli çağırırız.
   const updateRef = useRef(update);
-  updateRef.current = update;
+  useEffect(() => {
+    updateRef.current = update;
+  });
 
   // Giriş sonrası stale header: credentials girişi sunucu redirect'iyle
   // biter, layout remount olmaz ve `useSession` cache'i tazelenmez. Route
@@ -65,10 +66,14 @@ export function SiteHeader() {
     void updateRef.current();
   }, [pathname]);
 
-  // Route değişiminde menüyü kapat.
-  useEffect(() => {
+  // Route değişiminde menüyü kapat — prop değişiminde render sırasında
+  // ayarlama (react.dev: "adjusting state when a prop changes"); effect'te
+  // setState kademeli render tetikler.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   // Menü açıkken: dışarı tıklama ve Escape ile kapat.
   useEffect(() => {
@@ -106,19 +111,12 @@ export function SiteHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-surface-mid bg-surface/90 shadow-card backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-12">
-        {/* Marka */}
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <Image
-            src="/images/logo.png"
-            alt=""
-            width={112}
-            height={28}
-            className="h-7 w-auto"
-            priority
-          />
-          <span className="text-title-md font-bold tracking-tight text-primary">
-            Karavan Kiralama<span className="text-accent">.</span>
-          </span>
+        {/* Marka — tek marka işareti (footer ve sayfa başlıklarıyla aynı metin) */}
+        <Link
+          href="/"
+          className="shrink-0 text-title-md font-bold tracking-tight text-primary"
+        >
+          Karavan Kiralama<span className="text-accent">.</span>
         </Link>
 
         {/* Orta navigasyon */}

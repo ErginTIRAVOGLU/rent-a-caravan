@@ -1,18 +1,19 @@
 @import "tailwindcss";
 
 /* ================================================================
-   design2 "Ege Akdeniz Indigo" tasarım tokenları — Tailwind v4 @theme
-   Kaynak: designs/design2 (code.html tailwind-config)
+   "Villasepeti esinli Turkuaz Kıyı" tasarım tokenları — Tailwind v4 @theme
+   Kaynak: villasepeti.com paleti (#0F6274 koyu turkuaz, #158AA4 turkuaz,
+   #FAA150 turuncu) + mevcut yüzey/feedback tokenları.
    ================================================================ */
 @theme {
   /* Renkler */
-  --color-primary: #16324f;
-  --color-primary-deep: #0f2338;
-  --color-primary-soft: #2e4867;
-  --color-secondary: #2a6f97;
-  --color-accent: #ee6c4d;
-  --color-accent-deep: #c94f31;
-  --color-accent-soft: #ffe8e2;
+  --color-primary: #0f6274;
+  --color-primary-deep: #0a4b5c;
+  --color-primary-soft: #17758c;
+  --color-secondary: #117c93;
+  --color-accent: #faa150;
+  --color-accent-deep: #b45309;
+  --color-accent-soft: #fff3e6;
 
   --color-background: #f7fafc;
   --color-surface: #f7fafc;
@@ -94,9 +95,9 @@
   --text-price--letter-spacing: -0.02em;
   --text-price--font-weight: 700;
 
-  /* Gölgeler */
-  --shadow-card: 0 1px 8px rgba(22, 50, 79, 0.05);
-  --shadow-raised: 0 6px 24px rgba(22, 50, 79, 0.1);
+  /* Gölgeler — turkuaz palet tonu */
+  --shadow-card: 0 1px 8px rgba(15, 98, 116, 0.06);
+  --shadow-raised: 0 6px 24px rgba(15, 98, 116, 0.12);
 }
 
 @layer base {
@@ -146,7 +147,9 @@
     @apply bg-primary text-white hover:bg-primary-deep;
   }
   .btn-accent {
-    @apply bg-accent text-white hover:bg-accent-deep;
+    /* #FAA150 açık turuncu: üstünde beyaz metin ~2:1 kalır; koyu turkuaz
+       metin kullan, hover'da koyu turuncuya geçip metni beyaza çevir. */
+    @apply bg-accent text-primary-deep hover:bg-accent-deep hover:text-white;
   }
   .btn-outline {
     @apply border border-outline-variant bg-white text-primary hover:bg-surface-low;
