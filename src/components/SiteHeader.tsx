@@ -56,7 +56,9 @@ export function SiteHeader() {
   // `update` kimliği render'lar arası değişebilir; effect bağımlılığına
   // alınırsa her çağrı yeniden tetiklenir. Ref üzerinden günceli çağırırız.
   const updateRef = useRef(update);
-  updateRef.current = update;
+  useEffect(() => {
+    updateRef.current = update;
+  });
 
   // Giriş sonrası stale header: credentials girişi sunucu redirect'iyle
   // biter, layout remount olmaz ve `useSession` cache'i tazelenmez. Route
@@ -65,10 +67,14 @@ export function SiteHeader() {
     void updateRef.current();
   }, [pathname]);
 
-  // Route değişiminde menüyü kapat.
-  useEffect(() => {
+  // Route değişiminde menüyü kapat — prop değişiminde render sırasında
+  // ayarlama (react.dev: "adjusting state when a prop changes"); effect'te
+  // setState kademeli render tetikler.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   // Menü açıkken: dışarı tıklama ve Escape ile kapat.
   useEffect(() => {

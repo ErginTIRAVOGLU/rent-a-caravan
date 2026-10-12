@@ -7,6 +7,7 @@ import useSWR from "swr";
 
 import type { Conversation, Message, User } from "@prisma/client";
 import { formatRelativeTime } from "../../../../lib/format";
+import { reconcileOptimistic } from "../../../../lib/messages/optimistic";
 import { sendMessage, markMessagesRead } from "../../../../server/messages/actions";
 
 type ConversationThreadData = Conversation & {
@@ -81,33 +82,15 @@ export function ConversationThread({
     }
   }, [conversation?.messages, optimisticMessages]);
 
-  // Sunucu verisine yansıyan optimistic mesajları temizle (bire bir eşleşme:
-  // aynı içerikten iki kez gönderildiyse yalnız yankılanan kadar silinir).
-  // Eski geçmişteki aynı içerikli mesajlar createdAt korumasıyla elenmez.
-  useEffect(() => {
-    const serverMessages = conversation?.messages ?? [];
-    if (serverMessages.length === 0) return;
-    setOptimisticMessages((prev) => {
-      if (prev.length === 0) return prev;
-      const remaining = [...prev];
-      for (const server of serverMessages) {
-        const serverTime = new Date(server.createdAt).getTime();
-        const index = remaining.findIndex(
-          (opt) =>
-            opt.id === server.id ||
-            (opt.senderId === server.senderId &&
-              opt.content === server.content &&
-              serverTime >= new Date(opt.createdAt).getTime() - 1000),
-        );
-        if (index >= 0) remaining.splice(index, 1);
-      }
-      return remaining.length === prev.length ? prev : remaining;
-    });
-  }, [conversation?.messages]);
+  // Sunucu verisine yansıyan optimistic mesajlar render sırasında türetilir
+  // (saf mutabakat: effect'te setState kademeli render tetiklerdi). Eski
+  // geçmişteki aynı içerikli mesajlar 1 sn zaman penceresiyle elenmez.
+  const serverMessages = conversation?.messages ?? [];
+  const visibleOptimistic = reconcileOptimistic(optimisticMessages, serverMessages);
 
   const allMessages = [
-    ...(conversation?.messages ?? []).map((m) => ({ ...m, optimistic: false as const })),
-    ...optimisticMessages,
+    ...serverMessages.map((m) => ({ ...m, optimistic: false as const })),
+    ...visibleOptimistic,
   ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   const isRenter = conversation?.renterId === currentUserId;

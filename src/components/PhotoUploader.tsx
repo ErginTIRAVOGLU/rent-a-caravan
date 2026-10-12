@@ -38,8 +38,12 @@ export function PhotoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   // Yükleme sürerken-listede silme yapılabildiği için en güncel listeyi ref'te tut.
+  // Ref yazımı yalnızca effect'te (render sırasında ref'e yazmak yasak);
+  // kullanıcı etkileşimi her zaman effect'ten sonra gelir.
   const urlsRef = useRef(photoUrls);
-  urlsRef.current = photoUrls;
+  useEffect(() => {
+    urlsRef.current = photoUrls;
+  });
 
   const { startUpload, isUploading } = useUploadThing("imageUploader", {
     onUploadError: (uploadError) => {
