@@ -25,6 +25,11 @@ import { defineConfig, devices } from "@playwright/test";
 // daima tests/e2e dizinine göre çözümlenir.
 const e2eDir = __dirname;
 
+// Yerelde başka bir porttaki sunucuya karşı koşmak için: E2E_BASE_URL
+// (ör. PowerShellda `$env:E2E_BASE_URL="http://localhost:3001"`). CI'da ve
+// varsayılanda http://localhost:3000 kullanılır.
+const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+
 export default defineConfig({
   testDir: e2eDir,
   // Senaryolar aynı dev DB'sini paylaşır (bekleyen talep, onay bekleyen ilan
@@ -40,7 +45,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   globalSetup: path.join(e2eDir, "fixtures/global-setup.ts"),
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
@@ -48,7 +53,7 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
     command: "npm run build && npm run start",
-    url: "http://localhost:3000",
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
     stdout: "pipe",
