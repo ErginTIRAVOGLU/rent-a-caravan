@@ -104,7 +104,9 @@ describe("/hesap/mesajlar page", () => {
     const { default: MesajlarPage } = await import("../../../src/app/hesap/mesajlar/page");
     const { getByText } = render(await MesajlarPage());
 
-    expect(getByText("Mesajlarım")).toBeInTheDocument();
+    const heading = getByText("Mesajlarım");
+    expect(heading.tagName).toBe("H1");
+    expect(heading.className).toContain("section-title");
     expect(getByText("İlan 1")).toBeInTheDocument();
     expect(getByText("İlan 2")).toBeInTheDocument();
   });

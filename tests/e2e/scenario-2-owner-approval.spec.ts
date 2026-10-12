@@ -2,12 +2,13 @@ import { expect, test } from "@playwright/test";
 
 import { login } from "./helpers/auth";
 import {
+  dataTable,
   dateRangeLabel,
   fillBookingForm,
   isoDay,
   openListingFromSearch,
-  sectionByHeading,
   settle,
+  tableRow,
   waitForHydration,
 } from "./helpers/ui";
 import { ACCOUNTS, BOOKING_MESSAGE_SCENARIO_2, CITIES, LISTINGS } from "./fixtures/seed-data";
@@ -52,15 +53,14 @@ test("senaryo 2: sahip talebi onaylar ve kiracı 'Onaylandı' durumunu görür",
   await test.step("ilan sahibi gelen talebi onaylar", async () => {
     const ownerPage = await browser.newPage();
     await login(ownerPage, ACCOUNTS.owner);
-    await ownerPage.goto("/hesap/taleplerim");
+    await ownerPage.goto("/hesap/taleplerim?sekme=incoming");
     await settle(ownerPage);
     await expect(
       ownerPage.getByRole("heading", { level: 1, name: "Taleplerim" }),
     ).toBeVisible();
 
     // Gelen taleplerde kiracının mesajı gösterilir → satır mesajla bulunur.
-    const incoming = sectionByHeading(ownerPage, "Gelen Talepler");
-    const row = incoming.getByRole("listitem").filter({ hasText: bookingMessage });
+    const row = tableRow(dataTable(ownerPage, "requests-table"), bookingMessage);
     await expect(row).toHaveCount(1);
     await expect(row.getByText("Bekliyor")).toBeVisible();
 
@@ -78,16 +78,16 @@ test("senaryo 2: sahip talebi onaylar ve kiracı 'Onaylandı' durumunu görür",
   await test.step("kiracı onaylanmış talebi görür", async () => {
     const renterPage = await browser.newPage();
     await login(renterPage, ACCOUNTS.renter);
-    await renterPage.goto("/hesap/taleplerim");
+    await renterPage.goto("/hesap/taleplerim?sekme=outgoing");
     await settle(renterPage);
     await expect(
       renterPage.getByRole("heading", { level: 1, name: "Taleplerim" }),
     ).toBeVisible();
 
-    const outgoing = sectionByHeading(renterPage, "Giden Taleplerim");
-    const row = outgoing
-      .getByRole("listitem")
-      .filter({ hasText: dateRangeLabel(stay.start, stay.end) });
+    const row = tableRow(
+      dataTable(renterPage, "requests-table"),
+      dateRangeLabel(stay.start, stay.end),
+    );
     await expect(row).toHaveCount(1);
     await expect(row.getByText(LISTINGS.antalya)).toBeVisible();
     await expect(row.getByText("Onaylandı")).toBeVisible();

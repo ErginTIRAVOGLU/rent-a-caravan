@@ -109,7 +109,10 @@ export function SiteHeader() {
   );
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-surface-mid bg-surface/90 shadow-card backdrop-blur-xl">
+    <header
+      data-testid="site-header"
+      className="fixed inset-x-0 top-0 z-50 border-b border-surface-mid bg-surface/90 shadow-card backdrop-blur-xl"
+    >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-12">
         {/* Marka — tek marka işareti (footer ve sayfa başlıklarıyla aynı metin) */}
         <Link

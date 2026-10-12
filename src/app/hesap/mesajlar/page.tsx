@@ -3,7 +3,7 @@ import type { Conversation } from "@prisma/client";
 
 import { requireUser } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
-import { AccountNav } from "../../../components/AccountNav";
+import { PageHeader } from "../../../components/panel/PageHeader";
 import { ConversationList } from "./ConversationList";
 
 export const metadata: Metadata = {
@@ -55,16 +55,12 @@ export default async function MesajlarPage() {
   }));
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-6">
-        <span className="eyebrow">Hesabım</span>
-        <h1 className="mt-1 text-headline-lg font-bold text-primary">Mesajlarım</h1>
-        <p className="mt-1 text-body-md text-on-surface-variant">
-          Kiracılar ve ilan sahipleriyle konuşmalarınızı yönetin.
-        </p>
-      </header>
-
-      <AccountNav current="mesajlar" />
+    <div className="mx-auto w-full max-w-7xl">
+      <PageHeader
+        eyebrow="Hesabım"
+        title="Mesajlarım"
+        description="Kiracılar ve ilan sahipleriyle konuşmalarınızı yönetin."
+      />
 
       <ConversationList initialConversations={conversationsWithUnread} userId={user.id} />
     </div>

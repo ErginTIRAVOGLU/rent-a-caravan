@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
-import { SiteFooter } from "../components/SiteFooter";
-import { SiteHeader } from "../components/SiteHeader";
+import { ChromeGate } from "../components/ChromeGate";
 import { Providers } from "./providers";
 
 import "./globals.css";
@@ -49,10 +48,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={`${jakarta.variable} flex min-h-dvh flex-col font-sans antialiased`}
       >
         <Providers>
-          <SiteHeader />
-          {/* Sabit header için üst boşluk; ana sayfa hero'su -mt-20 ile altına girer. */}
-          <div className="flex-1 pt-20">{children}</div>
-          <SiteFooter />
+          <ChromeGate>
+            <div className="flex-1 pt-20">{children}</div>
+          </ChromeGate>
         </Providers>
       </body>
     </html>

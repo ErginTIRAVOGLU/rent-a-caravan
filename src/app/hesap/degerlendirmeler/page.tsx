@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { requireUser } from "../../../lib/auth";
 import { getUserReviews } from "../../../server/reviews/service";
-import { AccountNav } from "../../../components/AccountNav";
+import { PageHeader } from "../../../components/panel/PageHeader";
 import { StarRating } from "../../../components/StarRating";
 import { ReviewActions } from "./ReviewActions";
 
@@ -24,18 +24,12 @@ export default async function DegerlendirmelerPage() {
   const received = reviewsResult.ok ? reviewsResult.data.received : [];
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-6">
-        <span className="eyebrow">Hesabım</span>
-        <h1 className="mt-1 text-headline-lg font-bold text-primary">
-          Değerlendirmeler
-        </h1>
-        <p className="mt-1 text-body-md text-on-surface-variant">
-          Yazdığınız yorumlar ve ilanlarınıza yazılan yorumlar.
-        </p>
-      </header>
-
-      <AccountNav current="degerlendirmeler" />
+    <div className="mx-auto w-full max-w-7xl">
+      <PageHeader
+        eyebrow="Hesabım"
+        title="Değerlendirmeler"
+        description="Yazdığınız yorumlar ve ilanlarınıza yazılan yorumlar."
+      />
 
       {/* Yazdıklarım */}
       <section className="mt-8">

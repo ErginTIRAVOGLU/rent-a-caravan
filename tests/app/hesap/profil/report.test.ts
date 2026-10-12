@@ -75,8 +75,11 @@ describe("/hesap/profil — Bildir dialogu", () => {
   it("hesap bildirimi bölümü ve 'Bildir' düğmesi gösterilir", async () => {
     setupSession(user);
 
-    const { getByText, queryByRole } = await renderProfilePage();
+    const { getByText, queryByRole, getByRole } = await renderProfilePage();
 
+    expect(
+      getByRole("heading", { level: 1, name: "Profil" }).className,
+    ).toContain("section-title");
     expect(getByText("Hesap Bildirimi")).toBeInTheDocument();
     expect(getByText("Bildir")).toBeInTheDocument();
     expect(queryByRole("dialog")).not.toBeInTheDocument();

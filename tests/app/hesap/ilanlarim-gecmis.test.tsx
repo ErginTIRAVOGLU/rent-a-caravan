@@ -98,8 +98,11 @@ describe("/hesap/ilanlarim/[id]/gecmis", () => {
     });
     setupSession(owner);
 
-    const { getByText } = await renderHistoryPage(listing.id);
+    const { getByText, getByRole } = await renderHistoryPage(listing.id);
 
+    expect(
+      getByRole("heading", { level: 1, name: "İlan Geçmişi" }).className,
+    ).toContain("section-title");
     expect(getByText("Geçmişli Karavan")).toBeInTheDocument();
     expect(getByText("Yayında → Duraklatıldı")).toBeInTheDocument();
     expect(getByText("İlan sahibi")).toBeInTheDocument();

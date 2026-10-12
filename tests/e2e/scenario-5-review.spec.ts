@@ -46,7 +46,9 @@ test("senaryo 5: kiracı tamamlanmış rezervasyonuna yorum yazar ve yorum iland
   await test.step("yorum ilan detayında ve ortalamada görünür", async () => {
     await page.goto(listingPath);
     await settle(page);
-    const reviews = sectionByHeading(page, "Yorumlar");
+    // Detay sayfasındaki bölüm başlığı redesign ile "Değerlendirmeler" oldu
+    // (hesap sayfasıyla aynı ad — bkz. src/app/ilan/[id]/page.tsx).
+    const reviews = sectionByHeading(page, "Değerlendirmeler");
     await expect(reviews.getByText(REVIEW_COMMENT_SCENARIO_5)).toBeVisible();
     // Kiracının adı yorumun yazarı olarak görünür.
     await expect(reviews.getByText(me.name)).toBeVisible();

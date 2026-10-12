@@ -1,197 +1,209 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { BookingRequestStatus } from "@prisma/client";
+import type { BookingRequestStatus, Prisma } from "@prisma/client";
 
 import { requireUser } from "../../../lib/auth";
-import { formatTRY } from "../../../lib/format";
 import { prisma } from "../../../lib/prisma";
-import { AccountNav } from "../../../components/AccountNav";
-import { BookingActions } from "./BookingActions";
+import { PageHeader } from "../../../components/panel/PageHeader";
+import {
+  StatusTabs,
+  type TabOption,
+} from "../../../components/panel/StatusTabs";
+import { EmptyState } from "../../../components/panel/EmptyState";
+import { parseTabValue } from "../../../components/panel/tabs";
+import {
+  RequestTable,
+  STATUS_LABELS,
+  type RequestDirection,
+} from "./RequestTable";
 
 export const metadata: Metadata = {
   title: "Taleplerim",
 };
 
-// Rezervasyon talepleri: GELEN (kullanıcı ilan sahibi) ve GİDEN (kiracı).
-// Durum rozetleri TR; DB değeri İngilizce (ilanlarim sayfası ile aynı kalıp).
+// `/hesap/taleplerim` — Gelen/Giden ana sekmeleri + durum filtreleri + tablo
+// (spec §7.3, §8, §9). Sekme ve filtre durumu URL query'sinde yaşar; istemci
+// durumu yoktur. Aynı anda YALNIZ seçili yönün listesi render edilir. Sunucu
+// bileşeni veriyi çeker, tek istemci adası satır aksiyonlarıdır.
 
-const STATUS_LABELS: Record<BookingRequestStatus, string> = {
-  PENDING: "Bekliyor",
-  APPROVED: "Onaylandı",
-  REJECTED: "Reddedildi",
-  CANCELLED: "İptal",
-  COMPLETED: "Tamamlandı",
-};
+/** Durum sekmesi sırası — spec §8 alt filtreleri. */
+const STATUS_ORDER: readonly BookingRequestStatus[] = [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "CANCELLED",
+  "COMPLETED",
+];
 
-const STATUS_BADGES: Record<BookingRequestStatus, string> = {
-  PENDING: "badge badge-warning",
-  APPROVED: "badge badge-success",
-  REJECTED: "badge badge-error",
-  CANCELLED: "badge badge-neutral",
-  COMPLETED: "badge badge-info",
-};
+/** İzinli yön sekmeleri — ilk (`incoming`) varsayılandır. */
+const ALLOWED_SEKME = ["incoming", "outgoing"] as const;
 
-/** @db.Date → DD.MM.YYYY (UTC gece yarısı; saat dilimi kaymaz). */
-function formatDate(value: Date): string {
-  const dd = String(value.getUTCDate()).padStart(2, "0");
-  const mm = String(value.getUTCMonth() + 1).padStart(2, "0");
-  return `${dd}.${mm}.${value.getUTCFullYear()}`;
+/** İzinli `durum` değerleri — ilk (`all`) varsayılandır. */
+const ALLOWED_DURUM = ["all", ...STATUS_ORDER] as const;
+
+/** groupBy sonucunu tam durum dağılımına çevirir. */
+function toCounts(
+  groups: { status: BookingRequestStatus; _count: { _all: number } }[],
+): Record<BookingRequestStatus, number> {
+  const counts: Record<BookingRequestStatus, number> = {
+    PENDING: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+    CANCELLED: 0,
+    COMPLETED: 0,
+  };
+  for (const group of groups) {
+    counts[group.status] = group._count._all;
+  }
+  return counts;
 }
 
-function DateRange({ start, end }: { start: Date; end: Date }) {
-  return (
-    <span>
-      {formatDate(start)} – {formatDate(end)}
-    </span>
-  );
+function totalOf(counts: Record<BookingRequestStatus, number>): number {
+  return STATUS_ORDER.reduce((sum, value) => sum + counts[value], 0);
 }
 
-export default async function TaleplerimPage() {
+export default async function TaleplerimPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireUser();
+  const params = await searchParams;
 
-  const [incoming, outgoing] = await Promise.all([
-    // Gelen: kullanıcı ilanlarının sahibi olduğu talepler
-    prisma.bookingRequest.findMany({
+  const direction = parseTabValue(
+    params.sekme,
+    ALLOWED_SEKME,
+    "incoming",
+  ) as RequestDirection;
+  const durum = parseTabValue(params.durum, ALLOWED_DURUM, "all");
+  const status = durum === "all" ? null : (durum as BookingRequestStatus);
+
+  const directionWhere: Prisma.BookingRequestWhereInput =
+    direction === "incoming"
+      ? { listing: { ownerId: user.id } }
+      : { renterId: user.id };
+
+  const [incomingGroups, outgoingGroups, rows] = await Promise.all([
+    // Yön sayaçları kullanıcı kapsamlı; durum filtresinden bağımsız.
+    prisma.bookingRequest.groupBy({
+      by: ["status"],
       where: { listing: { ownerId: user.id } },
-      include: {
-        listing: { select: { id: true, title: true } },
-        renter: { select: { name: true } },
-      },
-      orderBy: { createdAt: "desc" },
+      _count: { _all: true },
     }),
-    // Giden: kullanıcının kiracı olduğu talepler
-    prisma.bookingRequest.findMany({
+    prisma.bookingRequest.groupBy({
+      by: ["status"],
       where: { renterId: user.id },
+      _count: { _all: true },
+    }),
+    // Yalnız seçili yön + durum filtresi; tek liste.
+    prisma.bookingRequest.findMany({
+      where: { ...directionWhere, ...(status ? { status } : {}) },
       include: {
         listing: { select: { id: true, title: true, status: true } },
+        renter: { select: { name: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
   ]);
 
+  const incomingCounts = toCounts(incomingGroups);
+  const outgoingCounts = toCounts(outgoingGroups);
+  const incomingTotal = totalOf(incomingCounts);
+  const outgoingTotal = totalOf(outgoingCounts);
+  const selectedCounts =
+    direction === "incoming" ? incomingCounts : outgoingCounts;
+  const selectedTotal =
+    direction === "incoming" ? incomingTotal : outgoingTotal;
+
+  const mainTabs: TabOption[] = [
+    { value: "incoming", label: "Gelen", count: incomingTotal },
+    { value: "outgoing", label: "Giden", count: outgoingTotal },
+  ];
+
+  const statusTabs: TabOption[] = [
+    { value: "all", label: "Tümü", count: selectedTotal },
+    ...STATUS_ORDER.map((value) => ({
+      value,
+      label: STATUS_LABELS[value],
+      count: selectedCounts[value],
+    })),
+  ];
+
+  // Sekme linkleri diğer filtreyi korumalı (StatusTabs sözleşmesi).
+  const mainTabsBase =
+    durum === "all" ? "/hesap/taleplerim" : `/hesap/taleplerim?durum=${durum}`;
+  const statusTabsBase =
+    direction === "incoming"
+      ? "/hesap/taleplerim"
+      : `/hesap/taleplerim?sekme=${direction}`;
+
+  const emptyState =
+    direction === "incoming" ? (
+      selectedTotal === 0 ? (
+        <EmptyState
+          icon="inbox"
+          title="Henüz gelen talep yok"
+          description="İlanlarınıza gelen talepler burada listelenir."
+        />
+      ) : (
+        <EmptyState
+          icon="filter_alt_off"
+          title="Bu filtreyle eşleşen talep yok"
+          description="Farklı bir durum seçin."
+        />
+      )
+    ) : selectedTotal === 0 ? (
+      <EmptyState
+        icon="search_off"
+        title="Henüz talebiniz yok"
+        description="Karavan keşfedin ve rezervasyon talebi gönderin."
+        action={
+          <Link href="/arama" className="btn btn-primary">
+            Karavan Ara
+          </Link>
+        }
+      />
+    ) : (
+      <EmptyState
+        icon="filter_alt_off"
+        title="Bu filtreyle eşleşen talep yok"
+        description="Farklı bir durum seçin."
+      />
+    );
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-6">
-        <span className="eyebrow">Hesabım</span>
-        <h1 className="mt-1 text-headline-lg font-bold text-primary">Taleplerim</h1>
-        <p className="mt-1 text-body-md text-on-surface-variant">
-          Gelen talepleri onaylayın ya da reddedin, kendi taleplerinizi takip edin.
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-7xl">
+      <PageHeader
+        eyebrow="Hesabım"
+        title="Taleplerim"
+        description="Gelen talepleri onaylayın ya da reddedin, kendi taleplerinizi takip edin."
+      />
 
-      <AccountNav current="taleplerim" />
+      <div className="mb-3">
+        <StatusTabs
+          basePath={mainTabsBase}
+          param="sekme"
+          tabs={mainTabs}
+          current={direction}
+        />
+      </div>
 
-      {/* GELEN */}
-      <section className="mt-8">
-        <h2 className="section-title">Gelen Talepler</h2>
-        {incoming.length === 0 ? (
-          <div className="card mt-3 p-6 text-center">
-            <span className="material-symbols-outlined text-3xl text-outline">
-              inbox
-            </span>
-            <p className="mt-2 font-semibold text-on-surface">Henüz gelen talep yok</p>
-          </div>
-        ) : (
-          <ul className="mt-3 space-y-4">
-            {incoming.map((booking) => (
-              <li key={booking.id} className="card p-4 sm:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">
-                      {booking.listing.title}
-                    </h3>
-                    <p className="mt-1 text-body-md text-on-surface-variant">
-                      <DateRange
-                        start={booking.startDate}
-                        end={booking.endDate}
-                      />{" "}
-                      · {booking.guests} kişi ·{" "}
-                      {formatTRY(Number(booking.totalPrice))}
-                    </p>
-                    <p className="mt-1 text-body-md text-on-surface-variant">
-                      Kiracı: {booking.renter.name}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 ${STATUS_BADGES[booking.status]}`}>
-                    {STATUS_LABELS[booking.status]}
-                  </span>
-                </div>
+      <div className="mb-4">
+        <StatusTabs
+          basePath={statusTabsBase}
+          param="durum"
+          tabs={statusTabs}
+          current={durum}
+        />
+      </div>
 
-                {booking.message ? (
-                  <p className="mt-3 break-words rounded-lg bg-surface-low p-3 text-body-md text-on-surface-variant">
-                    “{booking.message}”
-                  </p>
-                ) : null}
-
-                {booking.status === "PENDING" ? (
-                  <BookingActions bookingId={booking.id} mode="decide" />
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* GİDEN */}
-      <section className="mt-10">
-        <h2 className="section-title">Giden Taleplerim</h2>
-        {outgoing.length === 0 ? (
-          <div className="card mt-3 p-6 text-center">
-            <span className="material-symbols-outlined text-3xl text-outline">
-              search_off
-            </span>
-            <p className="mt-2 font-semibold text-on-surface">Henüz talebiniz yok</p>
-            <Link href="/arama" className="btn btn-primary btn-sm mt-4">
-              Karavan Arayın
-            </Link>
-          </div>
-        ) : (
-          <ul className="mt-3 space-y-4">
-            {outgoing.map((booking) => (
-              <li key={booking.id} className="card p-4 sm:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-bold text-on-surface">
-                      {booking.listing.status === "ACTIVE" ? (
-                        <Link
-                          href={`/ilan/${booking.listing.id}`}
-                          className="hover:text-primary hover:underline"
-                        >
-                          {booking.listing.title}
-                        </Link>
-                      ) : (
-                        booking.listing.title
-                      )}
-                    </h3>
-                    <p className="mt-1 text-body-md text-on-surface-variant">
-                      <DateRange
-                        start={booking.startDate}
-                        end={booking.endDate}
-                      />{" "}
-                      · {booking.guests} kişi ·{" "}
-                      {formatTRY(Number(booking.totalPrice))}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 ${STATUS_BADGES[booking.status]}`}>
-                    {STATUS_LABELS[booking.status]}
-                  </span>
-                </div>
-
-                {booking.status === "REJECTED" && booking.rejectionReason ? (
-                  <p className="mt-3 break-words rounded-lg bg-error-bg p-3 text-body-md text-error">
-                    Red gerekçesi: {booking.rejectionReason}
-                  </p>
-                ) : null}
-
-                {booking.status === "PENDING" ||
-                booking.status === "APPROVED" ? (
-                  <BookingActions bookingId={booking.id} mode="cancel" />
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {rows.length === 0 ? (
+        <div className="card">{emptyState}</div>
+      ) : (
+        <div className="card overflow-hidden p-2 sm:p-4">
+          <RequestTable rows={rows} direction={direction} />
+        </div>
+      )}
     </div>
   );
 }
