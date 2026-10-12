@@ -15,8 +15,8 @@ export type TabOption = {
 
 /**
  * Ham query değerini izinli kümedeki bir sekmeye eşler.
- * - `undefined` / `""` / boş dizi → `fallback`.
- * - Dizi verilirse ilk değer kullanılır (ör. `?durum=a&durum=b`).
+ * - `undefined` / `""` → `fallback`.
+ * - Çok değerli dizi (ör. `?durum=a&durum=b`) → `fallback`.
  * - İzinli kümede olmayan değer → `fallback`.
  */
 export function parseTabValue(
@@ -24,11 +24,10 @@ export function parseTabValue(
   allowed: readonly string[],
   fallback: string,
 ): string {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (value === undefined || value === "") {
+  if (raw === undefined || raw === "" || Array.isArray(raw)) {
     return fallback;
   }
-  return allowed.includes(value) ? value : fallback;
+  return allowed.includes(raw) ? raw : fallback;
 }
 
 /**

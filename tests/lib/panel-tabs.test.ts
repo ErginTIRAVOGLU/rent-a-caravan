@@ -21,11 +21,11 @@ describe("parseTabValue", () => {
     expect(parseTabValue("gecersiz", ALLOWED, "all")).toBe("all");
   });
 
-  it("dizi verilirse ilk değeri kullanır", () => {
-    expect(parseTabValue(["PAUSED", "ACTIVE"], ALLOWED, "all")).toBe("PAUSED");
+  it("çok değerli dizi için fallback döner", () => {
+    expect(parseTabValue(["PAUSED", "ACTIVE"], ALLOWED, "all")).toBe("all");
   });
 
-  it("dizinin ilk değeri geçersizse fallback döner", () => {
+  it("dizinin ilk değeri geçersizse de fallback döner", () => {
     expect(parseTabValue(["gecersiz", "ACTIVE"], ALLOWED, "all")).toBe("all");
   });
 
