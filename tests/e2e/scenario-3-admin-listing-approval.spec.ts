@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { login } from "./helpers/auth";
-import { sectionByHeading, settle } from "./helpers/ui";
+import { dataTable, settle, tableRow } from "./helpers/ui";
 import { ACCOUNTS, CITIES, LISTINGS } from "./fixtures/seed-data";
 
 /**
@@ -30,31 +30,33 @@ test("senaryo 3: admin onay bekleyen ilanı onaylar ve ilan aramada görünür",
     await settle(page);
     await expect(page.getByRole("heading", { level: 1, name: "İlanlar" })).toBeVisible();
 
-    const pending = sectionByHeading(page, "İncelemedeki ilanlar");
-    const row = pending.getByRole("listitem").filter({ hasText: LISTINGS.bolu });
+    // Varsayılan sekme PENDING'dir; inceleme kuyruğu tek listede gösterilir.
+    const row = tableRow(dataTable(page, "admin-listings-table"), LISTINGS.bolu);
     await expect(row).toHaveCount(1);
     await expect(row.getByText("İncelemede")).toBeVisible();
 
     await row.getByRole("button", { name: "Onayla" }).click();
 
-    // Onay sonrası satır inceleme kuyruğundan çıkıp "Yayındaki ilanlar"a geçer.
+    // Onay sonrası satır inceleme kuyruğundan çıkar.
     await expect(
-      pending.getByRole("listitem").filter({ hasText: LISTINGS.bolu }),
+      tableRow(dataTable(page, "admin-listings-table"), LISTINGS.bolu),
     ).toHaveCount(0);
-    const active = sectionByHeading(page, "Yayındaki ilanlar");
-    await expect(
-      active.getByRole("listitem").filter({ hasText: LISTINGS.bolu }),
-    ).toHaveCount(1);
-    await expect(
-      active.getByRole("listitem").filter({ hasText: LISTINGS.bolu }).getByText("Yayında"),
-    ).toBeVisible();
+
+    // İlan artık ACTIVE sekmesinde listelenir.
+    await page.goto("/admin/ilanlar?durum=ACTIVE");
+    await settle(page);
+    const activeRow = tableRow(
+      dataTable(page, "admin-listings-table"),
+      LISTINGS.bolu,
+    );
+    await expect(activeRow).toHaveCount(1);
+    await expect(activeRow.getByText("Yayında")).toBeVisible();
   });
 
   await test.step("admin ilan detay önizlemesini açar", async () => {
-    await page.goto("/admin/ilanlar");
+    await page.goto("/admin/ilanlar?durum=ACTIVE");
     await settle(page);
-    const active = sectionByHeading(page, "Yayındaki ilanlar");
-    const row = active.getByRole("listitem").filter({ hasText: LISTINGS.bolu });
+    const row = tableRow(dataTable(page, "admin-listings-table"), LISTINGS.bolu);
     await expect(row).toHaveCount(1);
     await row.getByRole("link", { name: "İncele" }).click();
     await settle(page);
