@@ -151,7 +151,7 @@ export default async function AramaPage({
       {/* Başlık */}
       <p className="eyebrow">Karavanları keşfet</p>
       <h1
-        className="mt-1 text-headline-lg font-bold text-primary"
+        className="mt-1 text-balance text-headline-lg font-bold text-primary"
         aria-live="polite"
       >
         {headline}
@@ -162,8 +162,10 @@ export default async function AramaPage({
           </span>
         ) : null}
       </h1>
-      <p className="mt-2 text-body-md text-on-surface-variant">
-        Seçtiğiniz tarih, kişi ve fiyat filtreleriyle eşleşen ilanlar.
+      <p className="mt-2 text-body-md text-pretty text-on-surface-variant">
+        {chips.length > 0
+          ? "Seçtiğiniz tarih, kişi ve fiyat filtreleriyle eşleşen ilanlar."
+          : "Tüm karavanlar arasından tarihinize ve bütçenize uygun olanı seçin."}
       </p>
 
       {/* Aktif filtre chip'leri */}
@@ -227,10 +229,19 @@ export default async function AramaPage({
               <p className="mt-3 font-bold text-on-surface">
                 Sonuç bulunamadı
               </p>
-              <p className="mt-1 text-body-md text-on-surface-variant">
+              <p className="mt-1 text-body-md text-pretty text-on-surface-variant">
                 Filtreleri gevşetmeyi (tarih veya fiyat aralığını genişletmeyi)
                 deneyin.
               </p>
+              {chips.length > 0 ? (
+                <Link href="/arama" className="btn btn-primary btn-sm mt-4">
+                  Filtreleri temizle
+                </Link>
+              ) : (
+                <Link href="/" className="btn btn-primary btn-sm mt-4">
+                  Ana sayfaya dön
+                </Link>
+              )}
             </div>
           ) : !hasResults ? (
             /* sayfa sayısı aşıldı (ör. ?sayfa=99) */
@@ -271,7 +282,7 @@ export default async function AramaPage({
                   ← Önceki
                 </span>
               )}
-              <span className="text-body-md text-on-surface-variant">
+              <span className="text-body-md tabular-nums text-on-surface-variant">
                 Sayfa {Math.min(page, totalPages)} / {totalPages}
               </span>
               {page < totalPages ? (

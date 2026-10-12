@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 /** Genel 404 — kök `notFound()`; `/ilan/[id]` kendi rota-kapsamlı 404'üne düşer. */
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 p-8 text-center">
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-gray-50 p-8 text-center">
       <p className="text-sm font-semibold text-emerald-700">404</p>
       <h1 className="text-3xl font-bold text-gray-900">
         Sayfa bulunamadı

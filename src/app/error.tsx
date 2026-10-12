@@ -13,7 +13,7 @@ type Props = {
 
 export default function ErrorPage({ reset }: Props) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 p-8 text-center">
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-gray-50 p-8 text-center">
       <svg
         aria-hidden="true"
         className="h-12 w-12 text-red-500"

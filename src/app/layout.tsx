@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body
-        className={`${jakarta.variable} flex min-h-screen flex-col font-sans antialiased`}
+        className={`${jakarta.variable} flex min-h-dvh flex-col font-sans antialiased`}
       >
         <Providers>
           <SiteHeader />
