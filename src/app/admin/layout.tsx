@@ -33,7 +33,7 @@ export default async function AdminLayout({
     <div className="min-h-dvh bg-surface">
       <div className="mx-auto flex w-full max-w-7xl flex-col lg:flex-row">
         {/* Sidebar / üst çubuk */}
-        <aside className="border-b border-outline-variant/60 bg-surface-lowest lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
+        <aside className="border-b border-outline-variant/60 bg-surface-lowest lg:sticky lg:top-0 lg:h-dvh lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
           <div className="px-4 py-4 sm:px-6 lg:px-5 lg:py-6">
             <Link
               href="/admin"
