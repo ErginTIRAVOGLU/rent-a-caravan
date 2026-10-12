@@ -1,46 +1,64 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReportStatus } from "@prisma/client";
 
 import { requireAdmin } from "../../../lib/auth";
+import { REPORT_STATUS_LABELS } from "../../../lib/labels";
+import { PageHeader } from "../../../components/panel/PageHeader";
 import {
-  REPORT_STATUS_LABELS,
-  REPORT_TARGET_LABELS,
-} from "../../../lib/labels";
-import { getReportsCore } from "../../../server/reports/service";
-import { ReportActions } from "./ReportActions";
+  StatusTabs,
+  type TabOption,
+} from "../../../components/panel/StatusTabs";
+import { EmptyState } from "../../../components/panel/EmptyState";
+import { parseTabValue } from "../../../components/panel/tabs";
+import { getReportsCore, type AdminReport } from "../../../server/reports/service";
+import { AdminReportsTable } from "./AdminReportsTable";
 
 export const metadata: Metadata = {
   title: "Şikâyetler — Yönetim",
 };
 
-/** @db/timestamp → DD.MM.YYYY (UTC; saat dilimi kaymaz). */
-function formatDate(value: Date): string {
-  const dd = String(value.getUTCDate()).padStart(2, "0");
-  const mm = String(value.getUTCMonth() + 1).padStart(2, "0");
-  return `${dd}.${mm}.${value.getUTCFullYear()}`;
-}
+// `/admin/sikayetler` — durum sekmeleri (Açık/İnceleniyor/Kapatıldı) + sunucu
+// tarafı `?q=` araması + tablo (spec §7.4, §8, §9). Durum geçişleri
+// (OPEN→REVIEWING→CLOSED; CLOSED geri açılmaz) mevcut `ReportActions` adasıyla
+// sunulur. Otomatik aksiyon yoktur.
 
-/** Durum rozeti renkleri — açık dikkat çeker, kapalı sakin. */
-function statusBadgeClass(status: keyof typeof REPORT_STATUS_LABELS): string {
-  switch (status) {
-    case "OPEN":
-      return "badge-error";
-    case "REVIEWING":
-      return "badge-primary";
-    default:
-      return "badge-neutral";
-  }
+/** Sekme sırası — ilk sekme (`OPEN`) varsayılandır. */
+const STATUS_ORDER = ["OPEN", "REVIEWING", "CLOSED"] as const;
+
+/** Boş sekme başlıkları — duruma özel, tek cümle. */
+const EMPTY_TITLE: Record<ReportStatus, string> = {
+  OPEN: "Açık şikayet yok",
+  REVIEWING: "İncelenen şikayet yok",
+  CLOSED: "Kapatılmış şikayet yok",
+};
+
+/** Tek değerli query alanı; dizi/undefined → boş metin. */
+function firstValue(raw: string | string[] | undefined): string {
+  return typeof raw === "string" ? raw : "";
 }
 
 /**
- * Şikayet kuyruğu (spec §8): gerekçe, bildiren, hedefe link, durum rozeti ve
- * tarih. Durum geçişleri matriste olan düğmelerle sunulur (OPEN→REVIEWING→
- * CLOSED; CLOSED geri açılmaz). Otomatik aksiyon yoktur — yönetici gerekip
- * görürse ilanı duraklatma/kullanıcı banlama araçlarını kullanır (satırdaki
- * hedef linkleri bu yüzden ilan detayına ve kullanıcı listesine gider).
+ * `q` eşleşmesi sayfanın sunduğu alanlarla sınırlıdır: gerekçe, hedef etiketi
+ * (ilan başlığı / kullanıcı adı) ve bildiren adı/e-postası. Küçük/büyük harf
+ * duyarsızdır.
  */
-export default async function AdminReportsPage() {
+function matchesQuery(report: AdminReport, q: string): boolean {
+  return [
+    report.reason,
+    report.target.label,
+    report.reporter.name,
+    report.reporter.email,
+  ].some((value) => value.toLowerCase().includes(q));
+}
+
+export default async function AdminReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireAdmin();
+  const params = await searchParams;
 
   const result = await getReportsCore();
   // Kuyruk yüklenemezse BOŞ DURUM GÖSTERİLMEZ: "Henüz şikayet yok" demek
@@ -49,84 +67,129 @@ export default async function AdminReportsPage() {
   if (!result.ok) {
     throw new Error(result.error);
   }
-  const reports = result.data;
+  const all = result.data;
+
+  const durum = parseTabValue(
+    params.durum,
+    STATUS_ORDER,
+    "OPEN",
+  ) as ReportStatus;
+  const q = firstValue(params.q).trim().toLowerCase();
+
+  // Sayaçlar `q` uygulanmadan tam durum dağılımını verir.
+  const counts: Record<ReportStatus, number> = {
+    OPEN: 0,
+    REVIEWING: 0,
+    CLOSED: 0,
+  };
+  for (const report of all) {
+    counts[report.status] += 1;
+  }
+  const total = all.length;
+
+  const reports = all.filter(
+    (report) =>
+      report.status === durum && (q === "" || matchesQuery(report, q)),
+  );
+
+  const tabs: TabOption[] = STATUS_ORDER.map((value) => ({
+    value,
+    label: REPORT_STATUS_LABELS[value],
+    count: counts[value],
+  }));
+
+  // Sekme linkleri mevcut `q` aramasını korur (StatusTabs sözleşmesi).
+  const tabBasePath = q
+    ? `/admin/sikayetler?q=${encodeURIComponent(q)}`
+    : "/admin/sikayetler";
+  const clearHref =
+    durum === "OPEN" ? "/admin/sikayetler" : `/admin/sikayetler?durum=${durum}`;
+
+  const showChrome = total > 0;
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-12">
-      <header className="mb-6">
-        <span className="eyebrow">Yönetim</span>
-        <h1 className="mt-1 text-headline-lg font-bold text-primary">
-          Şikâyetler
-        </h1>
-        <p className="mt-1 text-body-md text-on-surface-variant">
-          Kullanıcı bildirimlerini inceleyin; durumu açıktan incelemeye,
-          incelemeden kapatıya taşıyın. Kapatılan şikayet yeniden açılmaz.
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-7xl">
+      <PageHeader
+        eyebrow="Yönetim"
+        title="Şikâyetler"
+        description="Kullanıcı bildirimlerini inceleyin; durumu açıktan incelemeye, incelemeden kapatıya taşıyın."
+        actions={
+          showChrome ? (
+            <form
+              method="get"
+              action="/admin/sikayetler"
+              role="search"
+              className="flex items-center gap-2"
+            >
+              {durum !== "OPEN" ? (
+                <input type="hidden" name="durum" value={durum} />
+              ) : null}
+              <label htmlFor="admin-sikayetler-q" className="sr-only">
+                Şikayet ara
+              </label>
+              <input
+                id="admin-sikayetler-q"
+                name="q"
+                type="search"
+                defaultValue={firstValue(params.q).trim()}
+                placeholder="Gerekçe, hedef veya bildiren ara"
+                className="input h-11 w-48 sm:w-64"
+              />
+              <button
+                type="submit"
+                aria-label="Ara"
+                className="btn btn-outline shrink-0"
+              >
+                <span className="material-symbols-outlined text-lg">
+                  search
+                </span>
+              </button>
+            </form>
+          ) : null
+        }
+      />
+
+      {showChrome ? (
+        <div className="mb-4">
+          <StatusTabs
+            basePath={tabBasePath}
+            param="durum"
+            tabs={tabs}
+            current={durum}
+          />
+        </div>
+      ) : null}
 
       {reports.length === 0 ? (
-        <div className="card mt-8 p-8 text-center">
-          <span className="material-symbols-outlined text-3xl text-outline">
-            report_problem
-          </span>
-          <p className="mt-2 font-semibold text-on-surface">Henüz şikayet yok</p>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            Kullanıcılar ilan veya hesap bildiriminde bulunduğunda burada
-            listelenir.
-          </p>
+        <div className="card">
+          {q ? (
+            <EmptyState
+              icon="search_off"
+              title="Aramanızla eşleşen şikayet yok"
+              description="Farklı bir arama deneyin."
+              action={
+                <Link href={clearHref} className="btn btn-outline">
+                  Aramayı temizle
+                </Link>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon="report_problem"
+              title={EMPTY_TITLE[durum]}
+              description="Bu durumda şikayet bulunmuyor."
+              action={
+                <Link href="/admin" className="btn btn-outline">
+                  Genel Bakışa dön
+                </Link>
+              }
+            />
+          )}
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
-          {reports.map((report) => (
-            <li key={report.id} className="card p-4 sm:p-5">
-              <div className="sm:flex sm:items-start sm:justify-between sm:gap-4">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`badge ${statusBadgeClass(report.status)}`}
-                    >
-                      {REPORT_STATUS_LABELS[report.status]}
-                    </span>
-                    <span className="badge badge-neutral">
-                      {REPORT_TARGET_LABELS[report.target.type]}
-                    </span>
-                    <span className="text-body-sm text-on-surface-variant">
-                      {formatDate(report.createdAt)}
-                    </span>
-                  </div>
-
-                  <p className="mt-2 whitespace-pre-line break-words text-body-md text-on-surface">
-                    {report.reason}
-                  </p>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-on-surface-variant">
-                    <span>Bildiren:</span>
-                    <span className="font-semibold text-on-surface">
-                      {report.reporter.name}
-                    </span>
-                    <span>{report.reporter.email}</span>
-                  </div>
-
-                  <p className="mt-1 text-body-sm text-on-surface-variant">
-                    Hedef:{" "}
-                    {report.target.href ? (
-                      <Link
-                        href={report.target.href}
-                        className="font-semibold text-primary hover:underline"
-                      >
-                        {report.target.label}
-                      </Link>
-                    ) : (
-                      <span className="font-semibold">{report.target.label}</span>
-                    )}
-                  </p>
-                </div>
-
-                <ReportActions reportId={report.id} status={report.status} />
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="card overflow-hidden p-2 sm:p-4">
+          <AdminReportsTable reports={reports} />
+        </div>
       )}
     </div>
   );
