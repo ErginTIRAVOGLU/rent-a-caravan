@@ -271,18 +271,16 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
                     </div>
                   ) : (
                     <div>
-                      {stayNights !== null && stayTotal !== null ? (
-                        <BookingRequestForm
-                          listingId={listing.id}
-                          minRentalDays={listing.minRentalDays}
-                          capacity={listing.capacity}
-                          nightlyPrice={nightlyPrice}
-                        />
-                      ) : (
-                        <div className="rounded-lg bg-surface-low p-4 text-center text-body-sm text-on-surface-variant">
-                          Rezervasyon için tarih seçin
-                        </div>
-                      )}
+                      {/* Form KOŞULSUZ render olur: tarih seçimi formun içindedir
+                          ve URL'de tarih olmadan da (city-only arama) talep
+                          gönderilebilmelidir — fiyat ÖZETİ kapalı kalır, form
+                          kapalı kalmaz (e2e senaryo 1/2 bu akışı doğrular). */}
+                      <BookingRequestForm
+                        listingId={listing.id}
+                        minRentalDays={listing.minRentalDays}
+                        capacity={listing.capacity}
+                        nightlyPrice={nightlyPrice}
+                      />
                       <div className="mt-3 flex flex-col gap-2">
                         <AskButton listingId={listing.id} />
                         <ReportDialog targetType="LISTING" targetId={listing.id} />
