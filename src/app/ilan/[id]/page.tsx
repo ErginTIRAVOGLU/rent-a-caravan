@@ -18,6 +18,7 @@ import { ReportDialog } from "../../../components/ReportDialog";
 import { StarRating } from "../../../components/StarRating";
 import { BookingRequestForm } from "./BookingRequestForm";
 import { AskButton } from "./AskButton";
+import { ListingGallery } from "./ListingGallery";
 
 // İlan detayı — genel okuma yüzeyi: yalnız ACTIVE ilanlar görünür
 // (sahip/admin bypass bu görevde YOK; sahipleri kendi ilanını hesabından görür).
@@ -190,44 +191,8 @@ export default async function IlanDetayPage({ params, searchParams }: Props) {
       <div className="mt-6 grid gap-6 lg:grid-cols-12">
         {/* SOL TARAF: Galeri + İçerik */}
         <div className="space-y-6 lg:col-span-8">
-          {/* BÜYÜK GALERİ + KÜÇÜK RESİMLER */}
-          <div className="space-y-3">
-            {/* Ana görsel */}
-            <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-surface-low">
-              {listing.photoUrls.length > 0 ? (
-                // eslint-disable-next-line @next/next/no-img-element -- UploadThing URL'leri next.config images domain listesinde değil; bkz. ListingCard
-                <img
-                  src={listing.photoUrls[0]}
-                  alt={`${listing.title} - Ana görsel`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-surface-mid">
-                  <span className="material-symbols-outlined text-4xl text-outline">photo_camera</span>
-                </div>
-              )}
-            </div>
-
-            {/* Küçük resimler (thumbnail strip) */}
-            {listing.photoUrls.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
-                {listing.photoUrls.map((url, index) => (
-                  <button
-                    key={index}
-                    className="relative h-20 w-28 shrink-0 rounded-lg overflow-hidden border-2 border-transparent hover:border-accent transition-colors"
-                    aria-label={`Fotoğraf ${index + 1}`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- bkz. yukarıdaki galeri yorumu */}
-                    <img
-                      src={url}
-                      alt={`${listing.title} - Fotoğraf ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* BÜYÜK GALERİ + KÜÇÜK RESİMLER (istemci bileşeni: seçim durumu) */}
+          <ListingGallery photos={listing.photoUrls} title={listing.title} />
         </div>
 
         {/* SAĞ TARAF: YAPIŞKAN REZERVASYON PANELİ */}
