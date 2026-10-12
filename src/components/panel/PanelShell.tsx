@@ -10,6 +10,28 @@ import type { PanelNavItem } from "./nav";
 /** Offcanvas tetikleyicisinin `aria-controls` hedefi. */
 export const PANEL_SIDEBAR_ID = "panel-sidebar";
 
+/** Masaüstü kenar çubuğu kırılımı — `lg:` ile aynı olmalı. */
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
+/**
+ * Masaüstü algılama. SSR ve `matchMedia`'sız ortamlarda (ör. testler) masaüstü
+ * varsayar; böylece masaüstü kenar çubuğu ilk boyamada da kullanılabilir kalır.
+ */
+function useIsDesktop(): boolean {
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia(DESKTOP_QUERY);
+    const update = () => setIsDesktop(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return isDesktop;
+}
+
 type PanelShellProps = {
   items: readonly PanelNavItem[];
   /** Sidebar marka/rol başlığı. */
@@ -39,6 +61,11 @@ export function PanelShell({
 }: PanelShellProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const isDesktop = useIsDesktop();
+
+  // Mobilde kapalı offcanvas; erişilebilirlik ağacından ve sekme sırasından
+  // çıkarılır. Masaüstünde (`isDesktop`) kenar çubuğu her zaman kullanılabilir.
+  const drawerHidden = !isDesktop && !open;
 
   // Rota değişiminde offcanvas'ı kapat — prop değişiminde render sırasında
   // ayarlama (effect'te setState kademeli render tetikler).
@@ -74,6 +101,8 @@ export function PanelShell({
 
       <aside
         id={PANEL_SIDEBAR_ID}
+        inert={drawerHidden}
+        aria-hidden={drawerHidden ? true : undefined}
         className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-outline-variant/60 bg-surface-lowest transition-transform duration-200 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}

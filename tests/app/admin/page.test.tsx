@@ -41,6 +41,11 @@ function statText(container: HTMLElement, label: string): string {
 }
 
 describe("/admin page (Genel Bakış)", () => {
+  it("metadata başlığı 'Genel Bakış — Yönetim'", async () => {
+    const { metadata } = await import("../../../src/app/admin/page");
+    expect(metadata.title).toBe("Genel Bakış — Yönetim");
+  });
+
   it("4 stat kartı gerçek sayıları gösterir ve block bağlantıdır", async () => {
     const owner = await prisma.user.create({ data: makeUser() });
     for (let i = 0; i < 4; i += 1) {

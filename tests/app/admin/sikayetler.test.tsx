@@ -213,6 +213,26 @@ describe("/admin/sikayetler", () => {
     expect(within(table).queryByText("İkinci gerekçe")).not.toBeInTheDocument();
   });
 
+  it("q Türkçe İ harfini katlar: 'ilan' araması 'İlan' hedefini bulur", async () => {
+    await makeReport({
+      reporterName: "Bildiren Bir",
+      reason: "Birinci gerekçe",
+      targetTitle: "İlan Başlığı",
+    });
+    await makeReport({
+      reporterName: "Bildiren İki",
+      reason: "İkinci gerekçe",
+      targetTitle: "Temiz Başlık",
+    });
+    setupAdmin();
+
+    await renderPage({ q: "ilan" });
+
+    const table = screen.getByTestId("admin-reports-table");
+    expect(within(table).getByText("Birinci gerekçe")).toBeInTheDocument();
+    expect(within(table).queryByText("İkinci gerekçe")).not.toBeInTheDocument();
+  });
+
   it("q bildiren adı/gerekçe üzerinde de eşleşir", async () => {
     await makeReport({
       reporterName: "Zeynep Bildiren",

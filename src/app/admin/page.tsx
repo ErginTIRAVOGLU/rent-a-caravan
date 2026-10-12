@@ -9,7 +9,7 @@ import { PanelCard } from "../../components/panel/PanelCard";
 import { EmptyState } from "../../components/panel/EmptyState";
 
 export const metadata: Metadata = {
-  title: "Genel Bakış",
+  title: "Genel Bakış — Yönetim",
 };
 
 /** @db timestamp → DD.MM.YYYY (UTC; saat dilimi kaymaz). */

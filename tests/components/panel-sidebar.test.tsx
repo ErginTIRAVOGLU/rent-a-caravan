@@ -160,3 +160,47 @@ describe("PanelShell offcanvas", () => {
     );
   });
 });
+
+describe("PanelShell offcanvas erişilebilirliği (mobil)", () => {
+  const originalMatchMedia = window.matchMedia;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPathname.mockReturnValue("/hesap/ilanlarim");
+    // Mobil kırılım: lg eşleşmez.
+    window.matchMedia = vi.fn().mockReturnValue({
+      matches: false,
+      media: "(min-width: 1024px)",
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    window.matchMedia = originalMatchMedia;
+    vi.resetAllMocks();
+  });
+
+  it("kapalı offcanvas kenar çubuğunu erişilebilirlik ağacından ve sekme sırasından çıkarır", () => {
+    render(
+      <PanelShell items={ITEMS}>
+        <p>içerik</p>
+      </PanelShell>,
+    );
+
+    const drawer = document.getElementById("panel-sidebar");
+    expect(drawer).not.toBeNull();
+    expect(drawer).toHaveAttribute("aria-hidden", "true");
+    expect(drawer).toHaveAttribute("inert");
+
+    const trigger = screen.getByRole("button", { name: "Menü" });
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(drawer).not.toHaveAttribute("aria-hidden");
+    expect(drawer).not.toHaveAttribute("inert");
+  });
+});

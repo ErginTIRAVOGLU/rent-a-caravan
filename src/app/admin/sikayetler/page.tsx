@@ -11,6 +11,7 @@ import {
 } from "../../../components/panel/StatusTabs";
 import { EmptyState } from "../../../components/panel/EmptyState";
 import { parseTabValue } from "../../../components/panel/tabs";
+import { foldTurkish } from "../../../lib/turkish";
 import { getReportsCore, type AdminReport } from "../../../server/reports/service";
 import { AdminReportsTable } from "./AdminReportsTable";
 
@@ -49,7 +50,7 @@ function matchesQuery(report: AdminReport, q: string): boolean {
     report.target.label,
     report.reporter.name,
     report.reporter.email,
-  ].some((value) => value.toLowerCase().includes(q));
+  ].some((value) => foldTurkish(value).includes(q));
 }
 
 export default async function AdminReportsPage({
@@ -74,7 +75,7 @@ export default async function AdminReportsPage({
     STATUS_ORDER,
     "OPEN",
   ) as ReportStatus;
-  const q = firstValue(params.q).trim().toLowerCase();
+  const q = foldTurkish(firstValue(params.q).trim());
 
   // Sayaçlar `q` uygulanmadan tam durum dağılımını verir.
   const counts: Record<ReportStatus, number> = {
