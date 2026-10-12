@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { requireUser } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
-import { AccountNav } from "../../../components/AccountNav";
+import { PageHeader } from "../../../components/panel/PageHeader";
 import { ReportDialog } from "../../../components/ReportDialog";
 import { ProfileForm } from "./ProfileForm";
 import { ReviewsVisibleToggle } from "./ReviewsVisibleToggle";
@@ -19,16 +19,12 @@ export default async function ProfilPage() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <header className="mb-6">
-        <span className="eyebrow">Hesabım</span>
-        <h1 className="mt-1 text-headline-lg font-bold text-primary">Profil</h1>
-        <p className="mt-1 text-body-md text-on-surface-variant">
-          Adınızı ve telefonunuzu güncelleyin, şifrenizi değiştirin.
-        </p>
-      </header>
-
-      <AccountNav current="profil" />
+    <div className="mx-auto w-full max-w-7xl">
+      <PageHeader
+        eyebrow="Hesabım"
+        title="Profil"
+        description="Adınızı ve telefonunuzu güncelleyin, şifrenizi değiştirin."
+      />
 
       <ProfileForm
         email={user?.email ?? sessionUser.email}

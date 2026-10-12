@@ -174,6 +174,9 @@ describe("/hesap/mesajlar/[id] page", () => {
     const { default: ConversationPage } = await import("../../../../src/app/hesap/mesajlar/[id]/page");
     const { getByText } = render(await ConversationPage({ params: Promise.resolve({ id: conversationId }) }));
 
+    const heading = getByText("Sohbet");
+    expect(heading.tagName).toBe("H1");
+    expect(heading.className).toContain("section-title");
     expect(getByText("Test İlanı")).toBeInTheDocument();
     expect(getByText("Merhaba")).toBeInTheDocument();
     expect(getByText("Merhaba, nasıl yardımcı olabilirim?")).toBeInTheDocument();

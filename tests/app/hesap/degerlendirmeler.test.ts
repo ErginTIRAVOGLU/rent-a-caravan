@@ -117,9 +117,14 @@ describe("/hesap/degerlendirmeler page", () => {
     const { default: DegerlendirmelerPage } = await import(
       "../../../src/app/hesap/degerlendirmeler/page"
     );
-    const { getByText, getAllByText } = render(await DegerlendirmelerPage());
+    const { getByText, getAllByText, getByRole } = render(
+      await DegerlendirmelerPage(),
+    );
 
     expect(getAllByText("Değerlendirmeler").length).toBeGreaterThan(0);
+    expect(
+      getByRole("heading", { level: 1, name: "Değerlendirmeler" }).className,
+    ).toContain("section-title");
     expect(getByText("Yazdıklarım")).toBeInTheDocument();
     expect(getByText("Mükemmel deneyim!")).toBeInTheDocument();
     expect(getByText("Düzenle")).toBeInTheDocument();

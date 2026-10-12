@@ -7,8 +7,7 @@ import { PanelShell } from "../../components/panel/PanelShell";
 
 // `/hesap` panel kabuğu: oturum kapısı + rol bazlı menü rozetleri burada bir
 // kez hesaplanır (spec §6, §7.5). Sayfa içerikleri `children` olarak RSC
-// şeklinde geçer; diğer `/hesap/*` sayfaları Task 8'e kadar kendi eski
-// `AccountNav`'larını render etmeye devam eder (geçici durum).
+// şeklinde geçer; her hesap sayfası yalnız içeriğini render eder.
 
 export default async function HesapLayout({
   children,
