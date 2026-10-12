@@ -248,7 +248,7 @@ export function ConversationThread({
                 <div
                   className={`max-w-[70%] ${
                     isOwn
-                      ? "rounded-tr-none rounded-bl-lg rounded-br-lg bg-accent text-white"
+                      ? "rounded-tr-none rounded-bl-lg rounded-br-lg bg-primary text-white"
                       : "rounded-tl-none rounded-bl-lg rounded-br-lg bg-surface-low text-on-surface"
                   } px-3 py-2`}
                 >
@@ -259,7 +259,7 @@ export function ConversationThread({
                   </p>
                 </div>
                 {isOwn && (
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-title-sm font-bold text-white">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-title-sm font-bold text-white">
                     S
                   </span>
                 )}
