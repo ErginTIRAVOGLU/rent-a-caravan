@@ -10,7 +10,7 @@ import { getReportsCore } from "../../../server/reports/service";
 import { ReportActions } from "./ReportActions";
 
 export const metadata: Metadata = {
-  title: "Şikayetler — Yönetim",
+  title: "Şikâyetler — Yönetim",
 };
 
 /** @db/timestamp → DD.MM.YYYY (UTC; saat dilimi kaymaz). */
@@ -56,7 +56,7 @@ export default async function AdminReportsPage() {
       <header className="mb-6">
         <span className="eyebrow">Yönetim</span>
         <h1 className="mt-1 text-headline-lg font-bold text-primary">
-          Şikayetler
+          Şikâyetler
         </h1>
         <p className="mt-1 text-body-md text-on-surface-variant">
           Kullanıcı bildirimlerini inceleyin; durumu açıktan incelemeye,

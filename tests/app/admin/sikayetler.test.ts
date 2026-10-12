@@ -246,7 +246,7 @@ describe("/admin/sikayetler page", () => {
 
     const { getByText } = await renderAdminPage();
 
-    expect(getByText("Şikayetler")).toBeInTheDocument();
+    expect(getByText("Şikâyetler")).toBeInTheDocument();
     expect(authMock).toHaveBeenCalled();
     expect(admin.id).toBeTruthy();
   });
