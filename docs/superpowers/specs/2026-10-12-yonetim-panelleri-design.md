@@ -2,7 +2,7 @@
 
 - **Tarih:** 2026-10-12
 - **Konu:** satıcı (sahip), alıcı (kiracı) ve admin panellerinin görünüm + işlevsellik yenilemesi
-- **Durum:** Kullanıcı onaylı (ortak sidebar kabuğu + tek `/hesap` paneli kararı), plan aşamasına hazır
+- **Durum:** Uygulandı — tüm 12 görev tamam, `npm run check` 559 test yeşil, uçtan uca e2e 6/6 yeşil (dal: `feature/panels-redesign`)
 
 ## 1. Amaç ve neden
 
